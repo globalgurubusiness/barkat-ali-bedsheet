@@ -6,12 +6,12 @@
 <title>Barkat Ali Bed Sheet — Roznamcha Khata</title>
 <meta name="description" content="Barkat Ali Bed Sheet, Multan — Roznamcha, Khata, Inventory aur Talpat ka mukammal hisaab system. Powered by Global Guru.">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#53687f">
+<meta name="theme-color" content="#6d1a2d">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  :root{ --brand:#53687f; --brand-dark:#3d4f63; --cream:#f5efe3; --cream2:#efe6d2; --gold:#b9975b; }
+  :root{ --brand:#6d1a2d; --brand-dark:#4f1220; --cream:#f5efe3; --cream2:#efe6d2; --gold:#b9975b; }
   *{ -webkit-tap-highlight-color:transparent; }
   body{ font-family:'Segoe UI',system-ui,-apple-system,sans-serif; background:var(--cream); color:#24303d; }
   .brand-bg{ background:var(--brand); } .brand-dark-bg{ background:var(--brand-dark); }
@@ -25,7 +25,7 @@
   .navbtn.active{ color:var(--brand-dark); border-top-color:var(--brand); }
   .navbtn .ic{ font-size:19px; display:block; line-height:1.1; }
   input,select,textarea{ outline:none; }
-  input:focus,select:focus,textarea:focus{ border-color:var(--brand)!important; box-shadow:0 0 0 3px rgba(83,104,127,.18); }
+  input:focus,select:focus,textarea:focus{ border-color:var(--brand)!important; box-shadow:0 0 0 3px rgba(109,26,45,.18); }
   .field{ width:100%; border:1.5px solid #d8dee5; border-radius:10px; padding:10px 12px; font-size:15px; background:#fff; }
   .lbl{ font-size:12px; font-weight:700; color:#5a6b7d; margin-bottom:4px; display:block; letter-spacing:.02em; }
   .modal-bg{ background:rgba(30,40,52,.55); backdrop-filter:blur(2px); }
@@ -53,7 +53,7 @@
   <p class="text-sm font-semibold text-gray-600 text-center mt-3">Roznamcha &bull; Khata &bull; Inventory &bull; Talpat</p>
   <div class="card w-full max-w-sm mt-7 p-5">
     <button id="btnGoogleLogin" class="btn-brand w-full py-3.5 text-base flex items-center justify-center gap-2">
-      <span class="bg-white text-[#53687f] rounded-full w-6 h-6 flex items-center justify-center font-extrabold text-sm">G</span>
+      <span class="bg-white text-[#6d1a2d] rounded-full w-6 h-6 flex items-center justify-center font-extrabold text-sm">G</span>
       Google se Login karein
     </button>
     <p id="loginModeNote" class="text-xs text-gray-400 text-center mt-3"></p>
@@ -190,6 +190,12 @@
         <div><label class="lbl">Business ka Naam (bill par yehi chhape ga)</label><input id="setBizName" class="field"></div>
         <div><label class="lbl">Phone Numbers (bill par)</label><input id="setBizPhones" class="field" placeholder="03xx-xxxxxxx, 03xx-xxxxxxx"></div>
         <div><label class="lbl">Address (bill par)</label><input id="setBizAddress" class="field"></div>
+        <div>
+          <label class="lbl">Bill Contacts (naam ke saath — bill par aise hi chhapen ge)</label>
+          <div id="contactRows" class="space-y-2"></div>
+          <button type="button" id="btnAddContact" class="btn-cream w-full py-2 text-sm mt-2">+ Contact add karein</button>
+        </div>
+        <div><label class="lbl">Upar wala naam (baghair number ke — bill par naam hi aye ga)</label><input id="setNameLine" class="field"></div>
         <button id="btnSaveProfile" class="btn-brand w-full py-2.5">Profile Save karein</button>
       </div>
       <div class="card p-4 space-y-2 mb-4">
@@ -502,7 +508,22 @@ const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + St
 let toastTimer = null;
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2600); }
 
-const DEFAULT_PROFILE = { name: APP_NAME, phones: '', address: 'Chungi No. 11, Nasir Wali Market, Shop No. 28, Multan' };
+// Bill contacts: naam pehle se bhare hain, NUMBERS jaan boojh kar khaali hain — number kabhi code mein nahi, user Settings mein bharta hai (sirf us ke apne data/Firestore mein rehte hain)
+const DEFAULT_CONTACTS = [
+  { name: 'Talib Hussain', phone1: '', phone2: '' },
+  { name: 'Aqib Hussain', phone1: '', phone2: '' },
+  { name: 'Muhammad Aqeel', phone1: '', phone2: '' }
+];
+const DEFAULT_NAME_LINE = 'Muhammad Javeed Talib Hussain';
+const DEFAULT_PROFILE = { name: APP_NAME, phones: '', address: 'Chungi No. 11, Nasir Wali Market, Shop No. 28, Multan', contacts: DEFAULT_CONTACTS.map(c => ({ ...c })), nameLine: DEFAULT_NAME_LINE };
+// Purani saved profile (jis mein contacts field nahi) par defaults merge kar deta hai — saved naam/phones/address mehfooz rehte hain
+function normalizeProfile(p) {
+  if (!p || typeof p !== 'object') p = { ...DEFAULT_PROFILE };
+  if (!Array.isArray(p.contacts)) p.contacts = DEFAULT_CONTACTS.map(c => ({ ...c }));
+  else p.contacts = p.contacts.map(c => ({ name: String((c && c.name) || ''), phone1: String((c && c.phone1) || ''), phone2: String((c && c.phone2) || '') }));
+  if (typeof p.nameLine !== 'string') p.nameLine = DEFAULT_NAME_LINE;
+  return p;
+}
 const SEED_PRODUCTS = ['Khes', 'Dari', 'Kambal', 'Crystal', 'Diamond'];
 const SEED_ACCOUNTS = ['Kirya / Transport', 'Mazdoori', 'Chai / Khana', 'Dukkan Kharcha', 'Deegar Kharcha'];
 
@@ -615,9 +636,12 @@ async function logout() {
   $('appScreen').classList.add('hidden'); $('loginScreen').classList.remove('hidden');
 }
 function applyProfile() {
-  const p = S.data.profile || DEFAULT_PROFILE;
+  if (!S.data.profile) S.data.profile = { ...DEFAULT_PROFILE };
+  const p = normalizeProfile(S.data.profile);
   $('hdrBizName').textContent = p.name || APP_NAME; $('loginBizName').textContent = p.name || APP_NAME;
   $('setBizName').value = p.name || ''; $('setBizPhones').value = p.phones || ''; $('setBizAddress').value = p.address || '';
+  $('setNameLine').value = p.nameLine || '';
+  if (typeof renderContactRows === 'function') renderContactRows(p.contacts);
 }
 </script>
 
@@ -628,7 +652,7 @@ const productById = id => S.data.products.find(p => p.id === id);
 const accountById = id => S.data.accounts.find(a => a.id === id);
 const TYPE_META = {
   sale:             { label: 'Sale (Bikri)',        color: '#2e7d4f', icon: '&#128722;' },
-  purchase:         { label: 'Purchase (Khareed)',  color: '#53687f', icon: '&#128230;' },
+  purchase:         { label: 'Purchase (Khareed)',  color: '#6d1a2d', icon: '&#128230;' },
   payment_received: { label: 'Wasooli (Paisa Aya)', color: '#1f8a70', icon: '&#11015;' },
   payment_given:    { label: 'Adaigi (Paisa Diya)', color: '#b06a00', icon: '&#11014;' },
   expense:          { label: 'Kharcha',             color: '#a03b3b', icon: '&#129534;' },
@@ -689,7 +713,7 @@ function renderRoznamcha() {
   const sumCard = (label, val, color) => `<div class="card p-2.5 text-center"><div class="text-[11px] font-bold text-gray-400">${label}</div><div class="font-extrabold text-sm sm:text-base" style="color:${color}">${val}</div></div>`;
   $('daySummary').innerHTML =
     sumCard('AAJ KI SALE', fmtRs(d.sale), '#2e7d4f') + sumCard('WASOOLI', fmtRs(d.wasooli), '#1f8a70') + sumCard('KHARCHA', fmtRs(d.kharcha), '#a03b3b') +
-    sumCard('PURCHASE', fmtRs(d.purchase), '#53687f') + sumCard('AAJ KA MUNAFA', fmtRs(d.profit), '#2e7d4f') + sumCard('GALLA (CASH)', fmtRs(d.gallaTotal), '#3d4f63');
+    sumCard('PURCHASE', fmtRs(d.purchase), '#6d1a2d') + sumCard('AAJ KA MUNAFA', fmtRs(d.profit), '#2e7d4f') + sumCard('GALLA (CASH)', fmtRs(d.gallaTotal), '#4f1220');
   $('dayPicker').value = selectedDate;
   $('dayEntriesTitle').textContent = 'Entries — ' + selectedDate + ' (' + d.entries + ')';
   const day = BA_CORE.activeEntries(S.data.entries).concat(S.data.entries.filter(e => e.isReversal || e.status === 'reversed'))
@@ -1089,27 +1113,64 @@ async function saveAdd() {
   renderAll();
 }
 function stashDraftKeep() { /* values pehle stashDraft se mehfooz hain; form dobara bane par wahi lagte hain */ }
+/* ================= SETTINGS: BILL CONTACTS ================= */
+function contactRowHTML(c) {
+  c = c || { name: '', phone1: '', phone2: '' };
+  return `<div class="contact-row space-y-2 rounded-xl p-2" style="border:1.5px solid #d8dee5">
+    <div class="flex gap-2">
+      <input class="field c-name" placeholder="Naam" value="${esc(c.name || '')}">
+      <button type="button" class="c-remove btn-cream px-3 shrink-0" title="Contact hataein">✕</button>
+    </div>
+    <div class="flex gap-2">
+      <input class="field c-phone1" placeholder="Number 1" inputmode="tel" value="${esc(c.phone1 || '')}">
+      <input class="field c-phone2" placeholder="Number 2" inputmode="tel" value="${esc(c.phone2 || '')}">
+    </div>
+  </div>`;
+}
+function addContactRow(c) { const w = $('contactRows'); if (w) w.insertAdjacentHTML('beforeend', contactRowHTML(c)); }
+function renderContactRows(contacts) {
+  const wrap = $('contactRows'); if (!wrap) return;
+  wrap.innerHTML = '';
+  (Array.isArray(contacts) ? contacts : []).forEach(c => addContactRow(c));
+}
+function collectContacts() {
+  return [...document.querySelectorAll('#contactRows .contact-row')].map(r => ({
+    name: r.querySelector('.c-name').value.trim(),
+    phone1: r.querySelector('.c-phone1').value.trim(),
+    phone2: r.querySelector('.c-phone2').value.trim()
+  })).filter(c => c.name || c.phone1 || c.phone2);
+}
 /* ================= PRINT: Bill / Statement / Report ================= */
 function billHTML(e) {
-  const p = S.data.profile || DEFAULT_PROFILE;
+  const p = normalizeProfile(S.data.profile || { ...DEFAULT_PROFILE });
   const party = e.partyId ? partyById(e.partyId) : null;
+  const contacts = (Array.isArray(p.contacts) ? p.contacts : []).filter(c => (c.name || '').trim() || (c.phone1 || '').trim() || (c.phone2 || '').trim());
+  const hasContactPhone = contacts.some(c => (c.phone1 || '').trim() || (c.phone2 || '').trim());
+  const nameLineHTML = (p.nameLine || '').trim() ? `<div style="font-size:12px;margin-top:2px">${esc(p.nameLine.trim())}</div>` : '';
+  const contactsHTML = contacts.length ? `<div style="display:flex;flex-wrap:wrap;justify-content:space-around;gap:4px 14px;font-size:11.5px;margin-top:3px">${contacts.map(c => `<div style="text-align:center;min-width:110px"><div style="font-weight:700">${esc((c.name || '').trim())}</div>${(c.phone1 || '').trim() ? `<div>${esc(c.phone1.trim())}</div>` : ''}${(c.phone2 || '').trim() ? `<div>${esc(c.phone2.trim())}</div>` : ''}</div>`).join('')}</div>` : '';
+  // Legacy phones line sirf tab, jab contacts mein koi number na ho (purane data ka fallback) — warna double print hoga
+  const addrHTML = hasContactPhone
+    ? `<div style="font-size:12px">${esc(p.address || '')}</div>`
+    : `<div style="font-size:12px">${esc(p.phones || '')} ${p.phones ? '•' : ''} ${esc(p.address || '')}</div>`;
   return `<div style="font-family:'Segoe UI',sans-serif;color:#24303d;max-width:640px;margin:0 auto">
-  <div style="text-align:center;border-bottom:3px solid #53687f;padding-bottom:8px">
-    <div style="font-size:26px;font-weight:800;color:#53687f">${esc(p.name)}</div>
+  <div style="text-align:center;border-bottom:3px solid #6d1a2d;padding-bottom:8px">
+    <div style="font-size:26px;font-weight:800;color:#6d1a2d">${esc(p.name)}</div>
     <div style="font-size:12px">Hamare haan Khes, Dari, Kambal, Crystal, Diamond dastiyab hain</div>
-    <div style="font-size:12px">${esc(p.phones || '')} ${p.phones ? '•' : ''} ${esc(p.address || '')}</div>
+    ${nameLineHTML}
+    ${contactsHTML}
+    ${addrHTML}
   </div>
   <div style="display:flex;justify-content:space-between;font-size:13px;margin:10px 0">
     <div>Bill No: <b>${esc(e.code)}</b></div><div>Tareekh: <b>${esc(e.date)}</b></div></div>
   <div style="font-size:13px;margin-bottom:8px">Naam Kharidaar: <b>${party ? esc(party.code) + ' • ' + esc(party.name) : ''}</b> ${party && party.phone ? '(' + esc(party.phone) + ')' : ''}</div>
   <table style="width:100%;border-collapse:collapse;font-size:14px">
-    <tr style="background:#53687f;color:#fff"><th style="padding:7px;text-align:left">Number</th><th style="padding:7px;text-align:left">Tafseel</th><th style="padding:7px;text-align:right">Narkh</th><th style="padding:7px;text-align:right">Rupay</th></tr>
+    <tr style="background:#6d1a2d;color:#fff"><th style="padding:7px;text-align:left">Number</th><th style="padding:7px;text-align:left">Tafseel</th><th style="padding:7px;text-align:right">Narkh</th><th style="padding:7px;text-align:right">Rupay</th></tr>
     <tr style="border-bottom:1px solid #ccc"><td style="padding:7px">${e.qty}</td><td style="padding:7px">${esc(e.productName || '')}</td><td style="padding:7px;text-align:right">${fmtRs(e.rate)}</td><td style="padding:7px;text-align:right">${fmtRs(e.total)}</td></tr>
   </table>
   <table style="width:260px;margin-left:auto;font-size:14px;margin-top:8px">
     <tr><td style="padding:4px">Total</td><td style="padding:4px;text-align:right"><b>${fmtRs(e.total)}</b></td></tr>
     <tr><td style="padding:4px">Advance</td><td style="padding:4px;text-align:right">${fmtRs(e.amountReceived || 0)}</td></tr>
-    <tr style="border-top:2px solid #53687f"><td style="padding:4px"><b>Baqaya</b></td><td style="padding:4px;text-align:right"><b>${fmtRs((e.total || 0) - (e.amountReceived || 0))}</b></td></tr>
+    <tr style="border-top:2px solid #6d1a2d"><td style="padding:4px"><b>Baqaya</b></td><td style="padding:4px;text-align:right"><b>${fmtRs((e.total || 0) - (e.amountReceived || 0))}</b></td></tr>
   </table>
   <div style="margin-top:36px;display:flex;justify-content:space-between;font-size:12px;color:#666"><span>Dastakhat: ____________________</span><span>${ggBrandHTML(18)}</span></div></div>`;
 }
@@ -1123,7 +1184,7 @@ function printStatement(key) {
   const rows = posts.map(x => { run = r2(run + x.dr - x.cr); return `<tr style="border-bottom:1px solid #ddd"><td style="padding:5px">${esc(x.date)}</td><td style="padding:5px">${esc(x.note || '')} (${esc(x.code)})</td><td style="padding:5px;text-align:right">${x.dr ? fmtRs(x.dr) : ''}</td><td style="padding:5px;text-align:right">${x.cr ? fmtRs(x.cr) : ''}</td><td style="padding:5px;text-align:right"><b>${fmtRs(run)}</b></td></tr>`; }).join('');
   const p = S.data.profile || DEFAULT_PROFILE;
   $('printArea').innerHTML = `<div style="font-family:'Segoe UI',sans-serif;color:#24303d;max-width:680px;margin:0 auto">
-  <div style="text-align:center;border-bottom:3px solid #53687f;padding-bottom:8px"><div style="font-size:22px;font-weight:800;color:#53687f">${esc(p.name)}</div>
+  <div style="text-align:center;border-bottom:3px solid #6d1a2d;padding-bottom:8px"><div style="font-size:22px;font-weight:800;color:#6d1a2d">${esc(p.name)}</div>
   <div style="font-size:12px">${esc(p.address || '')}</div></div>
   <h3 style="margin:12px 0 6px">Khata Statement — ${esc(l.code)} • ${esc(l.name)}</h3>
   <table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="background:#efe6d2"><th style="padding:6px;text-align:left">Tareekh</th><th style="padding:6px;text-align:left">Tafseel</th><th style="padding:6px;text-align:right">Naame</th><th style="padding:6px;text-align:right">Jama</th><th style="padding:6px;text-align:right">Baqaya</th></tr>${rows}</table>
@@ -1154,7 +1215,7 @@ window.printReport = function () {
   const d = BA_CORE.dailySummary(S.data, selectedDate);
   const p = S.data.profile || DEFAULT_PROFILE;
   $('printArea').innerHTML = `<div style="font-family:'Segoe UI',sans-serif;color:#24303d;max-width:640px;margin:0 auto">
-  <h2 style="color:#53687f;text-align:center">${esc(p.name)} — Roz ki Report</h2>
+  <h2 style="color:#6d1a2d;text-align:center">${esc(p.name)} — Roz ki Report</h2>
   <p style="text-align:center;font-size:12px">Tareekh: ${esc(selectedDate)}</p>
   <table style="width:100%;font-size:14px;border-collapse:collapse">
   ${[['Sale', d.sale], ['Purchase', d.purchase], ['Wasooli (cash aya)', d.cashIn], ['Cash gaya', d.cashOut], ['Kharcha', d.kharcha], ['Aaj ka Munafa', d.profit], ['Galla kul', d.gallaTotal]].map(r => `<tr style="border-bottom:1px solid #ddd"><td style="padding:6px">${r[0]}</td><td style="padding:6px;text-align:right"><b>${fmtRs(r[1])}</b></td></tr>`).join('')}
@@ -1195,7 +1256,9 @@ $('dayPicker').addEventListener('change', e => { selectedDate = e.target.value |
 $('btnPrevDay').addEventListener('click', () => { const d = new Date(selectedDate); d.setDate(d.getDate() - 1); selectedDate = d.toISOString().slice(0, 10); renderRoznamcha(); });
 $('btnNextDay').addEventListener('click', () => { const d = new Date(selectedDate); d.setDate(d.getDate() + 1); selectedDate = d.toISOString().slice(0, 10); renderRoznamcha(); });
 $('btnToday').addEventListener('click', () => { selectedDate = todayStr(); renderRoznamcha(); });
-$('btnSaveProfile').addEventListener('click', async () => { await Store.saveProfile({ name: $('setBizName').value.trim() || APP_NAME, phones: $('setBizPhones').value.trim(), address: $('setBizAddress').value.trim() }); toast('Profile save ho gaya'); });
+$('btnSaveProfile').addEventListener('click', async () => { await Store.saveProfile({ name: $('setBizName').value.trim() || APP_NAME, phones: $('setBizPhones').value.trim(), address: $('setBizAddress').value.trim(), contacts: collectContacts(), nameLine: $('setNameLine').value.trim() }); toast('Profile save ho gaya'); });
+$('btnAddContact').addEventListener('click', () => addContactRow());
+$('contactRows').addEventListener('click', e => { const b = e.target.closest('.c-remove'); if (b) { const row = b.closest('.contact-row'); if (row) row.remove(); } });
 $('btnExport').addEventListener('click', exportData);
 $('fileImport').addEventListener('change', e => { if (e.target.files[0]) importData(e.target.files[0]); e.target.value = ''; });
 $('btnResetDemo').addEventListener('click', () => { if (confirm('Demo data saaf kar dein? Saari demo entries mit jayengi.')) { localStorage.removeItem(LS_KEY); Store.loadDemo(); renderAll(); toast('Demo data saaf ho gaya'); } });
