@@ -24,6 +24,24 @@
   .navbtn{ flex:1; padding:9px 2px; font-size:11px; font-weight:600; color:#7b8a9a; text-align:center; border-top:3px solid transparent; }
   .navbtn.active{ color:var(--brand-dark); border-top-color:var(--brand); }
   .navbtn .ic{ font-size:19px; display:block; line-height:1.1; }
+  .navbtn .ic svg{ width:22px; height:22px; display:block; margin:0 auto; }
+  /* Sound toggle (Settings) */
+  .sfx-toggle{ cursor:pointer; flex-shrink:0; }
+  .sfx-toggle .track{ display:block; width:50px; height:28px; border-radius:999px; background:#cfd6dd; position:relative; transition:.2s; }
+  .sfx-toggle .knob{ position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.3); transition:.2s; }
+  .sfx-toggle input:checked + .track{ background:var(--brand); }
+  .sfx-toggle input:checked + .track .knob{ left:25px; }
+  /* Desktop (web) view — sirf bari screens; mobile bilkul waisa hi rehta hai */
+  @media (min-width:1024px){
+    #view-khata:not(.hidden){ display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:0 1rem; align-items:start; }
+    #view-khata > *{ grid-column:1 / -1; }
+    #view-khata > #khataList{ grid-column:1; }
+    #view-khata > #statementWrap{ grid-column:2; margin-top:0; }
+    #productList{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.5rem; }
+    #productList > *{ margin-top:0 !important; }
+    #buyerList, #sellerList{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.5rem; }
+    #buyerList > *, #sellerList > *{ margin-top:0 !important; }
+  }
   input,select,textarea{ outline:none; }
   input:focus,select:focus,textarea:focus{ border-color:var(--brand)!important; box-shadow:0 0 0 3px rgba(109,26,45,.18); }
   .field{ width:100%; border:1.5px solid #d8dee5; border-radius:10px; padding:10px 12px; font-size:15px; background:#fff; }
@@ -65,7 +83,7 @@
 <!-- ============ APP ============ -->
 <div id="appScreen" class="hidden">
   <header class="brand-bg text-white sticky top-0 z-40 shadow">
-    <div class="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
+    <div class="max-w-3xl lg:max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
       <img src="logo.jpg" alt="logo" class="w-10 h-10 rounded-xl object-cover bg-white">
       <div class="flex-1 min-w-0">
         <div class="font-extrabold leading-tight truncate" id="hdrBizName">Barkat Ali Bed Sheet</div>
@@ -76,13 +94,13 @@
     </div>
   </header>
 
-  <main class="max-w-3xl mx-auto px-3 sm:px-4">
+  <main class="max-w-3xl lg:max-w-6xl mx-auto px-3 sm:px-4 lg:px-6">
 
     <!-- ===== VIEW: ROZNAMCHA ===== -->
     <section id="view-roznamcha" class="view pt-3">
       <div class="card p-3 mb-3">
         <div class="flex items-center gap-2">
-          <span class="text-xl">&#128269;</span>
+          <span class="brand-text flex items-center shrink-0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="w-5 h-5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>
           <input id="searchBar" class="flex-1 text-base font-medium placeholder-gray-400" style="border:none;box-shadow:none!important"
                  placeholder="Search: code, naam, phone, product, rakam...">
           <button id="btnClearSearch" class="text-gray-400 font-bold px-2 hidden">&#10005;</button>
@@ -105,7 +123,7 @@
         <div class="grid grid-cols-3 gap-2 mb-3" id="daySummary"></div>
 
         <div class="text-sm font-bold brand-text mb-2">Nayi Entry — Roznamcha se</div>
-        <div class="grid grid-cols-4 gap-2 mb-4" id="entryTypeBtns"></div>
+        <div class="grid grid-cols-4 lg:grid-cols-7 gap-2 mb-4" id="entryTypeBtns"></div>
 
         <div class="flex items-center justify-between mb-2">
           <div class="text-sm font-bold brand-text" id="dayEntriesTitle">Aaj ki Entries</div>
@@ -186,7 +204,11 @@
       <h2 class="text-lg font-extrabold brand-text mb-2">Aakhri Hisaab (Final Accounts)</h2>
       <div id="pnlWrap" class="mb-5"></div>
       <h2 class="text-lg font-extrabold brand-text mb-2">Settings</h2>
-      <div class="card p-4 space-y-3 mb-4">
+      <div class="card p-4 space-y-3 mb-4 lg:max-w-3xl">
+        <div class="flex items-center justify-between gap-3">
+          <div><div class="font-bold text-sm brand-text">Sound</div><div class="text-xs text-gray-400">Har action par usi ke hisaab ki halki awaaz</div></div>
+          <label class="sfx-toggle"><input type="checkbox" id="setSound" class="hidden" checked><span class="track"><span class="knob"></span></span></label>
+        </div>
         <div><label class="lbl">Business ka Naam (bill par yehi chhape ga)</label><input id="setBizName" class="field"></div>
         <div><label class="lbl">Phone Numbers (bill par)</label><input id="setBizPhones" class="field" placeholder="03xx-xxxxxxx, 03xx-xxxxxxx"></div>
         <div><label class="lbl">Address (bill par)</label><input id="setBizAddress" class="field"></div>
@@ -198,13 +220,13 @@
         <div><label class="lbl">Upar wala naam (baghair number ke — bill par naam hi aye ga)</label><input id="setNameLine" class="field"></div>
         <button id="btnSaveProfile" class="btn-brand w-full py-2.5">Profile Save karein</button>
       </div>
-      <div class="card p-4 space-y-2 mb-4">
+      <div class="card p-4 space-y-2 mb-4 lg:max-w-3xl">
         <div class="font-bold text-sm brand-text">Data Backup</div>
         <button id="btnExport" class="btn-cream w-full py-2.5 text-sm">Poora Data Export (JSON)</button>
         <label class="btn-cream w-full py-2.5 text-sm block text-center cursor-pointer">Backup Import (JSON)<input id="fileImport" type="file" accept=".json" class="hidden"></label>
         <button id="btnResetDemo" class="btn-cream w-full py-2.5 text-sm hidden" style="color:#c0392b">Demo Data Saaf karein</button>
       </div>
-      <div class="card p-4 mb-4">
+      <div class="card p-4 mb-4 lg:max-w-3xl">
         <div class="text-[11px] font-extrabold tracking-[.18em] text-gray-400 mb-3">CONTACT US</div>
         <a href="https://wa.me/923027374880?text=Assalam%20o%20Alaikum!%20Mujhe%20Barkat%20Ali%20Khata%20app%20ke%20baray%20mein%20madad%20chahiye." target="_blank" rel="noopener" class="flex items-center gap-3 rounded-2xl p-3.5" style="background:linear-gradient(135deg,#25d366,#1cb457)">
           <span class="flex items-center justify-center w-11 h-11 rounded-xl shrink-0" style="background:rgba(255,255,255,.22)">
@@ -253,13 +275,13 @@
   </main>
 
   <nav class="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-2px_10px_rgba(0,0,0,.08)] z-40">
-    <div class="max-w-3xl mx-auto flex">
-      <button class="navbtn active" data-view="roznamcha"><span class="ic">&#128214;</span>Roznamcha</button>
-      <button class="navbtn" data-view="khata"><span class="ic">&#128210;</span>Khata</button>
-      <button class="navbtn" data-view="inventory"><span class="ic">&#128230;</span>Inventory</button>
-      <button class="navbtn" data-view="baqaya"><span class="ic">&#9878;</span>Baqaya/Talpat</button>
-      <button class="navbtn" data-view="parties"><span class="ic">&#128101;</span>Parties</button>
-      <button class="navbtn" data-view="more"><span class="ic">&#128176;</span>Aakhri Hisaab</button>
+    <div class="max-w-3xl lg:max-w-6xl mx-auto flex">
+      <button class="navbtn active" data-view="roznamcha"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/></svg></span>Roznamcha</button>
+      <button class="navbtn" data-view="khata"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>Khata</button>
+      <button class="navbtn" data-view="inventory"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 9.4 7.5 4.2"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></span>Inventory</button>
+      <button class="navbtn" data-view="baqaya"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg></span>Baqaya/Talpat</button>
+      <button class="navbtn" data-view="parties"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Parties</button>
+      <button class="navbtn" data-view="more"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6.5h8"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01M8.5 15h.01M12 15h.01M15.5 15h.01M8.5 18.5h.01M12 18.5h.01M15.5 18.5h.01"/></svg></span>Aakhri Hisaab</button>
     </div>
   </nav>
 </div>
@@ -508,6 +530,47 @@ const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + St
 let toastTimer = null;
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2600); }
 
+/* ================= SFX — har action ki apni halki awaaz =================
+   Web Audio API ke oscillators — koi sound file nahi, offline bhi chalti hai.
+   Setting: profile.sound (false = band). Default ON. */
+let AC = null;
+function soundOn() { try { return !(S.data && S.data.profile && S.data.profile.sound === false); } catch (e) { return true; } }
+function sfxTone(f, start, dur, vol, type) {
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || 'sine'; o.frequency.setValueAtTime(f, start);
+  g.gain.setValueAtTime(0.0001, start);
+  g.gain.exponentialRampToValueAtTime(vol, start + 0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+  o.connect(g); g.connect(AC.destination);
+  o.start(start); o.stop(start + dur + 0.05);
+}
+function sfx(name) {
+  try {
+    if (!soundOn()) return;
+    const Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx) return;
+    if (!AC) AC = new Ctx();
+    if (AC.state === 'suspended') { const p = AC.resume(); if (p && p.catch) p.catch(() => {}); }
+    const t0 = AC.currentTime + 0.01;
+    const seq = (notes, gap, dur, vol, type) => notes.forEach((f, i) => sfxTone(f, t0 + i * gap, dur, vol, type));
+    switch (name) {
+      case 'sale': seq([740, 990], 0.09, 0.15, 0.10); break;
+      case 'purchase': seq([520, 430], 0.09, 0.15, 0.09); break;
+      case 'cashin': seq([880, 1175, 1568], 0.07, 0.13, 0.10, 'triangle'); break;
+      case 'cashout': seq([620, 460], 0.10, 0.16, 0.08, 'triangle'); break;
+      case 'expense': seq([290], 0, 0.13, 0.09); break;
+      case 'capital': seq([560, 705], 0.09, 0.14, 0.09); break;
+      case 'drawing': seq([705, 560], 0.09, 0.14, 0.09); break;
+      case 'correction': seq([520, 520], 0.11, 0.09, 0.10, 'triangle'); break;
+      case 'save': seq([780], 0, 0.12, 0.08); break;
+      case 'login': seq([620, 830], 0.10, 0.16, 0.09, 'triangle'); break;
+      case 'tick': seq([1250], 0, 0.045, 0.03); break;
+      case 'error': seq([165, 165], 0.14, 0.11, 0.055, 'square'); break;
+      default: break;
+    }
+  } catch (e) { /* awaaz na bane to app par koi farq nahi parta */ }
+}
+const SFX_FOR_TYPE = { sale: 'sale', purchase: 'purchase', payment_received: 'cashin', payment_given: 'cashout', expense: 'expense', capital: 'capital', drawing: 'drawing' };
+
 // Bill contacts: naam pehle se bhare hain, NUMBERS jaan boojh kar khaali hain — number kabhi code mein nahi, user Settings mein bharta hai (sirf us ke apne data/Firestore mein rehte hain)
 const DEFAULT_CONTACTS = [
   { name: 'Talib Hussain', phone1: '', phone2: '' },
@@ -515,7 +578,7 @@ const DEFAULT_CONTACTS = [
   { name: 'Muhammad Aqeel', phone1: '', phone2: '' }
 ];
 const DEFAULT_NAME_LINE = 'Muhammad Javeed Talib Hussain';
-const DEFAULT_PROFILE = { name: APP_NAME, phones: '', address: 'Chungi No. 11, Nasir Wali Market, Shop No. 28, Multan', contacts: DEFAULT_CONTACTS.map(c => ({ ...c })), nameLine: DEFAULT_NAME_LINE };
+const DEFAULT_PROFILE = { name: APP_NAME, phones: '', address: 'Chungi No. 11, Nasir Wali Market, Shop No. 28, Multan', contacts: DEFAULT_CONTACTS.map(c => ({ ...c })), nameLine: DEFAULT_NAME_LINE, sound: true };
 // Purani saved profile (jis mein contacts field nahi) par defaults merge kar deta hai — saved naam/phones/address mehfooz rehte hain
 function normalizeProfile(p) {
   if (!p || typeof p !== 'object') p = { ...DEFAULT_PROFILE };
@@ -599,7 +662,7 @@ function subscribeFirestore() {
       S.data[key] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       if (key === 'products' || key === 'accounts') { /* seed sirf bilkul khali account par */ }
       renderAll();
-    }, err => toast('Data load error: ' + err.message)));
+    }, err => { sfx('error'); toast('Data load error: ' + err.message); }));
   };
   bind('parties', 'parties'); bind('products', 'products'); bind('accounts', 'accounts'); bind('entries', 'entries');
   unsubs.push(onSnapshot(doc(fb.db, 'users', S.uid, 'profile', 'main'), snap => {
@@ -617,10 +680,10 @@ function subscribeFirestore() {
 }
 async function googleLogin() {
   if (CONFIG_IS_PLACEHOLDER) { toast('Firebase config abhi placeholder hai — Demo Mode chal raha hai'); enterDemo(); return; }
-  if (!fb) { toast('Firebase load nahi hua — page refresh karein ya Demo Mode use karein'); return; }
+  if (!fb) { sfx('error'); toast('Firebase load nahi hua — page refresh karein ya Demo Mode use karein'); return; }
   const provider = new fb.authMod.GoogleAuthProvider();
   try { await fb.authMod.signInWithPopup(fb.auth, provider); }
-  catch (e) { try { await fb.authMod.signInWithRedirect(fb.auth, provider); } catch (e2) { toast('Login error: ' + e2.message); } }
+  catch (e) { try { await fb.authMod.signInWithRedirect(fb.auth, provider); } catch (e2) { sfx('error'); toast('Login error: ' + e2.message); } }
 }
 function enterDemo() { S.mode = 'demo'; S.uid = 'demo'; Store.loadDemo(); enterApp(); }
 function enterApp() {
@@ -628,6 +691,7 @@ function enterApp() {
   $('modeBadge').classList.toggle('hidden', S.mode !== 'demo');
   $('btnResetDemo').classList.toggle('hidden', S.mode !== 'demo');
   applyProfile(); renderAll();
+  sfx('login');
 }
 async function logout() {
   if (S.mode === 'firebase' && fb) { try { await fb.authMod.signOut(fb.auth); } catch (e) {} }
@@ -641,6 +705,7 @@ function applyProfile() {
   $('hdrBizName').textContent = p.name || APP_NAME; $('loginBizName').textContent = p.name || APP_NAME;
   $('setBizName').value = p.name || ''; $('setBizPhones').value = p.phones || ''; $('setBizAddress').value = p.address || '';
   $('setNameLine').value = p.nameLine || '';
+  const ssEl = $('setSound'); if (ssEl) ssEl.checked = p.sound !== false;
   if (typeof renderContactRows === 'function') renderContactRows(p.contacts);
 }
 </script>
@@ -650,14 +715,27 @@ function applyProfile() {
 const partyById = id => S.data.parties.find(p => p.id === id);
 const productById = id => S.data.products.find(p => p.id === id);
 const accountById = id => S.data.accounts.find(a => a.id === id);
+/* Saaf professional line icons (SVG) — emoji icons khatam (owner ka locked UI rule).
+   Sab aik hi style: 24x24 viewBox, stroke currentColor, stroke-width 1.8, round caps. */
+const ICON_PATHS = {
+  tag: '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.3" fill="currentColor" stroke="none"/>',
+  box: '<path d="M16.5 9.4 7.5 4.2"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+  downCircle: '<circle cx="12" cy="12" r="9"/><path d="m8 12.5 4 4 4-4"/><path d="M12 8v8.5"/>',
+  upCircle: '<circle cx="12" cy="12" r="9"/><path d="m8 11.5 4-4 4 4"/><path d="M12 16V7.5"/>',
+  receipt: '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z"/><path d="M8 8h8"/><path d="M8 12h8"/><path d="M8 16h5"/>',
+  landmark: '<path d="m12 2 9 5H3z"/><path d="M3 10h18"/><path d="M6 21v-8"/><path d="M10 21v-8"/><path d="M14 21v-8"/><path d="M18 21v-8"/><path d="M3 21h18"/>',
+  ownerOut: '<circle cx="9" cy="8" r="3.5"/><path d="M3.5 20c.6-3.3 2.8-5.2 5.5-5.2 1.1 0 2.2.3 3.1.8"/><path d="M15.5 3.5H21V9"/><path d="m21 3.5-5.8 5.8"/>',
+  file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>'
+};
+const ico = (name, cls) => `<svg viewBox="0 0 24 24" class="${cls || 'w-6 h-6'}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON_PATHS[name] || ICON_PATHS.file}</svg>`;
 const TYPE_META = {
-  sale:             { label: 'Sale (Bikri)',        color: '#2e7d4f', icon: '&#128722;' },
-  purchase:         { label: 'Purchase (Khareed)',  color: '#6d1a2d', icon: '&#128230;' },
-  payment_received: { label: 'Wasooli (Paisa Aya)', color: '#1f8a70', icon: '&#11015;' },
-  payment_given:    { label: 'Adaigi (Paisa Diya)', color: '#b06a00', icon: '&#11014;' },
-  expense:          { label: 'Kharcha',             color: '#a03b3b', icon: '&#129534;' },
-  capital:          { label: 'Sarmaya Jama',        color: '#5b5bd6', icon: '&#128176;' },
-  drawing:          { label: 'Owner ne Nikala',     color: '#7a4b9e', icon: '&#128176;' }
+  sale:             { label: 'Sale (Bikri)',        color: '#2e7d4f', icon: 'tag' },
+  purchase:         { label: 'Purchase (Khareed)',  color: '#6d1a2d', icon: 'box' },
+  payment_received: { label: 'Wasooli (Paisa Aya)', color: '#1f8a70', icon: 'downCircle' },
+  payment_given:    { label: 'Adaigi (Paisa Diya)', color: '#b06a00', icon: 'upCircle' },
+  expense:          { label: 'Kharcha',             color: '#a03b3b', icon: 'receipt' },
+  capital:          { label: 'Sarmaya Jama',        color: '#5b5bd6', icon: 'landmark' },
+  drawing:          { label: 'Owner ne Nikala',     color: '#7a4b9e', icon: 'ownerOut' }
 };
 function derived() { if (!S.derived) S.derived = BA_CORE.computeDerived(S.data); return S.derived; }
 function partyBalanceText(p) {
@@ -675,7 +753,7 @@ function entryTitle(e) {
   return TYPE_META[e.type] ? TYPE_META[e.type].label : e.type;
 }
 function entryCard(e, showDate) {
-  const d = derived(); const m = TYPE_META[e.type] || { label: e.type, color: '#666', icon: '•' };
+  const d = derived(); const m = TYPE_META[e.type] || { label: e.type, color: '#666', icon: 'file' };
   const isRev = e.isReversal || e.status === 'reversed';
   let extra = '';
   if (e.type === 'sale' && d.salesInfo[e.id]) extra = `<span class="chip" style="background:#e7f3ec;color:#2e7d4f">Munafa ${fmtRs(d.salesInfo[e.id].profit)}</span>`;
@@ -684,7 +762,7 @@ function entryCard(e, showDate) {
   const canCorrect = !isRev;
   return `<div class="card entrycard p-3 ${isRev ? 'revcard' : ''}" style="border-left-color:${m.color}">
     <div class="flex items-start gap-2">
-      <div class="text-xl">${m.icon}</div>
+      <div style="color:${m.color}">${ico(m.icon, 'w-5 h-5')}</div>
       <div class="flex-1 min-w-0">
         <div class="font-bold text-sm leading-snug">${esc(entryTitle(e))}</div>
         <div class="text-xs text-gray-500 mt-0.5">${esc(e.code)}${showDate ? ' • ' + esc(e.date) : ''} • ${esc(m.label)} ${extra}</div>
@@ -996,36 +1074,36 @@ async function saveEntry() {
   if (t === 'sale' || t === 'purchase') {
     const partyId = fieldVal('f_party'), productId = fieldVal('f_product');
     const qty = parseFloat(fieldVal('f_qty')) || 0, rate = parseFloat(fieldVal('f_rate')) || 0, paid = parseFloat(fieldVal('f_paid')) || 0;
-    if (!partyId || partyId === '__add__') return toast(t === 'sale' ? 'Buyer chunein' : 'Seller chunein');
-    if (!productId || productId === '__add__') return toast('Product chunein');
-    if (qty <= 0 || rate <= 0) return toast('Quantity aur Rate theek likhein');
+    if (!partyId || partyId === '__add__') { sfx('error'); return toast(t === 'sale' ? 'Buyer chunein' : 'Seller chunein'); }
+    if (!productId || productId === '__add__') { sfx('error'); return toast('Product chunein'); }
+    if (qty <= 0 || rate <= 0) { sfx('error'); return toast('Quantity aur Rate theek likhein'); }
     const prod = productById(productId);
     Object.assign(base, { partyId, productId, productName: prod ? prod.name : '', qty, rate, total: r2(qty * rate) });
     if (t === 'sale') {
       const plan = BA_CORE.planSale(S.data, productId, qty, fieldVal('f_lot') || undefined);
-      if (!plan.ok) return toast('Stock kam hai — sirf ' + plan.available + ' pcs bache hain');
+      if (!plan.ok) { sfx('error'); return toast('Stock kam hai — sirf ' + plan.available + ' pcs bache hain'); }
       base.allocations = plan.alloc; base.amountReceived = Math.min(paid, base.total);
     } else base.amountPaid = Math.min(paid, base.total);
   } else if (t === 'payment_received' || t === 'payment_given') {
     const partyId = fieldVal('f_party'), amount = parseFloat(fieldVal('f_amount')) || 0;
-    if (!partyId || partyId === '__add__') return toast('Party chunein');
-    if (amount <= 0) return toast('Rakam likhein');
+    if (!partyId || partyId === '__add__') { sfx('error'); return toast('Party chunein'); }
+    if (amount <= 0) { sfx('error'); return toast('Rakam likhein'); }
     Object.assign(base, { partyId, total: amount });
   } else if (t === 'expense') {
     const accountId = fieldVal('f_account'), amount = parseFloat(fieldVal('f_amount')) || 0;
-    if (!accountId || accountId === '__add__') return toast('Kharcha head chunein');
-    if (amount <= 0) return toast('Rakam likhein');
+    if (!accountId || accountId === '__add__') { sfx('error'); return toast('Kharcha head chunein'); }
+    if (amount <= 0) { sfx('error'); return toast('Rakam likhein'); }
     Object.assign(base, { accountId, total: amount });
   } else { // capital / drawing
     const amount = parseFloat(fieldVal('f_amount')) || 0;
-    if (amount <= 0) return toast('Rakam likhein');
+    if (amount <= 0) { sfx('error'); return toast('Rakam likhein'); }
     base.total = amount;
   }
   await Store.addEntry(base);
   entryDraft = null;
   $('entryModal').classList.add('hidden');
   selectedDate = date;
-  toast('Entry save ho gayi — ' + base.code);
+  toast('Entry save ho gayi — ' + base.code); sfx(SFX_FOR_TYPE[t] || 'save');
   renderAll();
 }
 /* ================= CORRECTION (ulti entry — edit/delete kabhi nahi) ================= */
@@ -1034,14 +1112,14 @@ async function makeCorrection(entryId) {
   if (!e || e.isReversal || e.status === 'reversed') return;
   if (e.type === 'purchase') {
     const d = derived(); const lot = d.lots[entryId];
-    if (lot && lot.sold > 0.0001) return toast('Ye lot bik chuka hai (' + lot.sold + ' pcs) — pehle us sale ki correction karein');
+    if (lot && lot.sold > 0.0001) { sfx('error'); return toast('Ye lot bik chuka hai (' + lot.sold + ' pcs) — pehle us sale ki correction karein'); }
   }
   if (!confirm('Correction lagayein?\n\n' + e.code + ' ki entry ghalat thi — ulti (reversal) entry lage gi. Dono entries Roznamcha mein nazar ayengi, hisaab se ye entry khatam ho jayegi.')) return;
   const seq = S.data.entries.reduce((m, x) => Math.max(m, x.seq || 0), 0) + 1;
   const rev = { ...e, id: genId(), code: nextCode('E-', S.data.entries.map(x => x.code)), seq, date: todayStr(), isReversal: true, reverses: e.id, reversesCode: e.code, status: 'active', createdAt: new Date().toISOString(), note: 'Correction of ' + e.code + (e.note ? ' — ' + e.note : '') };
   await Store.addEntry(rev);
   await Store.updateMaster('entries', e.id, { status: 'reversed', reversedByCode: rev.code });
-  toast('Correction lag gayi — ' + rev.code);
+  toast('Correction lag gayi — ' + rev.code); sfx('correction');
   renderAll();
 }
 /* ================= ADD / EDIT MASTERS (har jagah Add, code ke saath) ================= */
@@ -1075,20 +1153,20 @@ function buildAddForm(existing) {
     if (!confirm('Band kar dein? Purana hisaab mehfooz rahe ga, sirf nayi entry mein nazar nahi ayega.')) return;
     const coll = kind === 'product' ? 'products' : kind === 'account' ? 'accounts' : 'parties';
     await Store.updateMaster(coll, addCtx.editId, { active: false });
-    $('addModal').classList.add('hidden'); toast('Band kar diya gaya'); renderAll();
+    $('addModal').classList.add('hidden'); toast('Band kar diya gaya'); sfx('save'); renderAll();
   });
 }
 async function saveAdd() {
   const kind = addCtx.kind, edit = !!addCtx.editId;
   const name = fieldVal('a_name').trim();
-  if (!name) return toast('Naam lazmi hai');
+  if (!name) { sfx('error'); return toast('Naam lazmi hai'); }
   if (edit) {
     const coll = kind === 'product' ? 'products' : kind === 'account' ? 'accounts' : 'parties';
     const patch = { name };
     if (kind === 'buyer' || kind === 'seller') { patch.phone = fieldVal('a_phone').trim(); patch.address = fieldVal('a_address').trim(); }
     if (kind === 'product') { patch.unit = fieldVal('a_unit') || 'pcs'; patch.lowStock = parseFloat(fieldVal('a_low')) || 0; }
     await Store.updateMaster(coll, addCtx.editId, patch);
-    $('addModal').classList.add('hidden'); toast('Update ho gaya'); renderAll(); return;
+    $('addModal').classList.add('hidden'); toast('Update ho gaya'); sfx('save'); renderAll(); return;
   }
   const id = genId();
   if (kind === 'buyer' || kind === 'seller') {
@@ -1100,7 +1178,7 @@ async function saveAdd() {
     await Store.addMaster('accounts', { id, code: nextCode('A-', S.data.accounts.map(x => x.code)), name, active: true, createdAt: new Date().toISOString() });
   }
   $('addModal').classList.add('hidden');
-  toast('Add ho gaya');
+  toast('Add ho gaya'); sfx('save');
   if (addCtx.fromEntry && entryDraft) {
     stashDraftKeep();
     buildEntryForm();
@@ -1193,7 +1271,7 @@ function printStatement(key) {
 }
 function shareStatementWA(key) {
   const p = key.startsWith('party:') ? partyById(key.slice(6)) : null;
-  if (!p || !p.phone) return toast('Party ka phone number nahi hai');
+  if (!p || !p.phone) { sfx('error'); return toast('Party ka phone number nahi hai'); }
   const d = derived(); const bal = d.partyBalances[p.id] || 0;
   const balLine = p.type === 'buyer' ? (bal > 0 ? 'Aap ke zimme baqaya: ' + fmtRs(bal) : 'Aap ka hisaab saaf hai') : (bal < 0 ? 'Aap ko dena hai: ' + fmtRs(-bal) : 'Hisaab saaf hai');
   const text = encodeURIComponent((S.data.profile.name || APP_NAME) + '\nAssalam o Alaikum ' + p.name + ',\n' + balLine + '.\nTafseel ke liye dukaan par rabta karein. Shukriya.\n' + GG_BRAND_LINE);
@@ -1226,7 +1304,7 @@ window.printReport = function () {
 function exportData() {
   const blob = new Blob([JSON.stringify({ app: 'barkat-ali-khata', version: 1, exportedAt: new Date().toISOString(), data: S.data }, null, 2)], { type: 'application/json' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'barkat-ali-backup-' + todayStr() + '.json'; a.click();
-  toast('Backup download ho gaya');
+  toast('Backup download ho gaya'); sfx('save');
 }
 async function importData(file) {
   try {
@@ -1235,15 +1313,15 @@ async function importData(file) {
     if (!data || !Array.isArray(data.entries)) throw new Error('ghalat file');
     data.profile = { ...DEFAULT_PROFILE, ...(data.profile || {}) };
     await Store.replaceAll(data);
-    toast('Backup import ho gaya'); applyProfile(); renderAll();
-  } catch (e) { toast('Import nahi hua — file theek nahi hai'); }
+    toast('Backup import ho gaya'); sfx('save'); applyProfile(); renderAll();
+  } catch (e) { sfx('error'); toast('Import nahi hua — file theek nahi hai'); }
 }
 /* ================= WIRING + INIT ================= */
-document.querySelectorAll('.navbtn').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
+document.querySelectorAll('.navbtn').forEach(b => b.addEventListener('click', () => { sfx('tick'); switchView(b.dataset.view); }));
 document.querySelectorAll('[data-add]').forEach(b => b.addEventListener('click', () => openAdd(b.dataset.add, false)));
 document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => $(b.dataset.close).classList.add('hidden')));
 $('entryTypeBtns').innerHTML = Object.keys(TYPE_META).map(t => `<button class="card p-3 text-center" onclick="openEntry('${t}')">
-  <div class="text-2xl">${TYPE_META[t].icon}</div><div class="text-[11px] font-bold mt-1 leading-tight">${TYPE_META[t].label}</div></button>`).join('');
+  <div style="color:${TYPE_META[t].color}">${ico(TYPE_META[t].icon, 'w-7 h-7 mx-auto')}</div><div class="text-[11px] font-bold mt-1 leading-tight">${TYPE_META[t].label}</div></button>`).join('');
 $('btnSaveEntry').addEventListener('click', saveEntry);
 $('btnSaveAdd').addEventListener('click', saveAdd);
 $('btnDailyReport').addEventListener('click', openDailyReport);
@@ -1256,7 +1334,13 @@ $('dayPicker').addEventListener('change', e => { selectedDate = e.target.value |
 $('btnPrevDay').addEventListener('click', () => { const d = new Date(selectedDate); d.setDate(d.getDate() - 1); selectedDate = d.toISOString().slice(0, 10); renderRoznamcha(); });
 $('btnNextDay').addEventListener('click', () => { const d = new Date(selectedDate); d.setDate(d.getDate() + 1); selectedDate = d.toISOString().slice(0, 10); renderRoznamcha(); });
 $('btnToday').addEventListener('click', () => { selectedDate = todayStr(); renderRoznamcha(); });
-$('btnSaveProfile').addEventListener('click', async () => { await Store.saveProfile({ name: $('setBizName').value.trim() || APP_NAME, phones: $('setBizPhones').value.trim(), address: $('setBizAddress').value.trim(), contacts: collectContacts(), nameLine: $('setNameLine').value.trim() }); toast('Profile save ho gaya'); });
+$('btnSaveProfile').addEventListener('click', async () => { await Store.saveProfile({ name: $('setBizName').value.trim() || APP_NAME, phones: $('setBizPhones').value.trim(), address: $('setBizAddress').value.trim(), contacts: collectContacts(), nameLine: $('setNameLine').value.trim(), sound: $('setSound').checked }); toast('Profile save ho gaya'); sfx('save'); });
+$('setSound').addEventListener('change', async e => {
+  const on = e.target.checked;
+  await Store.saveProfile({ name: $('setBizName').value.trim() || APP_NAME, phones: $('setBizPhones').value.trim(), address: $('setBizAddress').value.trim(), contacts: collectContacts(), nameLine: $('setNameLine').value.trim(), sound: on });
+  if (on) sfx('save');
+  toast(on ? 'Sound on ho gaya' : 'Sound band ho gaya');
+});
 $('btnAddContact').addEventListener('click', () => addContactRow());
 $('contactRows').addEventListener('click', e => { const b = e.target.closest('.c-remove'); if (b) { const row = b.closest('.contact-row'); if (row) row.remove(); } });
 $('btnExport').addEventListener('click', exportData);
