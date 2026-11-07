@@ -1111,9 +1111,11 @@ function billHTML(e) {
     <tr><td style="padding:4px">Advance</td><td style="padding:4px;text-align:right">${fmtRs(e.amountReceived || 0)}</td></tr>
     <tr style="border-top:2px solid #53687f"><td style="padding:4px"><b>Baqaya</b></td><td style="padding:4px;text-align:right"><b>${fmtRs((e.total || 0) - (e.amountReceived || 0))}</b></td></tr>
   </table>
-  <div style="margin-top:36px;display:flex;justify-content:space-between;font-size:12px;color:#666"><span>Dastakhat: ____________________</span><span>${ggBrandHTML(14)}</span></div></div>`;
+  <div style="margin-top:36px;display:flex;justify-content:space-between;font-size:12px;color:#666"><span>Dastakhat: ____________________</span><span>${ggBrandHTML(18)}</span></div></div>`;
 }
-function printBill(entryId) { const e = S.data.entries.find(x => x.id === entryId); if (!e) return; $('printArea').innerHTML = billHTML(e); window.print(); }
+// Print se pehle printArea ki images (GG logo) ke load ka intezaar — warna pehli print mein logo reh jata hai
+async function doPrint() { const imgs = [...$('printArea').querySelectorAll('img')]; await Promise.all(imgs.map(i => (i.complete && i.naturalWidth > 0) ? Promise.resolve() : new Promise(r => { i.onload = r; i.onerror = r; }))); window.print(); }
+function printBill(entryId) { const e = S.data.entries.find(x => x.id === entryId); if (!e) return; $('printArea').innerHTML = billHTML(e); doPrint(); }
 function printStatement(key) {
   const d = derived(); const l = accountLabel(key);
   const posts = d.postings.filter(x => x.account === key).sort((a, b) => (a.date < b.date ? -1 : 1) || (a.seq - b.seq));
@@ -1125,8 +1127,8 @@ function printStatement(key) {
   <div style="font-size:12px">${esc(p.address || '')}</div></div>
   <h3 style="margin:12px 0 6px">Khata Statement — ${esc(l.code)} • ${esc(l.name)}</h3>
   <table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="background:#efe6d2"><th style="padding:6px;text-align:left">Tareekh</th><th style="padding:6px;text-align:left">Tafseel</th><th style="padding:6px;text-align:right">Naame</th><th style="padding:6px;text-align:right">Jama</th><th style="padding:6px;text-align:right">Baqaya</th></tr>${rows}</table>
-  <div style="margin-top:20px;font-size:11px;color:#666;text-align:center">${ggBrandHTML(14)}</div></div>`;
-  window.print();
+  <div style="margin-top:20px;font-size:11px;color:#666;text-align:center">${ggBrandHTML(18)}</div></div>`;
+  doPrint();
 }
 function shareStatementWA(key) {
   const p = key.startsWith('party:') ? partyById(key.slice(6)) : null;
@@ -1156,8 +1158,8 @@ window.printReport = function () {
   <p style="text-align:center;font-size:12px">Tareekh: ${esc(selectedDate)}</p>
   <table style="width:100%;font-size:14px;border-collapse:collapse">
   ${[['Sale', d.sale], ['Purchase', d.purchase], ['Wasooli (cash aya)', d.cashIn], ['Cash gaya', d.cashOut], ['Kharcha', d.kharcha], ['Aaj ka Munafa', d.profit], ['Galla kul', d.gallaTotal]].map(r => `<tr style="border-bottom:1px solid #ddd"><td style="padding:6px">${r[0]}</td><td style="padding:6px;text-align:right"><b>${fmtRs(r[1])}</b></td></tr>`).join('')}
-  </table><div style="margin-top:16px;font-size:11px;color:#666;text-align:center">${ggBrandHTML(14)}</div></div>`;
-  window.print();
+  </table><div style="margin-top:16px;font-size:11px;color:#666;text-align:center">${ggBrandHTML(18)}</div></div>`;
+  doPrint();
 };
 /* ================= BACKUP ================= */
 function exportData() {
