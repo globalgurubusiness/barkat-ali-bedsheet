@@ -102,7 +102,7 @@
         <div class="flex items-center gap-2">
           <span class="brand-text flex items-center shrink-0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="w-5 h-5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>
           <input id="searchBar" class="flex-1 text-base font-medium placeholder-gray-400" style="border:none;box-shadow:none!important"
-                 placeholder="Search: code, naam, phone, product, rakam...">
+                 placeholder="Search">
           <button id="btnClearSearch" class="text-gray-400 font-bold px-2 hidden">&#10005;</button>
         </div>
       </div>
@@ -141,7 +141,7 @@
       </div>
       <p class="text-xs text-gray-500 mb-3">Roznamcha ki har entry khud-ba-khud yahan post hoti hai (Khatoni). Kisi khate par tap karein, statement khul jayega.</p>
       <div class="card p-3 mb-3">
-        <input id="khataSearch" class="w-full text-base placeholder-gray-400" style="border:none" placeholder="Khata search: code ya naam...">
+        <input id="khataSearch" class="w-full text-base placeholder-gray-400" style="border:none">
       </div>
       <div id="khataList" class="space-y-2"></div>
       <div id="statementWrap" class="hidden mt-4"></div>
@@ -155,7 +155,7 @@
       </div>
       <div id="invSummary" class="grid grid-cols-2 gap-2 mb-3"></div>
       <div class="card p-3 mb-3">
-        <input id="invSearch" class="w-full text-base placeholder-gray-400" style="border:none" placeholder="Product search: code ya naam...">
+        <input id="invSearch" class="w-full text-base placeholder-gray-400" style="border:none">
       </div>
       <div id="productList" class="space-y-2"></div>
       <p class="text-xs text-gray-400 mt-3">Har purchase aik alag <b>Lot</b> banti hai apne rate ke saath. Sale mein purana maal pehle bikta hai — jo lot pehle aya, woh pehle katega. Rate kabhi average nahi hota.</p>
@@ -191,7 +191,7 @@
         <button class="btn-brand py-2.5 text-sm" data-add="seller">+ Add Seller (S-)</button>
       </div>
       <div class="card p-3 mb-3">
-        <input id="partySearch" class="w-full text-base placeholder-gray-400" style="border:none" placeholder="Search: code, naam, phone...">
+        <input id="partySearch" class="w-full text-base placeholder-gray-400" style="border:none">
       </div>
       <div class="text-sm font-bold brand-text mb-2">Buyers / Clients</div>
       <div id="buyerList" class="space-y-2 mb-4"></div>
@@ -209,15 +209,15 @@
           <div><div class="font-bold text-sm brand-text">Sound</div><div class="text-xs text-gray-400">Har action par usi ke hisaab ki halki awaaz</div></div>
           <label class="sfx-toggle"><input type="checkbox" id="setSound" class="hidden" checked><span class="track"><span class="knob"></span></span></label>
         </div>
-        <div><label class="lbl">Business ka Naam (bill par yehi chhape ga)</label><input id="setBizName" class="field"></div>
-        <div><label class="lbl">Phone Numbers (bill par)</label><input id="setBizPhones" class="field" placeholder="03xx-xxxxxxx, 03xx-xxxxxxx"></div>
-        <div><label class="lbl">Address (bill par)</label><input id="setBizAddress" class="field"></div>
+        <div><label class="lbl">Business ka Naam</label><input id="setBizName" class="field"></div>
+        <div><label class="lbl">Phone Numbers</label><input id="setBizPhones" class="field"></div>
+        <div><label class="lbl">Address</label><input id="setBizAddress" class="field"></div>
         <div>
-          <label class="lbl">Bill Contacts (naam ke saath — bill par aise hi chhapen ge)</label>
+          <label class="lbl">Bill Contacts</label>
           <div id="contactRows" class="space-y-2"></div>
           <button type="button" id="btnAddContact" class="btn-cream w-full py-2 text-sm mt-2">+ Contact add karein</button>
         </div>
-        <div><label class="lbl">Upar wala naam (baghair number ke — bill par naam hi aye ga)</label><input id="setNameLine" class="field"></div>
+        <div><label class="lbl">Upar wala Naam</label><input id="setNameLine" class="field"></div>
         <button id="btnSaveProfile" class="btn-brand w-full py-2.5">Profile Save karein</button>
       </div>
       <div class="card p-4 space-y-2 mb-4 lg:max-w-3xl">
@@ -1074,10 +1074,10 @@ function saleLineRowHTML(l) {
       <button type="button" class="sl-remove btn-cream px-3 shrink-0" style="align-self:flex-end;padding-top:10px;padding-bottom:10px" title="Item hataein">✕</button>
     </div>
     <div class="grid grid-cols-2 gap-2">
-      <div><label class="lbl">Quantity (pcs)</label><input type="number" class="field sl-qty" min="0" step="any" value="${esc(l.qty ?? '')}" placeholder="80"></div>
-      <div><label class="lbl">Sale Rate (per pc)</label><input type="number" class="field sl-rate" min="0" step="any" value="${esc(l.rate ?? '')}" placeholder="1200"></div>
+      <div><label class="lbl">Quantity</label><input type="number" class="field sl-qty" min="0" step="any" value="${esc(l.qty ?? '')}"></div>
+      <div><label class="lbl">Rate</label><input type="number" class="field sl-rate" min="0" step="any" value="${esc(l.rate ?? '')}"></div>
     </div>
-    <div><label class="lbl">Lot (khud chunna ho to)</label><select class="field sl-lot">${lotOptions(pid, l.lotId || '')}</select></div>
+    <div><label class="lbl">Lot</label><select class="field sl-lot">${lotOptions(pid, l.lotId || '')}</select></div>
     <div class="sl-calc text-sm"></div>
   </div>`;
 }
@@ -1108,7 +1108,7 @@ function buildEntryForm() {
   const t = entryDraft.type, v = entryDraft.values || {};
   $('entryModalTitle').textContent = 'Nayi Entry — ' + (TYPE_META[t] ? TYPE_META[t].label : t);
   const dateF = `<div><label class="lbl">Tareekh</label><input type="date" id="f_date" class="field" value="${esc(v.f_date || selectedDate)}"></div>`;
-  const noteF = `<div><label class="lbl">Note (ikhtiyari)</label><input id="f_note" class="field" placeholder="Koi tafseel..." value="${esc(v.f_note || '')}"></div>`;
+  const noteF = `<div><label class="lbl">Note</label><input id="f_note" class="field" value="${esc(v.f_note || '')}"></div>`;
   let html = dateF;
   if (t === 'sale') {
     const initLines = (Array.isArray(v.saleLines) && v.saleLines.length) ? v.saleLines
@@ -1116,21 +1116,20 @@ function buildEntryForm() {
     html += `<div><label class="lbl">Buyer / Client</label><select id="f_party" class="field">${partyOptions('buyer', v.f_party)}</select></div>
     <div id="saleLines" class="space-y-2">${initLines.map(saleLineRowHTML).join('')}</div>
     <button type="button" id="btnAddSaleLine" class="btn-cream w-full py-2 text-sm">+ Item add karein</button>
-    <div><label class="lbl">Abhi Wasool Hua (Advance / Cash)</label><input type="number" id="f_paid" class="field" min="0" step="any" value="${esc(v.f_paid || '0')}"></div>` + noteF;
+    <div><label class="lbl">Wasool Hua</label><input type="number" id="f_paid" class="field" min="0" step="any" value="${esc(v.f_paid || '0')}"></div>` + noteF;
   } else if (t === 'purchase') {
     html += `<div><label class="lbl">Seller / Supplier</label><select id="f_party" class="field">${partyOptions('seller', v.f_party)}</select></div>
     <div><label class="lbl">Product</label><select id="f_product" class="field">${productOptions(v.f_product || entryDraft.presetProductId)}</select></div>
     <div class="grid grid-cols-2 gap-2">
-      <div><label class="lbl">Quantity (pcs)</label><input type="number" id="f_qty" class="field" min="0" step="any" value="${esc(v.f_qty || '')}" placeholder="100"></div>
-      <div><label class="lbl">Purchase Rate (per pc)</label><input type="number" id="f_rate" class="field" min="0" step="any" value="${esc(v.f_rate || '')}" placeholder="1000"></div>
+      <div><label class="lbl">Quantity</label><input type="number" id="f_qty" class="field" min="0" step="any" value="${esc(v.f_qty || '')}"></div>
+      <div><label class="lbl">Rate</label><input type="number" id="f_rate" class="field" min="0" step="any" value="${esc(v.f_rate || '')}"></div>
     </div>
-    <div><label class="lbl">Abhi Ada Kiya (Advance / Cash)</label><input type="number" id="f_paid" class="field" min="0" step="any" value="${esc(v.f_paid || '0')}"></div>` + noteF +
-    `<p class="text-xs text-gray-400">Ye purchase aik naya <b>Lot</b> banayegi apne rate ke saath — purane lot se mix nahi hogi.</p>`;
+    <div><label class="lbl">Ada Kiya</label><input type="number" id="f_paid" class="field" min="0" step="any" value="${esc(v.f_paid || '0')}"></div>` + noteF;
   } else if (t === 'payment_received') {
-    html += `<div><label class="lbl">Buyer / Client (kis se paisa aya)</label><select id="f_party" class="field">${partyOptions('buyer', v.f_party)}</select></div>
+    html += `<div><label class="lbl">Buyer / Client</label><select id="f_party" class="field">${partyOptions('buyer', v.f_party)}</select></div>
     <div><label class="lbl">Rakam</label><input type="number" id="f_amount" class="field" min="0" step="any" value="${esc(v.f_amount || '')}"></div>` + noteF;
   } else if (t === 'payment_given') {
-    html += `<div><label class="lbl">Seller / Supplier (kis ko paisa diya)</label><select id="f_party" class="field">${partyOptions('seller', v.f_party)}</select></div>
+    html += `<div><label class="lbl">Seller / Supplier</label><select id="f_party" class="field">${partyOptions('seller', v.f_party)}</select></div>
     <div><label class="lbl">Rakam</label><input type="number" id="f_amount" class="field" min="0" step="any" value="${esc(v.f_amount || '')}"></div>` + noteF;
   } else if (t === 'expense') {
     html += `<div><label class="lbl">Kharcha Head</label><select id="f_account" class="field">${accountOptions(v.f_account)}</select></div>
@@ -1272,14 +1271,14 @@ function buildAddForm(existing) {
   const codes = kind === 'product' ? S.data.products.map(x => x.code) : kind === 'account' ? S.data.accounts.map(x => x.code)
     : S.data.parties.filter(x => x.type === kind).map(x => x.code);
   $('addModalTitle').textContent = titleFor(kind, edit) + (edit ? ' — ' + esc(ex.code || '') : '');
-  let html = `<div><label class="lbl">Code (khud banta hai — dhundne mein asani ke liye)</label><input class="field" value="${esc(edit ? ex.code : nextCode(prefixFor(kind), codes))}" disabled></div>
-  <div><label class="lbl">Naam *</label><input id="a_name" class="field" value="${esc(ex.name || '')}" placeholder="Poora naam likhein"></div>`;
-  if (kind === 'buyer' || kind === 'seller') html += `<div><label class="lbl">Phone / WhatsApp</label><input id="a_phone" class="field" value="${esc(ex.phone || '')}" placeholder="03xx-xxxxxxx"></div>
+  let html = `<div><label class="lbl">Code</label><input class="field" value="${esc(edit ? ex.code : nextCode(prefixFor(kind), codes))}" disabled></div>
+  <div><label class="lbl">Naam</label><input id="a_name" class="field" value="${esc(ex.name || '')}"></div>`;
+  if (kind === 'buyer' || kind === 'seller') html += `<div><label class="lbl">Phone / WhatsApp</label><input id="a_phone" class="field" value="${esc(ex.phone || '')}"></div>
   <div><label class="lbl">Address / Sheher</label><input id="a_address" class="field" value="${esc(ex.address || '')}"></div>`;
   if (kind === 'product') html += `<div class="grid grid-cols-2 gap-2">
     <div><label class="lbl">Unit</label><input id="a_unit" class="field" value="${esc(ex.unit || 'pcs')}"></div>
-    <div><label class="lbl">Low-stock warning (pcs)</label><input type="number" id="a_low" class="field" value="${esc(ex.lowStock ?? 10)}"></div></div>`;
-  if (edit) html += `<button id="btnDeactivate" class="w-full py-2.5 text-sm font-bold rounded-xl mt-1" style="background:#fdecea;color:#c0392b">${kind === 'product' ? 'Product band karein (deactivate)' : 'Band karein (deactivate)'}</button>`;
+    <div><label class="lbl">Low-stock Warning</label><input type="number" id="a_low" class="field" value="${esc(ex.lowStock ?? 10)}"></div></div>`;
+  if (edit) html += `<button id="btnDeactivate" class="w-full py-2.5 text-sm font-bold rounded-xl mt-1" style="background:#fdecea;color:#c0392b">${kind === 'product' ? 'Product band karein' : 'Band karein'}</button>`;
   $('addFormFields').innerHTML = html;
   const deact = $('btnDeactivate');
   if (deact) deact.addEventListener('click', async () => {
@@ -1335,12 +1334,12 @@ function contactRowHTML(c) {
   c = c || { name: '', phone1: '', phone2: '' };
   return `<div class="contact-row space-y-2 rounded-xl p-2" style="border:1.5px solid #d8dee5">
     <div class="flex gap-2">
-      <input class="field c-name" placeholder="Naam" value="${esc(c.name || '')}">
-      <button type="button" class="c-remove btn-cream px-3 shrink-0" title="Contact hataein">✕</button>
+      <div class="flex-1"><label class="lbl">Naam</label><input class="field c-name" value="${esc(c.name || '')}"></div>
+      <button type="button" class="c-remove btn-cream px-3 shrink-0" style="align-self:flex-end" title="Contact hataein">✕</button>
     </div>
     <div class="flex gap-2">
-      <input class="field c-phone1" placeholder="Number 1" inputmode="tel" value="${esc(c.phone1 || '')}">
-      <input class="field c-phone2" placeholder="Number 2" inputmode="tel" value="${esc(c.phone2 || '')}">
+      <div class="flex-1"><label class="lbl">Number 1</label><input class="field c-phone1" inputmode="tel" value="${esc(c.phone1 || '')}"></div>
+      <div class="flex-1"><label class="lbl">Number 2</label><input class="field c-phone2" inputmode="tel" value="${esc(c.phone2 || '')}"></div>
     </div>
   </div>`;
 }
