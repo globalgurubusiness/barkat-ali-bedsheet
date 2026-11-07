@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Barkat Ali Bed Sheet — Roznamcha Khata</title>
+<meta name="description" content="Barkat Ali Bed Sheet, Multan — Roznamcha, Khata, Inventory aur Talpat ka mukammal hisaab system. Powered by Global Guru.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#53687f">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{ --brand:#53687f; --brand-dark:#3d4f63; --cream:#f5efe3; --cream2:#efe6d2; --gold:#b9975b; }
+  *{ -webkit-tap-highlight-color:transparent; }
+  body{ font-family:'Segoe UI',system-ui,-apple-system,sans-serif; background:var(--cream); color:#24303d; }
+  .brand-bg{ background:var(--brand); } .brand-dark-bg{ background:var(--brand-dark); }
+  .brand-text{ color:var(--brand); } .cream-bg{ background:var(--cream); } .cream2-bg{ background:var(--cream2); }
+  .card{ background:#fff; border-radius:16px; box-shadow:0 1px 4px rgba(61,79,99,.10); }
+  .btn-brand{ background:var(--brand); color:#fff; border-radius:12px; font-weight:600; transition:.15s; }
+  .btn-brand:active{ transform:scale(.97); background:var(--brand-dark); }
+  .btn-cream{ background:var(--cream2); color:var(--brand-dark); border-radius:12px; font-weight:600; }
+  .chip{ border-radius:999px; font-size:12px; font-weight:700; padding:3px 10px; }
+  .navbtn{ flex:1; padding:9px 2px; font-size:11px; font-weight:600; color:#7b8a9a; text-align:center; border-top:3px solid transparent; }
+  .navbtn.active{ color:var(--brand-dark); border-top-color:var(--brand); }
+  .navbtn .ic{ font-size:19px; display:block; line-height:1.1; }
+  input,select,textarea{ outline:none; }
+  input:focus,select:focus,textarea:focus{ border-color:var(--brand)!important; box-shadow:0 0 0 3px rgba(83,104,127,.18); }
+  .field{ width:100%; border:1.5px solid #d8dee5; border-radius:10px; padding:10px 12px; font-size:15px; background:#fff; }
+  .lbl{ font-size:12px; font-weight:700; color:#5a6b7d; margin-bottom:4px; display:block; letter-spacing:.02em; }
+  .modal-bg{ background:rgba(30,40,52,.55); backdrop-filter:blur(2px); }
+  .lotrow{ border-left:4px solid var(--gold); }
+  .lowstock{ background:#fdf0ec; border:1.5px solid #e8a08c; }
+  .toast{ position:fixed; left:50%; bottom:92px; transform:translateX(-50%); z-index:99; background:#24303d; color:#fff; padding:10px 18px; border-radius:999px; font-size:14px; font-weight:600; box-shadow:0 6px 20px rgba(0,0,0,.25); opacity:0; pointer-events:none; transition:.25s; max-width:92vw; text-align:center; }
+  .toast.show{ opacity:1; }
+  .entrycard{ border-left:5px solid var(--brand); }
+  .revcard{ border-left-color:#c0392b; opacity:.85; }
+  details.lots > summary{ cursor:pointer; list-style:none; } details.lots > summary::-webkit-details-marker{ display:none; }
+  @media print{
+    body *{ visibility:hidden; }
+    #printArea, #printArea *{ visibility:visible; }
+    #printArea{ position:absolute; inset:0; display:block!important; padding:16px; background:#fff; }
+  }
+</style>
+</head>
+<body class="min-h-screen pb-24">
+
+<!-- ============ LOGIN ============ -->
+<div id="loginScreen" class="min-h-screen flex flex-col items-center justify-center px-6 py-10">
+  <img id="loginLogo" alt="Barkat Ali Bed Sheet logo" class="w-36 h-auto rounded-3xl shadow-lg mb-4">
+  <h1 class="text-2xl font-extrabold brand-text text-center" id="loginBizName">Barkat Ali Bed Sheet</h1>
+  <p class="text-sm text-gray-500 text-center mt-1">Chungi No. 11, Nasir Wali Market, Shop No. 28, Multan</p>
+  <p class="text-sm font-semibold text-gray-600 text-center mt-3">Roznamcha &bull; Khata &bull; Inventory &bull; Talpat</p>
+  <div class="card w-full max-w-sm mt-7 p-5">
+    <button id="btnGoogleLogin" class="btn-brand w-full py-3.5 text-base flex items-center justify-center gap-2">
+      <span class="bg-white text-[#53687f] rounded-full w-6 h-6 flex items-center justify-center font-extrabold text-sm">G</span>
+      Google se Login karein
+    </button>
+    <p id="loginModeNote" class="text-xs text-gray-400 text-center mt-3"></p>
+    <button id="btnDemoLogin" class="btn-cream w-full py-3 mt-2 text-sm hidden">Demo Mode mein dekhein (bina login)</button>
+  </div>
+  <p class="text-[11px] text-gray-400 mt-8">Powered by <b>Global Guru</b></p>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="appScreen" class="hidden">
+  <header class="brand-bg text-white sticky top-0 z-40 shadow">
+    <div class="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
+      <img src="logo.jpg" alt="logo" class="w-10 h-10 rounded-xl object-cover bg-white">
+      <div class="flex-1 min-w-0">
+        <div class="font-extrabold leading-tight truncate" id="hdrBizName">Barkat Ali Bed Sheet</div>
+        <div class="text-[11px] text-white/75 leading-tight">Roznamcha Khata System &bull; Multan</div>
+      </div>
+      <span id="modeBadge" class="chip bg-white/20 text-white hidden">DEMO</span>
+      <button id="btnLogout" class="text-xs font-bold bg-white/15 rounded-lg px-3 py-2">Logout</button>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-3 sm:px-4">
+
+    <!-- ===== VIEW: ROZNAMCHA ===== -->
+    <section id="view-roznamcha" class="view pt-3">
+      <div class="card p-3 mb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">&#128269;</span>
+          <input id="searchBar" class="flex-1 text-base font-medium placeholder-gray-400" style="border:none;box-shadow:none!important"
+                 placeholder="Search: code, naam, phone, product, rakam...">
+          <button id="btnClearSearch" class="text-gray-400 font-bold px-2 hidden">&#10005;</button>
+        </div>
+      </div>
+
+      <div id="searchResultsWrap" class="hidden mb-3">
+        <div class="text-sm font-bold brand-text mb-2" id="searchResultsTitle"></div>
+        <div id="searchResults" class="space-y-2"></div>
+      </div>
+
+      <div id="roznamchaMain">
+        <div class="flex items-center gap-2 mb-3">
+          <button id="btnPrevDay" class="btn-cream px-3 py-2">&#8249;</button>
+          <input type="date" id="dayPicker" class="field flex-1 text-center font-bold">
+          <button id="btnNextDay" class="btn-cream px-3 py-2">&#8250;</button>
+          <button id="btnToday" class="btn-cream px-3 py-2 text-sm">Aaj</button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 mb-3" id="daySummary"></div>
+
+        <div class="text-sm font-bold brand-text mb-2">Nayi Entry — Roznamcha se</div>
+        <div class="grid grid-cols-4 gap-2 mb-4" id="entryTypeBtns"></div>
+
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-sm font-bold brand-text" id="dayEntriesTitle">Aaj ki Entries</div>
+          <button id="btnDailyReport" class="text-xs font-bold brand-text underline">Roz ki Report / Band</button>
+        </div>
+        <div id="dayEntries" class="space-y-2"></div>
+      </div>
+    </section>
+
+    <!-- ===== VIEW: KHATA ===== -->
+    <section id="view-khata" class="view hidden pt-3">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-lg font-extrabold brand-text">Khata (Ledger)</h2>
+        <button class="btn-brand px-3 py-2 text-sm" data-add="account">+ Add Hisab Head</button>
+      </div>
+      <p class="text-xs text-gray-500 mb-3">Roznamcha ki har entry khud-ba-khud yahan post hoti hai (Khatoni). Kisi khate par tap karein, statement khul jayega.</p>
+      <div class="card p-3 mb-3">
+        <input id="khataSearch" class="w-full text-base placeholder-gray-400" style="border:none" placeholder="Khata search: code ya naam...">
+      </div>
+      <div id="khataList" class="space-y-2"></div>
+      <div id="statementWrap" class="hidden mt-4"></div>
+    </section>
+
+    <!-- ===== VIEW: INVENTORY ===== -->
+    <section id="view-inventory" class="view hidden pt-3">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-lg font-extrabold brand-text">Inventory (Stock)</h2>
+        <button class="btn-brand px-3 py-2 text-sm" data-add="product">+ Add Product</button>
+      </div>
+      <div id="invSummary" class="grid grid-cols-2 gap-2 mb-3"></div>
+      <div class="card p-3 mb-3">
+        <input id="invSearch" class="w-full text-base placeholder-gray-400" style="border:none" placeholder="Product search: code ya naam...">
+      </div>
+      <div id="productList" class="space-y-2"></div>
+      <p class="text-xs text-gray-400 mt-3">Har purchase aik alag <b>Lot</b> banti hai apne rate ke saath. Sale FIFO se kategi — pehla lot pehle. Rate kabhi average nahi hota.</p>
+    </section>
+
+    <!-- ===== VIEW: BAQAYA + TALPAT ===== -->
+    <section id="view-baqaya" class="view hidden pt-3">
+      <h2 class="text-lg font-extrabold brand-text mb-2">Baqaya (Balances)</h2>
+      <div id="baqayaCards" class="grid grid-cols-2 gap-2 mb-3"></div>
+      <div id="baqayaList" class="space-y-2 mb-5"></div>
+      <h2 class="text-lg font-extrabold brand-text mb-2">Talpat (Trial Balance)</h2>
+      <div class="card overflow-hidden mb-3">
+        <table class="w-full text-sm">
+          <thead><tr class="cream2-bg text-left">
+            <th class="p-3 font-bold">Khata</th>
+            <th class="p-3 font-bold text-right">Naame (Dr)</th>
+            <th class="p-3 font-bold text-right">Jama (Cr)</th>
+          </tr></thead>
+          <tbody id="talpatBody"></tbody>
+          <tfoot id="talpatFoot"></tfoot>
+        </table>
+      </div>
+      <div id="talpatStatus" class="mb-4"></div>
+    </section>
+
+    <!-- ===== VIEW: PARTIES ===== -->
+    <section id="view-parties" class="view hidden pt-3">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-lg font-extrabold brand-text">Buyers &amp; Sellers</h2>
+      </div>
+      <div class="grid grid-cols-2 gap-2 mb-3">
+        <button class="btn-brand py-2.5 text-sm" data-add="buyer">+ Add Buyer (B-)</button>
+        <button class="btn-brand py-2.5 text-sm" data-add="seller">+ Add Seller (S-)</button>
+      </div>
+      <div class="card p-3 mb-3">
+        <input id="partySearch" class="w-full text-base placeholder-gray-400" style="border:none" placeholder="Search: code, naam, phone...">
+      </div>
+      <div class="text-sm font-bold brand-text mb-2">Buyers / Clients</div>
+      <div id="buyerList" class="space-y-2 mb-4"></div>
+      <div class="text-sm font-bold brand-text mb-2">Sellers / Suppliers</div>
+      <div id="sellerList" class="space-y-2"></div>
+    </section>
+
+    <!-- ===== VIEW: MORE (Aakhri Hisaab + Settings) ===== -->
+    <section id="view-more" class="view hidden pt-3">
+      <h2 class="text-lg font-extrabold brand-text mb-2">Aakhri Hisaab (Final Accounts)</h2>
+      <div id="pnlWrap" class="mb-5"></div>
+      <h2 class="text-lg font-extrabold brand-text mb-2">Settings</h2>
+      <div class="card p-4 space-y-3 mb-4">
+        <div><label class="lbl">Business ka Naam (bill par yehi chhape ga)</label><input id="setBizName" class="field"></div>
+        <div><label class="lbl">Phone Numbers (bill par)</label><input id="setBizPhones" class="field" placeholder="03xx-xxxxxxx, 03xx-xxxxxxx"></div>
+        <div><label class="lbl">Address (bill par)</label><input id="setBizAddress" class="field"></div>
+        <button id="btnSaveProfile" class="btn-brand w-full py-2.5">Profile Save karein</button>
+      </div>
+      <div class="card p-4 space-y-2 mb-4">
+        <div class="font-bold text-sm brand-text">Data Backup</div>
+        <button id="btnExport" class="btn-cream w-full py-2.5 text-sm">Poora Data Export (JSON)</button>
+        <label class="btn-cream w-full py-2.5 text-sm block text-center cursor-pointer">Backup Import (JSON)<input id="fileImport" type="file" accept=".json" class="hidden"></label>
+        <button id="btnResetDemo" class="btn-cream w-full py-2.5 text-sm hidden" style="color:#c0392b">Demo Data Saaf karein</button>
+      </div>
+      <p class="text-[11px] text-gray-400 text-center pb-4">Barkat Ali Bed Sheet &bull; Roznamcha Khata System<br>Powered by <b>Global Guru</b></p>
+    </section>
+  </main>
+
+  <nav class="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-2px_10px_rgba(0,0,0,.08)] z-40">
+    <div class="max-w-3xl mx-auto flex">
+      <button class="navbtn active" data-view="roznamcha"><span class="ic">&#128214;</span>Roznamcha</button>
+      <button class="navbtn" data-view="khata"><span class="ic">&#128210;</span>Khata</button>
+      <button class="navbtn" data-view="inventory"><span class="ic">&#128230;</span>Inventory</button>
+      <button class="navbtn" data-view="baqaya"><span class="ic">&#9878;</span>Baqaya/Talpat</button>
+      <button class="navbtn" data-view="parties"><span class="ic">&#128101;</span>Parties</button>
+      <button class="navbtn" data-view="more"><span class="ic">&#128176;</span>Aakhri Hisaab</button>
+    </div>
+  </nav>
+</div>
+
+<!-- ============ ENTRY MODAL ============ -->
+<div id="entryModal" class="hidden fixed inset-0 z-50 modal-bg flex items-end sm:items-center justify-center">
+  <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[92vh] overflow-y-auto p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-lg font-extrabold brand-text" id="entryModalTitle">Nayi Entry</h3>
+      <button class="text-gray-400 text-2xl font-bold px-2" data-close="entryModal">&times;</button>
+    </div>
+    <div id="entryFormFields" class="space-y-3"></div>
+    <div id="entryCalcBox" class="cream-bg rounded-xl p-3 text-sm font-semibold brand-text hidden"></div>
+    <button id="btnSaveEntry" class="btn-brand w-full py-3.5 mt-4 text-base">Entry Save karein</button>
+    <p class="text-[11px] text-gray-400 text-center mt-2">Save ki hui entry edit/delete nahi hoti. Ghalti ho to Correction (ulti entry) lage gi — dono entries nazar ayengi.</p>
+  </div>
+</div>
+
+<!-- ============ ADD MASTER MODAL (party/product/account) ============ -->
+<div id="addModal" class="hidden fixed inset-0 z-50 modal-bg flex items-end sm:items-center justify-center">
+  <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[92vh] overflow-y-auto p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-lg font-extrabold brand-text" id="addModalTitle">Add</h3>
+      <button class="text-gray-400 text-2xl font-bold px-2" data-close="addModal">&times;</button>
+    </div>
+    <div id="addFormFields" class="space-y-3"></div>
+    <button id="btnSaveAdd" class="btn-brand w-full py-3.5 mt-4 text-base">Save karein</button>
+  </div>
+</div>
+
+<!-- ============ DAILY REPORT MODAL ============ -->
+<div id="reportModal" class="hidden fixed inset-0 z-50 modal-bg flex items-end sm:items-center justify-center">
+  <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[92vh] overflow-y-auto p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-lg font-extrabold brand-text" id="reportTitle">Roz ki Report</h3>
+      <button class="text-gray-400 text-2xl font-bold px-2" data-close="reportModal">&times;</button>
+    </div>
+    <div id="reportBody" class="space-y-2 text-sm"></div>
+    <button class="btn-cream w-full py-3 mt-4" onclick="window.printReport()">Print karein</button>
+  </div>
+</div>
+
+<div id="printArea" class="hidden"></div>
+<div id="toast" class="toast"></div>
+
+<script id="core-logic">
+/* =====================================================================
+   BARKAT ALI BED SHEET — CORE HISAB LOGIC (pure, no DOM / no Firebase)
+   Roznamcha entry = Single Source of Truth.
+   Isi se Khata (Khatoni), Baqaya, Talpat, Inventory (Lot/FIFO),
+   Galla (Cash) aur Aakhri Hisaab (P&L) — sab derive hota hai.
+   ===================================================================== */
+const BA_CORE = (() => {
+  const r2 = n => Math.round(((+n) || 0) * 100) / 100;
+  const fmtRs = n => 'Rs ' + (Math.round((+n) || 0)).toLocaleString('en-IN');
+
+  function nextCode(prefix, existingCodes) {
+    let max = 0;
+    (existingCodes || []).forEach(c => {
+      const m = String(c || '').match(/(\d+)\s*$/);
+      if (m) max = Math.max(max, parseInt(m[1], 10));
+    });
+    return prefix + String(max + 1).padStart(3, '0');
+  }
+
+  // Sirf woh entries jo hisaab mein ginni hain: reversed aur reversal dono bahar
+  // (dono Roznamcha mein nazar aati hain, lekin jora aik dusre ko khatam kar deta hai)
+  function activeEntries(entries) {
+    return (entries || []).filter(e => !e.isReversal && e.status !== 'reversed');
+  }
+  function bySeq(entries) {
+    return entries.slice().sort((a, b) =>
+      (a.date < b.date ? -1 : a.date > b.date ? 1 : 0) || ((a.seq || 0) - (b.seq || 0)));
+  }
+
+  // FIFO allocation: lotStates = [{lotId, rate, remaining, seq}] (purana pehle)
+  function allocateFIFO(lotStates, qty, overrideLotId) {
+    let need = +qty || 0;
+    const alloc = [];
+    const take = ls => {
+      if (need <= 0 || !ls || ls.remaining <= 0) return;
+      const q = Math.min(need, ls.remaining);
+      alloc.push({ lotId: ls.lotId, qty: q, rate: ls.rate });
+      need = r2(need - q);
+    };
+    if (overrideLotId) take(lotStates.find(l => l.lotId === overrideLotId));
+    for (const ls of lotStates) { if (need <= 0) break; if (overrideLotId && ls.lotId === overrideLotId) continue; take(ls); }
+    if (need > 0) return { ok: false, shortBy: need, alloc };
+    return { ok: true, alloc, cost: r2(alloc.reduce((s, a) => s + a.qty * a.rate, 0)) };
+  }
+
+  /* Poora derived hisaab aik hi jagah se.
+     state = { entries:[], parties:[], products:[], accounts:[] }
+     party:  {id, code, type:'buyer'|'seller', name, phone}
+     account(head): {id, code, name}  (kharcha heads waghera)             */
+  function computeDerived(state) {
+    const entries = bySeq(activeEntries(state.entries));
+    const postings = [];   // {entryId, code, date, seq, account, dr, cr, note}
+    const P = (e, account, dr, cr, note) => {
+      if (!dr && !cr) return;
+      postings.push({ entryId: e.id, code: e.code, date: e.date, seq: e.seq || 0, account, dr: r2(dr), cr: r2(cr), note: note || '' });
+    };
+    const lots = {};       // lotId -> {lotId, entryId, code, productId, rate, qtyIn, sold, remaining, date, seq}
+    const salesInfo = {};  // entryId -> {cost, profit, alloc}
+
+    for (const e of entries) {
+      const total = r2(e.total);
+      if (e.type === 'purchase') {
+        const paid = r2(e.amountPaid);
+        P(e, 'stock', total, 0, 'Purchase ' + (e.productName || ''));
+        if (total - paid > 0) P(e, 'party:' + e.partyId, 0, total - paid, 'Purchase udhaar');
+        if (paid > 0) P(e, 'cash', 0, paid, 'Purchase par advance/paid');
+        lots[e.id] = { lotId: e.id, entryId: e.id, code: e.code, productId: e.productId, rate: r2(e.rate), qtyIn: +e.qty || 0, sold: 0, remaining: +e.qty || 0, date: e.date, seq: e.seq || 0 };
+      } else if (e.type === 'sale') {
+        const received = r2(e.amountReceived);
+        if (total - received > 0) P(e, 'party:' + e.partyId, total - received, 0, 'Sale udhaar');
+        if (received > 0) P(e, 'cash', received, 0, 'Sale par wasooli');
+        P(e, 'sales', 0, total, 'Sale ' + (e.productName || ''));
+        // FIFO se lot deduction (agar allocations pehle se mehfooz hain to wohi, warna abhi banao)
+        const prodLots = Object.values(lots).filter(l => l.productId === e.productId && l.remaining > 0)
+          .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0) || (a.seq - b.seq));
+        let alloc = (e.allocations && e.allocations.length) ? e.allocations : null;
+        if (!alloc) { const plan = allocateFIFO(prodLots, +e.qty || 0, e.overrideLotId); alloc = plan.alloc; }
+        let cost = 0;
+        for (const a of alloc) {
+          const lot = lots[a.lotId]; if (!lot) continue;
+          lot.sold = r2(lot.sold + a.qty); lot.remaining = r2(lot.qtyIn - lot.sold);
+          cost = r2(cost + a.qty * a.rate);
+        }
+        if (cost > 0) { P(e, 'cogs', cost, 0, 'Bikey hue maal ki laagat'); P(e, 'stock', 0, cost, 'Stock se kata'); }
+        salesInfo[e.id] = { cost, profit: r2(total - cost), alloc };
+      } else if (e.type === 'payment_received') {
+        P(e, 'cash', total, 0, 'Wasooli'); P(e, 'party:' + e.partyId, 0, total, 'Wasooli');
+      } else if (e.type === 'payment_given') {
+        P(e, 'party:' + e.partyId, total, 0, 'Adaigi'); P(e, 'cash', 0, total, 'Adaigi');
+      } else if (e.type === 'expense') {
+        P(e, 'acct:' + e.accountId, total, 0, e.note || 'Kharcha'); P(e, 'cash', 0, total, 'Kharcha');
+      } else if (e.type === 'capital') {
+        P(e, 'cash', total, 0, 'Owner ne paisa diya'); P(e, 'capital', 0, total, 'Sarmaya');
+      } else if (e.type === 'drawing') {
+        P(e, 'drawing', total, 0, 'Owner ne paisa nikala'); P(e, 'cash', 0, total, 'Owner ne nikala');
+      }
+    }
+
+    // Account balances: balance = Dr - Cr
+    const accBal = {};
+    for (const p of postings) { accBal[p.account] = r2((accBal[p.account] || 0) + p.dr - p.cr); }
+
+    // Talpat: Dr side = positive balance, Cr side = negative balance ka ulta
+    const talpat = Object.keys(accBal).filter(k => Math.abs(accBal[k]) > 0.004)
+      .map(k => ({ account: k, balance: accBal[k], dr: accBal[k] > 0 ? accBal[k] : 0, cr: accBal[k] < 0 ? -accBal[k] : 0 }));
+    const talpatDr = r2(talpat.reduce((s, t) => s + t.dr, 0));
+    const talpatCr = r2(talpat.reduce((s, t) => s + t.cr, 0));
+
+    // Inventory per product
+    const inventory = {};
+    for (const l of Object.values(lots)) {
+      const inv = inventory[l.productId] || (inventory[l.productId] = { productId: l.productId, qtyIn: 0, sold: 0, remaining: 0, value: 0, lots: [] });
+      inv.qtyIn += l.qtyIn; inv.sold = r2(inv.sold + l.sold); inv.remaining = r2(inv.remaining + l.remaining);
+      inv.value = r2(inv.value + l.remaining * l.rate); inv.lots.push(l);
+    }
+    Object.values(inventory).forEach(inv => inv.lots.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0) || (a.seq - b.seq)));
+
+    // Party balances (balance = Lena - Dena net Dr)
+    const partyBalances = {};
+    (state.parties || []).forEach(p => { partyBalances[p.id] = accBal['party:' + p.id] || 0; });
+
+    // Aakhri Hisaab (P&L)
+    const salesRevenue = r2(-(accBal['sales'] || 0));
+    const cogs = r2(accBal['cogs'] || 0);
+    let expenses = 0; Object.keys(accBal).forEach(k => { if (k.startsWith('acct:')) expenses = r2(expenses + accBal[k]); });
+    const grossProfit = r2(salesRevenue - cogs);
+    const netProfit = r2(grossProfit - expenses);
+
+    return {
+      postings, lots, salesInfo, accBal, talpat, talpatDr, talpatCr,
+      talpatBalanced: Math.abs(talpatDr - talpatCr) < 0.01,
+      inventory, partyBalances,
+      cashBalance: r2(accBal['cash'] || 0),
+      stockValue: r2(Object.values(inventory).reduce((s, i) => s + i.value, 0)),
+      pnl: { salesRevenue, cogs, grossProfit, expenses, netProfit },
+      capital: r2(-(accBal['capital'] || 0)), drawing: r2(accBal['drawing'] || 0)
+    };
+  }
+
+  // Sale ki planning save se pehle: stock check + FIFO allocations + cost/profit andaza
+  function planSale(state, productId, qty, overrideLotId) {
+    const d = computeDerived(state);
+    const inv = d.inventory[productId];
+    const lotStates = inv ? inv.lots.filter(l => l.remaining > 0) : [];
+    const plan = allocateFIFO(lotStates, qty, overrideLotId);
+    return { ...plan, available: inv ? inv.remaining : 0, derived: d };
+  }
+
+  // Kisi din ka khulasa (Roznamcha home + roz ki report)
+  function dailySummary(state, date) {
+    const d = computeDerived(state);
+    const day = activeEntries(state.entries).filter(e => e.date === date);
+    let sale = 0, purchase = 0, wasooli = 0, adaigi = 0, kharcha = 0, profit = 0, cashIn = 0, cashOut = 0;
+    for (const e of day) {
+      const t = r2(e.total);
+      if (e.type === 'sale') { sale = r2(sale + t); wasooli = r2(wasooli + (e.amountReceived || 0)); profit = r2(profit + (d.salesInfo[e.id] ? d.salesInfo[e.id].profit : 0)); }
+      if (e.type === 'purchase') { purchase = r2(purchase + t); adaigi = r2(adaigi + (e.amountPaid || 0)); }
+      if (e.type === 'payment_received') wasooli = r2(wasooli + t);
+      if (e.type === 'payment_given') adaigi = r2(adaigi + t);
+      if (e.type === 'expense') kharcha = r2(kharcha + t);
+    }
+    for (const p of d.postings) if (p.account === 'cash' && p.date === date) { cashIn = r2(cashIn + p.dr); cashOut = r2(cashOut + p.cr); }
+    return { date, entries: day.length, sale, purchase, wasooli, adaigi, kharcha, profit, cashIn, cashOut, cashNet: r2(cashIn - cashOut), gallaTotal: d.cashBalance };
+  }
+
+  return { r2, fmtRs, nextCode, activeEntries, allocateFIFO, computeDerived, planSale, dailySummary };
+})();
+if (typeof module !== 'undefined' && module.exports) module.exports = BA_CORE;
+</script>
+
+<script>
+/* =====================================================================
+   APP SETTINGS — sirf ye do jagah badalti hain:
+   1) APP_NAME: business ka display naam (logo par "Barket Ali" aur bill
+      par "Barkat Ali" hai — final spelling yahin se aik line mein badle gi)
+   2) firebaseConfig: asal Firebase project ki values yahan paste hongi.
+      Jab tak values placeholder hain, app DEMO MODE (localStorage) mein
+      chalegi — poora hisaab waisa hi hoga, data sirf is browser mein rahe ga.
+   ===================================================================== */
+const APP_NAME = 'Barkat Ali Bed Sheet';
+const firebaseConfig = {
+  apiKey: "AIzaSyDtU4QMil8ba2H8fv9V7uiCOfoN2kQkOSw",
+  authDomain: "barkat-ali-bed-sheet.firebaseapp.com",
+  projectId: "barkat-ali-bed-sheet",
+  storageBucket: "barkat-ali-bed-sheet.firebasestorage.app",
+  messagingSenderId: "36416253966",
+  appId: "1:36416253966:web:9abfb166b2c33fd25ecc5f"
+};
+const CONFIG_IS_PLACEHOLDER = String(firebaseConfig.apiKey).includes('PASTE_');
+const LOGO_B64 = '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';
+const { r2, fmtRs, nextCode } = BA_CORE;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+let toastTimer = null;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2600); }
+
+const DEFAULT_PROFILE = { name: APP_NAME, phones: '', address: 'Chungi No. 11, Nasir Wali Market, Shop No. 28, Multan' };
+const SEED_PRODUCTS = ['Khes', 'Dari', 'Kambal', 'Crystal', 'Diamond'];
+const SEED_ACCOUNTS = ['Kirya / Transport', 'Mazdoori', 'Chai / Khana', 'Dukkan Kharcha', 'Deegar Kharcha'];
+
+let S = { mode: 'none', uid: null, data: { parties: [], products: [], accounts: [], entries: [], profile: { ...DEFAULT_PROFILE } }, derived: null };
+let selectedDate = todayStr();
+let fb = null;          // firebase handles (mode === 'firebase' par)
+let unsubs = [];
+
+function seedMasters(data) {
+  if (!data.products.length) data.products = SEED_PRODUCTS.map((n, i) => ({ id: genId() + i, code: 'P-' + String(i + 1).padStart(3, '0'), name: n, unit: 'pcs', lowStock: 10, active: true }));
+  if (!data.accounts.length) data.accounts = SEED_ACCOUNTS.map((n, i) => ({ id: genId() + 'a' + i, code: 'A-' + String(i + 1).padStart(3, '0'), name: n, active: true }));
+}
+
+/* ---------------- STORE (demo = localStorage, firebase = Firestore) ---------------- */
+const LS_KEY = 'barkatali_demo_v1';
+const Store = {
+  loadDemo() {
+    try { const raw = localStorage.getItem(LS_KEY); if (raw) { S.data = JSON.parse(raw); return; } } catch (e) {}
+    S.data = { parties: [], products: [], accounts: [], entries: [], profile: { ...DEFAULT_PROFILE } };
+    seedMasters(S.data); Store.saveDemo();
+  },
+  saveDemo() { try { localStorage.setItem(LS_KEY, JSON.stringify(S.data)); } catch (e) {} },
+  async addMaster(coll, obj) {
+    if (S.mode === 'demo') { S.data[coll].push(obj); Store.saveDemo(); renderAll(); }
+    else { const { doc, setDoc } = fb.fs; await setDoc(doc(fb.db, 'users', S.uid, coll, obj.id), obj); }
+  },
+  async updateMaster(coll, id, patch) {
+    if (S.mode === 'demo') { const o = S.data[coll].find(x => x.id === id); if (o) Object.assign(o, patch); Store.saveDemo(); renderAll(); }
+    else { const { doc, setDoc } = fb.fs; await setDoc(doc(fb.db, 'users', S.uid, coll, id), patch, { merge: true }); }
+  },
+  async removeMaster(coll, id) {
+    if (S.mode === 'demo') { S.data[coll] = S.data[coll].filter(x => x.id !== id); Store.saveDemo(); renderAll(); }
+    else { const { doc, deleteDoc } = fb.fs; await deleteDoc(doc(fb.db, 'users', S.uid, coll, id)); }
+  },
+  async addEntry(e) {
+    if (S.mode === 'demo') { S.data.entries.push(e); Store.saveDemo(); renderAll(); }
+    else { const { doc, setDoc } = fb.fs; await setDoc(doc(fb.db, 'users', S.uid, 'entries', e.id), e); }
+  },
+  async saveProfile(p) {
+    S.data.profile = p;
+    if (S.mode === 'demo') { Store.saveDemo(); renderAll(); }
+    else { const { doc, setDoc } = fb.fs; await setDoc(doc(fb.db, 'users', S.uid, 'profile', 'main'), p); }
+  },
+  async replaceAll(data) { // backup import
+    if (S.mode === 'demo') { S.data = data; Store.saveDemo(); renderAll(); return; }
+    const { doc, setDoc } = fb.fs;
+    for (const coll of ['parties', 'products', 'accounts', 'entries'])
+      for (const o of (data[coll] || [])) await setDoc(doc(fb.db, 'users', S.uid, coll, o.id), o);
+    await Store.saveProfile(data.profile || { ...DEFAULT_PROFILE });
+  }
+};
+
+/* ---------------- FIREBASE INIT + LOGIN ---------------- */
+async function initFirebase() {
+  const appMod = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js');
+  const authMod = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js');
+  const fsMod = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+  const app = appMod.initializeApp(firebaseConfig);
+  const auth = authMod.getAuth(app);
+  const db = fsMod.getFirestore(app);
+  try { await fsMod.enableIndexedDbPersistence(db); } catch (e) { /* multi-tab waghera par ignore */ }
+  fb = { app, auth, db, authMod, fs: fsMod };
+  authMod.getRedirectResult(auth).catch(() => {});
+  authMod.onAuthStateChanged(auth, user => {
+    if (user) { S.mode = 'firebase'; S.uid = user.uid; subscribeFirestore(); enterApp(); }
+  });
+}
+function subscribeFirestore() {
+  unsubs.forEach(u => u()); unsubs = [];
+  const { collection, onSnapshot, doc } = fb.fs;
+  const bind = (coll, key) => {
+    unsubs.push(onSnapshot(collection(fb.db, 'users', S.uid, coll), snap => {
+      S.data[key] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (key === 'products' || key === 'accounts') { /* seed sirf bilkul khali account par */ }
+      renderAll();
+    }, err => toast('Data load error: ' + err.message)));
+  };
+  bind('parties', 'parties'); bind('products', 'products'); bind('accounts', 'accounts'); bind('entries', 'entries');
+  unsubs.push(onSnapshot(doc(fb.db, 'users', S.uid, 'profile', 'main'), snap => {
+    if (snap.exists()) { S.data.profile = { ...DEFAULT_PROFILE, ...snap.data() }; applyProfile(); }
+  }));
+  // Pehli dafa: seed products/accounts agar dono khali hain aur entries bhi nahi
+  setTimeout(async () => {
+    if (S.mode === 'firebase' && !S.data.products.length && !S.data.entries.length) {
+      const seed = { parties: [], products: [], accounts: [], entries: [], profile: { ...DEFAULT_PROFILE } };
+      seedMasters(seed);
+      for (const p of seed.products) await Store.addMaster('products', p);
+      for (const a of seed.accounts) await Store.addMaster('accounts', a);
+    }
+  }, 2500);
+}
+async function googleLogin() {
+  if (CONFIG_IS_PLACEHOLDER) { toast('Firebase config abhi placeholder hai — Demo Mode chal raha hai'); enterDemo(); return; }
+  if (!fb) { toast('Firebase load nahi hua — page refresh karein ya Demo Mode use karein'); return; }
+  const provider = new fb.authMod.GoogleAuthProvider();
+  try { await fb.authMod.signInWithPopup(fb.auth, provider); }
+  catch (e) { try { await fb.authMod.signInWithRedirect(fb.auth, provider); } catch (e2) { toast('Login error: ' + e2.message); } }
+}
+function enterDemo() { S.mode = 'demo'; S.uid = 'demo'; Store.loadDemo(); enterApp(); }
+function enterApp() {
+  $('loginScreen').classList.add('hidden'); $('appScreen').classList.remove('hidden');
+  $('modeBadge').classList.toggle('hidden', S.mode !== 'demo');
+  $('btnResetDemo').classList.toggle('hidden', S.mode !== 'demo');
+  applyProfile(); renderAll();
+}
+async function logout() {
+  if (S.mode === 'firebase' && fb) { try { await fb.authMod.signOut(fb.auth); } catch (e) {} }
+  unsubs.forEach(u => u()); unsubs = [];
+  S.mode = 'none'; S.uid = null;
+  $('appScreen').classList.add('hidden'); $('loginScreen').classList.remove('hidden');
+}
+function applyProfile() {
+  const p = S.data.profile || DEFAULT_PROFILE;
+  $('hdrBizName').textContent = p.name || APP_NAME; $('loginBizName').textContent = p.name || APP_NAME;
+  $('setBizName').value = p.name || ''; $('setBizPhones').value = p.phones || ''; $('setBizAddress').value = p.address || '';
+}
+</script>
+
+<script>
+/* ================= RENDER — sab views isi derived data se bante hain ================= */
+const partyById = id => S.data.parties.find(p => p.id === id);
+const productById = id => S.data.products.find(p => p.id === id);
+const accountById = id => S.data.accounts.find(a => a.id === id);
+const TYPE_META = {
+  sale:             { label: 'Sale (Bikri)',        color: '#2e7d4f', icon: '&#128722;' },
+  purchase:         { label: 'Purchase (Khareed)',  color: '#53687f', icon: '&#128230;' },
+  payment_received: { label: 'Wasooli (Paisa Aya)', color: '#1f8a70', icon: '&#11015;' },
+  payment_given:    { label: 'Adaigi (Paisa Diya)', color: '#b06a00', icon: '&#11014;' },
+  expense:          { label: 'Kharcha',             color: '#a03b3b', icon: '&#129534;' },
+  capital:          { label: 'Sarmaya Jama',        color: '#5b5bd6', icon: '&#128176;' },
+  drawing:          { label: 'Owner ne Nikala',     color: '#7a4b9e', icon: '&#128176;' }
+};
+function derived() { if (!S.derived) S.derived = BA_CORE.computeDerived(S.data); return S.derived; }
+function partyBalanceText(p) {
+  const d = derived(); const bal = d.partyBalances[p.id] || 0;
+  if (p.type === 'buyer') return bal > 0.5 ? `<span class="text-red-600 font-bold">Lena: ${fmtRs(bal)}</span>` : bal < -0.5 ? `<span class="text-green-700 font-bold">Advance: ${fmtRs(-bal)}</span>` : '<span class="text-gray-400">Hisaab saaf</span>';
+  return bal < -0.5 ? `<span class="text-red-600 font-bold">Dena: ${fmtRs(-bal)}</span>` : bal > 0.5 ? `<span class="text-green-700 font-bold">Advance diya: ${fmtRs(bal)}</span>` : '<span class="text-gray-400">Hisaab saaf</span>';
+}
+function entryTitle(e) {
+  const p = e.partyId ? partyById(e.partyId) : null;
+  const prod = e.productId ? productById(e.productId) : null;
+  const partyTxt = p ? `${esc(p.code)} • ${esc(p.name)}` : '';
+  if (e.type === 'sale' || e.type === 'purchase') return `${partyTxt} — ${esc(e.productName || (prod ? prod.name : ''))} ${e.qty} pcs @ ${fmtRs(e.rate)}`;
+  if (e.type === 'expense') { const a = e.accountId ? accountById(e.accountId) : null; return `${a ? esc(a.code) + ' • ' + esc(a.name) : 'Kharcha'}${e.note ? ' — ' + esc(e.note) : ''}`; }
+  if (partyTxt) return partyTxt + (e.note ? ' — ' + esc(e.note) : '');
+  return TYPE_META[e.type] ? TYPE_META[e.type].label : e.type;
+}
+function entryCard(e, showDate) {
+  const d = derived(); const m = TYPE_META[e.type] || { label: e.type, color: '#666', icon: '•' };
+  const isRev = e.isReversal || e.status === 'reversed';
+  let extra = '';
+  if (e.type === 'sale' && d.salesInfo[e.id]) extra = `<span class="chip" style="background:#e7f3ec;color:#2e7d4f">Munafa ${fmtRs(d.salesInfo[e.id].profit)}</span>`;
+  if (e.isReversal) extra += ` <span class="chip" style="background:#fdecea;color:#c0392b">Correction — ${esc(e.reversesCode || '')} ki ulti entry</span>`;
+  if (e.status === 'reversed') extra += ` <span class="chip" style="background:#fdecea;color:#c0392b">Reversed (Correction lag gayi)</span>`;
+  const canCorrect = !isRev;
+  return `<div class="card entrycard p-3 ${isRev ? 'revcard' : ''}" style="border-left-color:${m.color}">
+    <div class="flex items-start gap-2">
+      <div class="text-xl">${m.icon}</div>
+      <div class="flex-1 min-w-0">
+        <div class="font-bold text-sm leading-snug">${esc(entryTitle(e))}</div>
+        <div class="text-xs text-gray-500 mt-0.5">${esc(e.code)}${showDate ? ' • ' + esc(e.date) : ''} • ${esc(m.label)} ${extra}</div>
+        ${e.note && e.type !== 'expense' ? `<div class="text-xs text-gray-500">${esc(e.note)}</div>` : ''}
+      </div>
+      <div class="text-right">
+        <div class="font-extrabold" style="color:${m.color}">${fmtRs(e.total)}</div>
+        ${e.type === 'sale' ? `<div class="text-[11px] text-gray-400">Wasool ${fmtRs(e.amountReceived || 0)} • Baqaya ${fmtRs((e.total || 0) - (e.amountReceived || 0))}</div>` : ''}
+        ${e.type === 'purchase' ? `<div class="text-[11px] text-gray-400">Diya ${fmtRs(e.amountPaid || 0)} • Baqaya ${fmtRs((e.total || 0) - (e.amountPaid || 0))}</div>` : ''}
+      </div>
+    </div>
+    <div class="flex gap-2 mt-2">
+      ${e.type === 'sale' && !isRev ? `<button class="btn-cream px-3 py-1.5 text-xs" onclick="printBill('${e.id}')">Bill Print</button>` : ''}
+      ${e.partyId ? `<button class="btn-cream px-3 py-1.5 text-xs" onclick="openStatement('party:${e.partyId}')">Statement</button>` : ''}
+      ${canCorrect ? `<button class="px-3 py-1.5 text-xs font-bold rounded-xl" style="background:#fdecea;color:#c0392b" onclick="makeCorrection('${e.id}')">Correction</button>` : ''}
+    </div>
+  </div>`;
+}
+function renderAll() {
+  if (S.mode === 'none') return;
+  S.derived = null;
+  renderRoznamcha(); renderKhata(); renderInventory(); renderBaqaya(); renderParties(); renderPnL();
+}
+function renderRoznamcha() {
+  const d = BA_CORE.dailySummary(S.data, selectedDate);
+  const sumCard = (label, val, color) => `<div class="card p-2.5 text-center"><div class="text-[11px] font-bold text-gray-400">${label}</div><div class="font-extrabold text-sm sm:text-base" style="color:${color}">${val}</div></div>`;
+  $('daySummary').innerHTML =
+    sumCard('AAJ KI SALE', fmtRs(d.sale), '#2e7d4f') + sumCard('WASOOLI', fmtRs(d.wasooli), '#1f8a70') + sumCard('KHARCHA', fmtRs(d.kharcha), '#a03b3b') +
+    sumCard('PURCHASE', fmtRs(d.purchase), '#53687f') + sumCard('AAJ KA MUNAFA', fmtRs(d.profit), '#2e7d4f') + sumCard('GALLA (CASH)', fmtRs(d.gallaTotal), '#3d4f63');
+  $('dayPicker').value = selectedDate;
+  $('dayEntriesTitle').textContent = 'Entries — ' + selectedDate + ' (' + d.entries + ')';
+  const day = BA_CORE.activeEntries(S.data.entries).concat(S.data.entries.filter(e => e.isReversal || e.status === 'reversed'))
+    .filter(e => e.date === selectedDate).sort((a, b) => (b.seq || 0) - (a.seq || 0));
+  $('dayEntries').innerHTML = day.length ? day.map(e => entryCard(e, false)).join('')
+    : '<div class="card p-5 text-center text-gray-400 text-sm">Is din koi entry nahi. Upar se nayi entry karein.</div>';
+  const q = $('searchBar').value.trim();
+  if (q) runSearch(q); else { $('searchResultsWrap').classList.add('hidden'); $('roznamchaMain').classList.remove('hidden'); }
+}
+function runSearch(q) {
+  const ql = q.toLowerCase();
+  const hits = S.data.entries.filter(e => {
+    const p = e.partyId ? partyById(e.partyId) : null;
+    const hay = [e.code, e.date, String(e.total), String(e.rate || ''), e.productName || '', p ? p.name : '', p ? p.code : '', p ? p.phone : '', e.note || '', (TYPE_META[e.type] || {}).label || ''].join(' ').toLowerCase();
+    return ql.split(/\s+/).every(w => hay.includes(w));
+  }).sort((a, b) => (b.date < a.date ? -1 : 1) || ((b.seq || 0) - (a.seq || 0))).slice(0, 60);
+  const partyHits = S.data.parties.filter(p => (p.name + ' ' + p.code + ' ' + (p.phone || '')).toLowerCase().includes(ql));
+  const prodHits = S.data.products.filter(p => (p.name + ' ' + p.code).toLowerCase().includes(ql));
+  $('roznamchaMain').classList.add('hidden'); $('searchResultsWrap').classList.remove('hidden');
+  $('btnClearSearch').classList.remove('hidden');
+  $('searchResultsTitle').textContent = `Search: "${q}" — ${hits.length} entries, ${partyHits.length} parties, ${prodHits.length} products`;
+  let html = partyHits.map(p => `<div class="card p-3 flex justify-between items-center"><div><b>${esc(p.code)}</b> • ${esc(p.name)} <span class="text-xs text-gray-400">${p.type === 'buyer' ? 'Buyer' : 'Seller'} ${esc(p.phone || '')}</span></div><div class="text-sm">${partyBalanceText(p)}</div></div>`).join('');
+  html += prodHits.map(p => { const inv = derived().inventory[p.id]; return `<div class="card p-3 flex justify-between"><div><b>${esc(p.code)}</b> • ${esc(p.name)}</div><div class="text-sm font-bold brand-text">Stock: ${inv ? inv.remaining : 0} pcs</div></div>`; }).join('');
+  html += hits.map(e => entryCard(e, true)).join('');
+  $('searchResults').innerHTML = html || '<div class="card p-5 text-center text-gray-400 text-sm">Kuch nahi mila.</div>';
+}
+function accountLabel(key) {
+  const d = derived();
+  if (key === 'cash') return { code: 'CASH', name: 'Galla / Cash' };
+  if (key === 'sales') return { code: 'SALE', name: 'Bikri (Sales)' };
+  if (key === 'cogs') return { code: 'COST', name: 'Bikey Maal ki Laagat' };
+  if (key === 'stock') return { code: 'STOK', name: 'Stock / Inventory' };
+  if (key === 'capital') return { code: 'CAP', name: 'Sarmaya (Owner)' };
+  if (key === 'drawing') return { code: 'DRAW', name: 'Owner ne Nikala' };
+  if (key.startsWith('party:')) { const p = partyById(key.slice(6)); return p ? { code: p.code, name: p.name + (p.type === 'buyer' ? ' (Buyer)' : ' (Seller)') } : { code: '?', name: 'Party' }; }
+  if (key.startsWith('acct:')) { const a = accountById(key.slice(5)); return a ? { code: a.code, name: a.name } : { code: '?', name: 'Head' }; }
+  return { code: key, name: key };
+}
+function renderKhata() {
+  const d = derived(); const q = ($('khataSearch').value || '').toLowerCase();
+  const keys = Object.keys(d.accBal).filter(k => Math.abs(d.accBal[k]) > 0.004 || d.postings.some(p => p.account === k));
+  const rows = keys.map(k => ({ k, l: accountLabel(k), bal: d.accBal[k] || 0 }))
+    .filter(r => !q || (r.l.code + ' ' + r.l.name).toLowerCase().includes(q))
+    .sort((a, b) => Math.abs(b.bal) - Math.abs(a.bal));
+  $('khataList').innerHTML = rows.length ? rows.map(r => {
+    const balTxt = Math.abs(r.bal) < 0.5 ? '<span class="text-gray-400">Saaf</span>'
+      : r.bal > 0 ? `<span class="text-red-600 font-bold">Naame ${fmtRs(r.bal)}</span>` : `<span class="text-green-700 font-bold">Jama ${fmtRs(-r.bal)}</span>`;
+    return `<div class="card p-3 flex items-center gap-3 cursor-pointer" onclick="openStatement('${r.k}')">
+      <div class="chip cream2-bg brand-text">${esc(r.l.code)}</div>
+      <div class="flex-1 font-semibold text-sm">${esc(r.l.name)}</div><div class="text-sm">${balTxt}</div></div>`;
+  }).join('') : '<div class="card p-5 text-center text-gray-400 text-sm">Abhi koi khata nahi bana. Roznamcha se pehli entry karein.</div>';
+}
+function openStatement(key) {
+  const d = derived(); const l = accountLabel(key);
+  const posts = d.postings.filter(p => p.account === key).sort((a, b) => (a.date < b.date ? -1 : 1) || (a.seq - b.seq));
+  let run = 0;
+  const rows = posts.map(p => { run = r2(run + p.dr - p.cr); return `<tr class="border-t">
+    <td class="py-2 pr-2 text-xs text-gray-500">${esc(p.date)}<br>${esc(p.code)}</td>
+    <td class="py-2 pr-2">${esc(p.note || '')}</td>
+    <td class="py-2 text-right">${p.dr ? fmtRs(p.dr) : ''}</td><td class="py-2 text-right">${p.cr ? fmtRs(p.cr) : ''}</td>
+    <td class="py-2 text-right font-bold">${fmtRs(run)}</td></tr>`; }).join('');
+  const p = key.startsWith('party:') ? partyById(key.slice(6)) : null;
+  $('statementWrap').classList.remove('hidden');
+  $('statementWrap').innerHTML = `<div class="card p-4">
+    <div class="flex items-start justify-between">
+      <div><div class="font-extrabold brand-text">${esc(l.code)} • ${esc(l.name)}</div>
+      <div class="text-xs text-gray-500">Statement — Barkat Ali Bed Sheet</div></div>
+      <button class="text-gray-400 text-xl font-bold" onclick="document.getElementById('statementWrap').classList.add('hidden')">&times;</button>
+    </div>
+    <table class="w-full text-sm mt-2"><thead><tr class="text-left text-xs text-gray-400"><th class="py-1">Tareekh</th><th>Tafseel</th><th class="text-right">Naame</th><th class="text-right">Jama</th><th class="text-right">Baqaya</th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="5" class="py-3 text-gray-400">Koi entry nahi</td></tr>'}</tbody></table>
+    <div class="flex gap-2 mt-3">
+      <button class="btn-cream px-3 py-2 text-xs" onclick="printStatement('${key}')">Print Statement</button>
+      ${p && p.phone ? `<button class="btn-cream px-3 py-2 text-xs" onclick="shareStatementWA('${key}')">WhatsApp par bhejein</button>` : ''}
+    </div></div>`;
+  $('statementWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  switchView('khata');
+}
+function renderInventory() {
+  const d = derived(); const q = ($('invSearch').value || '').toLowerCase();
+  const totalQty = Object.values(d.inventory).reduce((s, i) => s + i.remaining, 0);
+  $('invSummary').innerHTML =
+    `<div class="card p-3 text-center"><div class="text-[11px] font-bold text-gray-400">KUL STOCK</div><div class="font-extrabold brand-text">${totalQty} pcs</div></div>` +
+    `<div class="card p-3 text-center"><div class="text-[11px] font-bold text-gray-400">STOCK KI LAAGAT VALUE</div><div class="font-extrabold brand-text">${fmtRs(d.stockValue)}</div></div>`;
+  const list = S.data.products.filter(p => p.active !== false).filter(p => !q || (p.name + ' ' + p.code).toLowerCase().includes(q));
+  $('productList').innerHTML = list.length ? list.map(p => {
+    const inv = d.inventory[p.id] || { remaining: 0, value: 0, lots: [], sold: 0 };
+    const low = inv.remaining <= (p.lowStock ?? 10);
+    const lotsHtml = (inv.lots || []).map((l, i) => `<div class="lotrow bg-[#faf7ef] rounded-lg p-2.5 mt-2 text-sm flex justify-between">
+      <div><b>Lot ${i + 1}</b> <span class="text-gray-400 text-xs">(${esc(l.code)} • ${esc(l.date)})</span><br><span class="text-xs text-gray-500">Rate ${fmtRs(l.rate)} • Aye ${l.qtyIn} • Bike ${l.sold}</span></div>
+      <div class="text-right"><div class="font-extrabold brand-text">${l.remaining} bache</div><div class="text-xs text-gray-400">${fmtRs(l.remaining * l.rate)}</div></div></div>`).join('');
+    return `<div class="card p-3 ${low ? 'lowstock' : ''}">
+      <div class="flex items-center gap-3">
+        <div class="chip cream2-bg brand-text">${esc(p.code)}</div>
+        <div class="flex-1"><div class="font-bold">${esc(p.name)} ${low ? '<span class="chip" style="background:#fdecea;color:#c0392b">Stock kam hai</span>' : ''}</div>
+        <div class="text-xs text-gray-400">Bike kul: ${inv.sold || 0} pcs</div></div>
+        <div class="text-right"><div class="font-extrabold text-lg brand-text">${inv.remaining} pcs</div><div class="text-xs text-gray-400">${fmtRs(inv.value)}</div></div>
+      </div>
+      ${inv.lots && inv.lots.length ? `<details class="lots mt-1"><summary class="text-xs font-bold brand-text">Lot-wise tafseel dekhein (${inv.lots.length} lots)</summary>${lotsHtml}</details>` : '<div class="text-xs text-gray-400 mt-1">Abhi koi lot nahi — Purchase entry se pehla lot banega.</div>'}
+      <div class="flex gap-2 mt-2">
+        <button class="btn-cream px-3 py-1.5 text-xs" onclick="openEntry('purchase','${p.id}')">+ Purchase (Lot)</button>
+        <button class="btn-cream px-3 py-1.5 text-xs" onclick="openEntry('sale','${p.id}')">+ Sale</button>
+        <button class="btn-cream px-3 py-1.5 text-xs" onclick="editProduct('${p.id}')">Edit</button>
+      </div></div>`;
+  }).join('') : '<div class="card p-5 text-center text-gray-400 text-sm">Koi product nahi.</div>';
+}
+function renderBaqaya() {
+  const d = derived();
+  let totalLena = 0, totalDena = 0;
+  const rows = S.data.parties.map(p => {
+    const bal = d.partyBalances[p.id] || 0;
+    let amt = 0, kind = '';
+    if (p.type === 'buyer' && bal > 0.5) { amt = bal; kind = 'Lena hai'; totalLena = r2(totalLena + bal); }
+    if (p.type === 'buyer' && bal < -0.5) { amt = -bal; kind = 'Buyer ka advance'; }
+    if (p.type === 'seller' && bal < -0.5) { amt = -bal; kind = 'Dena hai'; totalDena = r2(totalDena + (-bal)); }
+    if (p.type === 'seller' && bal > 0.5) { amt = bal; kind = 'Seller ko advance'; }
+    return { p, bal, amt, kind };
+  }).filter(r => Math.abs(r.bal) > 0.5).sort((a, b) => b.amt - a.amt);
+  $('baqayaCards').innerHTML =
+    `<div class="card p-3 text-center"><div class="text-[11px] font-bold text-gray-400">KUL LENA HAI (Buyers)</div><div class="font-extrabold text-red-600">${fmtRs(totalLena)}</div></div>` +
+    `<div class="card p-3 text-center"><div class="text-[11px] font-bold text-gray-400">KUL DENA HAI (Sellers)</div><div class="font-extrabold text-green-700">${fmtRs(totalDena)}</div></div>`;
+  $('baqayaList').innerHTML = rows.length ? rows.map(r => `<div class="card p-3 flex items-center gap-3 cursor-pointer" onclick="openStatement('party:${r.p.id}')">
+    <div class="chip cream2-bg brand-text">${esc(r.p.code)}</div>
+    <div class="flex-1"><div class="font-semibold text-sm">${esc(r.p.name)}</div><div class="text-xs text-gray-400">${r.p.type === 'buyer' ? 'Buyer' : 'Seller'} • ${esc(r.kind)}</div></div>
+    <div class="font-extrabold">${fmtRs(r.amt)}</div></div>`).join('')
+    : '<div class="card p-5 text-center text-gray-400 text-sm">Koi baqaya nahi — saare hisaab saaf hain.</div>';
+  const nameOf = k => { const l = accountLabel(k); return l.code + ' • ' + l.name; };
+  $('talpatBody').innerHTML = d.talpat.map(t => `<tr class="border-t"><td class="p-3">${esc(nameOf(t.account))}</td>
+    <td class="p-3 text-right font-semibold">${t.dr ? fmtRs(t.dr) : ''}</td><td class="p-3 text-right font-semibold">${t.cr ? fmtRs(t.cr) : ''}</td></tr>`).join('')
+    || '<tr><td colspan="3" class="p-4 text-gray-400">Abhi koi entry nahi</td></tr>';
+  $('talpatFoot').innerHTML = `<tr class="cream2-bg font-extrabold"><td class="p-3">TOTAL</td><td class="p-3 text-right">${fmtRs(d.talpatDr)}</td><td class="p-3 text-right">${fmtRs(d.talpatCr)}</td></tr>`;
+  $('talpatStatus').innerHTML = d.talpatBalanced
+    ? '<div class="card p-3 text-center font-bold" style="background:#e7f3ec;color:#2e7d4f">Talpat mil gaya — Naame = Jama. Hisaab theek hai.</div>'
+    : '<div class="card p-3 text-center font-bold" style="background:#fdecea;color:#c0392b">Talpat NAHI mila — farq: ' + fmtRs(Math.abs(d.talpatDr - d.talpatCr)) + '</div>';
+}
+function renderParties() {
+  const q = ($('partySearch').value || '').toLowerCase();
+  const match = p => !q || (p.name + ' ' + p.code + ' ' + (p.phone || '')).toLowerCase().includes(q);
+  const card = p => `<div class="card p-3 flex items-center gap-3">
+    <div class="chip cream2-bg brand-text">${esc(p.code)}</div>
+    <div class="flex-1 min-w-0"><div class="font-semibold text-sm truncate">${esc(p.name)}</div>
+    <div class="text-xs text-gray-400">${esc(p.phone || '')} ${p.address ? '• ' + esc(p.address) : ''}</div></div>
+    <div class="text-right"><div class="text-sm">${partyBalanceText(p)}</div>
+    <div class="flex gap-1 mt-1 justify-end">
+      <button class="btn-cream px-2 py-1 text-[11px]" onclick="openStatement('party:${p.id}')">Statement</button>
+      <button class="btn-cream px-2 py-1 text-[11px]" onclick="editParty('${p.id}')">Edit</button>
+    </div></div></div>`;
+  const buyers = S.data.parties.filter(p => p.type === 'buyer' && p.active !== false && match(p));
+  const sellers = S.data.parties.filter(p => p.type === 'seller' && p.active !== false && match(p));
+  $('buyerList').innerHTML = buyers.length ? buyers.map(card).join('') : '<div class="text-sm text-gray-400">Koi buyer nahi — + Add Buyer se pehla buyer banayein.</div>';
+  $('sellerList').innerHTML = sellers.length ? sellers.map(card).join('') : '<div class="text-sm text-gray-400">Koi seller nahi — + Add Seller se pehla seller banayein.</div>';
+}
+function renderPnL() {
+  const d = derived();
+  const row = (label, val, bold, color) => `<div class="flex justify-between py-2 ${bold ? 'font-extrabold text-base' : ''}" style="${color ? 'color:' + color : ''}"><span>${label}</span><span>${fmtRs(val)}</span></div>`;
+  $('pnlWrap').innerHTML = `<div class="card p-4 divide-y">
+    ${row('Kul Bikri (Sales)', d.pnl.salesRevenue)}
+    ${row('Bikey Maal ki Laagat (COGS)', -d.pnl.cogs)}
+    ${row('Kham Munafa (Gross Profit)', d.pnl.grossProfit, true, '#2e7d4f')}
+    ${row('Kul Kharchay (Expenses)', -d.pnl.expenses)}
+    ${row('Asal Munafa (Net Profit)', d.pnl.netProfit, true, d.pnl.netProfit >= 0 ? '#2e7d4f' : '#c0392b')}
+    <div class="pt-2"></div>
+    ${row('Stock ki Value (aaj)', d.stockValue)}
+    ${row('Galla / Cash Balance', d.cashBalance)}
+    ${row('Owner ka Sarmaya (Capital)', d.capital)}
+    ${row('Owner ne Nikala (Drawing)', -d.drawing)}
+  </div>
+  <p class="text-xs text-gray-400 mt-2">Ye hisaab Roznamcha ki tamam entries se khud banta hai — koi rakam haath se nahi likhi jati.</p>`;
+}
+function switchView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+  $('view-' + name).classList.remove('hidden');
+  document.querySelectorAll('.navbtn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+  window.scrollTo({ top: 0 });
+}
+</script>
+
+<script>
+/* ================= ENTRY FORM (sirf Roznamcha se entry hoti hai) ================= */
+let entryDraft = null;   // {type, values:{}, presetProductId}
+function partyOptions(type, sel) {
+  const list = S.data.parties.filter(p => p.type === type && p.active !== false);
+  return `<option value="">— Chunain —</option>` + list.map(p => `<option value="${p.id}" ${p.id === sel ? 'selected' : ''}>${esc(p.code)} • ${esc(p.name)}${p.phone ? ' (' + esc(p.phone) + ')' : ''}</option>`).join('') + `<option value="__add__">＋ Naya ${type === 'buyer' ? 'Buyer' : 'Seller'} add karein...</option>`;
+}
+function productOptions(sel) {
+  const d = derived();
+  const list = S.data.products.filter(p => p.active !== false);
+  return `<option value="">— Chunain —</option>` + list.map(p => { const inv = d.inventory[p.id]; return `<option value="${p.id}" ${p.id === sel ? 'selected' : ''}>${esc(p.code)} • ${esc(p.name)} (stock: ${inv ? inv.remaining : 0})</option>`; }).join('') + `<option value="__add__">＋ Naya Product add karein...</option>`;
+}
+function accountOptions(sel) {
+  const list = S.data.accounts.filter(a => a.active !== false);
+  return `<option value="">— Chunain —</option>` + list.map(a => `<option value="${a.id}" ${a.id === sel ? 'selected' : ''}>${esc(a.code)} • ${esc(a.name)}</option>`).join('') + `<option value="__add__">＋ Naya Hisab Head add karein...</option>`;
+}
+function lotOptions(productId, sel) {
+  const d = derived(); const inv = d.inventory[productId];
+  let html = `<option value="">Auto (FIFO — pehla lot pehle)</option>`;
+  if (inv) inv.lots.filter(l => l.remaining > 0).forEach((l, i) => { html += `<option value="${l.lotId}" ${l.lotId === sel ? 'selected' : ''}>Lot ${i + 1} — ${esc(l.code)} • Rate ${fmtRs(l.rate)} • ${l.remaining} bache</option>`; });
+  return html;
+}
+function openEntry(type, presetProductId) {
+  entryDraft = { type, presetProductId: presetProductId || null, values: (entryDraft && entryDraft.type === type ? entryDraft.values : {}) || {} };
+  buildEntryForm();
+  $('entryModal').classList.remove('hidden');
+}
+function fieldVal(id) { const el = $(id); return el ? el.value : ''; }
+function stashDraft() {
+  if (!entryDraft) return;
+  ['f_date', 'f_party', 'f_product', 'f_qty', 'f_rate', 'f_amount', 'f_paid', 'f_account', 'f_lot', 'f_note'].forEach(id => {
+    const el = $(id); if (el) entryDraft.values[id] = el.value;
+  });
+}
+function buildEntryForm() {
+  const t = entryDraft.type, v = entryDraft.values || {};
+  $('entryModalTitle').textContent = 'Nayi Entry — ' + (TYPE_META[t] ? TYPE_META[t].label : t);
+  const dateF = `<div><label class="lbl">Tareekh</label><input type="date" id="f_date" class="field" value="${esc(v.f_date || selectedDate)}"></div>`;
+  const noteF = `<div><label class="lbl">Note (ikhtiyari)</label><input id="f_note" class="field" placeholder="Koi tafseel..." value="${esc(v.f_note || '')}"></div>`;
+  let html = dateF;
+  if (t === 'sale') {
+    html += `<div><label class="lbl">Buyer / Client</label><select id="f_party" class="field">${partyOptions('buyer', v.f_party)}</select></div>
+    <div><label class="lbl">Product</label><select id="f_product" class="field">${productOptions(v.f_product || entryDraft.presetProductId)}</select></div>
+    <div class="grid grid-cols-2 gap-2">
+      <div><label class="lbl">Quantity (pcs)</label><input type="number" id="f_qty" class="field" min="0" step="any" value="${esc(v.f_qty || '')}" placeholder="80"></div>
+      <div><label class="lbl">Sale Rate (per pc)</label><input type="number" id="f_rate" class="field" min="0" step="any" value="${esc(v.f_rate || '')}" placeholder="1200"></div>
+    </div>
+    <div><label class="lbl">Lot (khud chunna ho to)</label><select id="f_lot" class="field">${lotOptions(v.f_product || entryDraft.presetProductId, v.f_lot)}</select></div>
+    <div><label class="lbl">Abhi Wasool Hua (Advance / Cash)</label><input type="number" id="f_paid" class="field" min="0" step="any" value="${esc(v.f_paid || '0')}"></div>` + noteF;
+  } else if (t === 'purchase') {
+    html += `<div><label class="lbl">Seller / Supplier</label><select id="f_party" class="field">${partyOptions('seller', v.f_party)}</select></div>
+    <div><label class="lbl">Product</label><select id="f_product" class="field">${productOptions(v.f_product || entryDraft.presetProductId)}</select></div>
+    <div class="grid grid-cols-2 gap-2">
+      <div><label class="lbl">Quantity (pcs)</label><input type="number" id="f_qty" class="field" min="0" step="any" value="${esc(v.f_qty || '')}" placeholder="100"></div>
+      <div><label class="lbl">Purchase Rate (per pc)</label><input type="number" id="f_rate" class="field" min="0" step="any" value="${esc(v.f_rate || '')}" placeholder="1000"></div>
+    </div>
+    <div><label class="lbl">Abhi Ada Kiya (Advance / Cash)</label><input type="number" id="f_paid" class="field" min="0" step="any" value="${esc(v.f_paid || '0')}"></div>` + noteF +
+    `<p class="text-xs text-gray-400">Ye purchase aik naya <b>Lot</b> banayegi apne rate ke saath — purane lot se mix nahi hogi.</p>`;
+  } else if (t === 'payment_received') {
+    html += `<div><label class="lbl">Buyer / Client (kis se paisa aya)</label><select id="f_party" class="field">${partyOptions('buyer', v.f_party)}</select></div>
+    <div><label class="lbl">Rakam</label><input type="number" id="f_amount" class="field" min="0" step="any" value="${esc(v.f_amount || '')}"></div>` + noteF;
+  } else if (t === 'payment_given') {
+    html += `<div><label class="lbl">Seller / Supplier (kis ko paisa diya)</label><select id="f_party" class="field">${partyOptions('seller', v.f_party)}</select></div>
+    <div><label class="lbl">Rakam</label><input type="number" id="f_amount" class="field" min="0" step="any" value="${esc(v.f_amount || '')}"></div>` + noteF;
+  } else if (t === 'expense') {
+    html += `<div><label class="lbl">Kharcha Head</label><select id="f_account" class="field">${accountOptions(v.f_account)}</select></div>
+    <div><label class="lbl">Rakam</label><input type="number" id="f_amount" class="field" min="0" step="any" value="${esc(v.f_amount || '')}"></div>` + noteF;
+  } else if (t === 'capital' || t === 'drawing') {
+    html += `<div><label class="lbl">Rakam</label><input type="number" id="f_amount" class="field" min="0" step="any" value="${esc(v.f_amount || '')}"></div>` + noteF;
+  }
+  $('entryFormFields').innerHTML = html;
+  // select par "＋ add" wala raasta + live calculation
+  const wire = (id, kind) => { const el = $(id); if (!el) return; el.addEventListener('change', () => {
+    if (el.value === '__add__') { stashDraft(); openAdd(kind, true); } else { stashDraft(); if (id === 'f_product' && t === 'sale') { entryDraft.values.f_product = el.value; buildEntryForm(); } else updateCalc(); }
+  }); };
+  wire('f_party', t === 'purchase' || t === 'payment_given' ? 'seller' : 'buyer');
+  wire('f_product', 'product'); wire('f_account', 'account');
+  ['f_qty', 'f_rate', 'f_paid', 'f_amount', 'f_lot'].forEach(id => { const el = $(id); if (el) el.addEventListener('input', updateCalc); if (el && id === 'f_lot') el.addEventListener('change', updateCalc); });
+  updateCalc();
+}
+function updateCalc() {
+  if (!entryDraft) return;
+  const t = entryDraft.type, box = $('entryCalcBox');
+  const qty = parseFloat(fieldVal('f_qty')) || 0, rate = parseFloat(fieldVal('f_rate')) || 0;
+  if ((t === 'sale' || t === 'purchase') && qty > 0 && rate > 0) {
+    let txt = `Total: <b>${fmtRs(qty * rate)}</b>`;
+    if (t === 'sale') {
+      const pid = fieldVal('f_product');
+      if (pid) {
+        const plan = BA_CORE.planSale(S.data, pid, qty, fieldVal('f_lot') || undefined);
+        if (!plan.ok) txt += ` &nbsp;|&nbsp; <span style="color:#c0392b">Stock kam hai — sirf ${plan.available} pcs bache hain</span>`;
+        else txt += ` &nbsp;|&nbsp; Laagat: ${fmtRs(plan.cost)} &nbsp;|&nbsp; Andazi Munafa: <b>${fmtRs(qty * rate - plan.cost)}</b><br><span class="text-xs">Lot se katega: ${plan.alloc.map(a => a.qty + ' pcs @ ' + fmtRs(a.rate)).join(' + ')}</span>`;
+      }
+    } else txt += ` &nbsp;|&nbsp; Naya Lot bane ga: ${qty} pcs @ ${fmtRs(rate)}`;
+    box.innerHTML = txt; box.classList.remove('hidden');
+  } else box.classList.add('hidden');
+}
+async function saveEntry() {
+  const t = entryDraft.type;
+  const date = fieldVal('f_date') || selectedDate;
+  const seq = S.data.entries.reduce((m, e) => Math.max(m, e.seq || 0), 0) + 1;
+  const base = { id: genId(), code: nextCode('E-', S.data.entries.map(e => e.code)), seq, date, type: t, note: fieldVal('f_note').trim(), status: 'active', createdAt: new Date().toISOString() };
+  if (t === 'sale' || t === 'purchase') {
+    const partyId = fieldVal('f_party'), productId = fieldVal('f_product');
+    const qty = parseFloat(fieldVal('f_qty')) || 0, rate = parseFloat(fieldVal('f_rate')) || 0, paid = parseFloat(fieldVal('f_paid')) || 0;
+    if (!partyId || partyId === '__add__') return toast(t === 'sale' ? 'Buyer chunein' : 'Seller chunein');
+    if (!productId || productId === '__add__') return toast('Product chunein');
+    if (qty <= 0 || rate <= 0) return toast('Quantity aur Rate theek likhein');
+    const prod = productById(productId);
+    Object.assign(base, { partyId, productId, productName: prod ? prod.name : '', qty, rate, total: r2(qty * rate) });
+    if (t === 'sale') {
+      const plan = BA_CORE.planSale(S.data, productId, qty, fieldVal('f_lot') || undefined);
+      if (!plan.ok) return toast('Stock kam hai — sirf ' + plan.available + ' pcs bache hain');
+      base.allocations = plan.alloc; base.amountReceived = Math.min(paid, base.total);
+    } else base.amountPaid = Math.min(paid, base.total);
+  } else if (t === 'payment_received' || t === 'payment_given') {
+    const partyId = fieldVal('f_party'), amount = parseFloat(fieldVal('f_amount')) || 0;
+    if (!partyId || partyId === '__add__') return toast('Party chunein');
+    if (amount <= 0) return toast('Rakam likhein');
+    Object.assign(base, { partyId, total: amount });
+  } else if (t === 'expense') {
+    const accountId = fieldVal('f_account'), amount = parseFloat(fieldVal('f_amount')) || 0;
+    if (!accountId || accountId === '__add__') return toast('Kharcha head chunein');
+    if (amount <= 0) return toast('Rakam likhein');
+    Object.assign(base, { accountId, total: amount });
+  } else { // capital / drawing
+    const amount = parseFloat(fieldVal('f_amount')) || 0;
+    if (amount <= 0) return toast('Rakam likhein');
+    base.total = amount;
+  }
+  await Store.addEntry(base);
+  entryDraft = null;
+  $('entryModal').classList.add('hidden');
+  selectedDate = date;
+  toast('Entry save ho gayi — ' + base.code);
+  renderAll();
+}
+/* ================= CORRECTION (ulti entry — edit/delete kabhi nahi) ================= */
+async function makeCorrection(entryId) {
+  const e = S.data.entries.find(x => x.id === entryId);
+  if (!e || e.isReversal || e.status === 'reversed') return;
+  if (e.type === 'purchase') {
+    const d = derived(); const lot = d.lots[entryId];
+    if (lot && lot.sold > 0.0001) return toast('Ye lot bik chuka hai (' + lot.sold + ' pcs) — pehle us sale ki correction karein');
+  }
+  if (!confirm('Correction lagayein?\n\n' + e.code + ' ki entry ghalat thi — ulti (reversal) entry lage gi. Dono entries Roznamcha mein nazar ayengi, hisaab se ye entry khatam ho jayegi.')) return;
+  const seq = S.data.entries.reduce((m, x) => Math.max(m, x.seq || 0), 0) + 1;
+  const rev = { ...e, id: genId(), code: nextCode('E-', S.data.entries.map(x => x.code)), seq, date: todayStr(), isReversal: true, reverses: e.id, reversesCode: e.code, status: 'active', createdAt: new Date().toISOString(), note: 'Correction of ' + e.code + (e.note ? ' — ' + e.note : '') };
+  await Store.addEntry(rev);
+  await Store.updateMaster('entries', e.id, { status: 'reversed', reversedByCode: rev.code });
+  toast('Correction lag gayi — ' + rev.code);
+  renderAll();
+}
+/* ================= ADD / EDIT MASTERS (har jagah Add, code ke saath) ================= */
+let addCtx = null;
+function openAdd(kind, fromEntry) {
+  addCtx = { kind, editId: null, fromEntry: !!fromEntry };
+  buildAddForm();
+  $('addModal').classList.remove('hidden');
+}
+function editParty(id) { const p = partyById(id); if (!p) return; addCtx = { kind: p.type, editId: id, fromEntry: false }; buildAddForm(p); $('addModal').classList.remove('hidden'); }
+function editProduct(id) { const p = productById(id); if (!p) return; addCtx = { kind: 'product', editId: id, fromEntry: false }; buildAddForm(p); $('addModal').classList.remove('hidden'); }
+function prefixFor(kind) { return kind === 'buyer' ? 'B-' : kind === 'seller' ? 'S-' : kind === 'product' ? 'P-' : 'A-'; }
+function titleFor(kind, edit) { return (edit ? 'Edit ' : 'Naya ') + { buyer: 'Buyer / Client', seller: 'Seller / Supplier', product: 'Product', account: 'Hisab Head' }[kind]; }
+function buildAddForm(existing) {
+  const kind = addCtx.kind, edit = !!addCtx.editId;
+  const ex = existing || {};
+  const codes = kind === 'product' ? S.data.products.map(x => x.code) : kind === 'account' ? S.data.accounts.map(x => x.code)
+    : S.data.parties.filter(x => x.type === kind).map(x => x.code);
+  $('addModalTitle').textContent = titleFor(kind, edit) + (edit ? ' — ' + esc(ex.code || '') : '');
+  let html = `<div><label class="lbl">Code (khud banta hai — dhundne mein asani ke liye)</label><input class="field" value="${esc(edit ? ex.code : nextCode(prefixFor(kind), codes))}" disabled></div>
+  <div><label class="lbl">Naam *</label><input id="a_name" class="field" value="${esc(ex.name || '')}" placeholder="Poora naam likhein"></div>`;
+  if (kind === 'buyer' || kind === 'seller') html += `<div><label class="lbl">Phone / WhatsApp</label><input id="a_phone" class="field" value="${esc(ex.phone || '')}" placeholder="03xx-xxxxxxx"></div>
+  <div><label class="lbl">Address / Sheher</label><input id="a_address" class="field" value="${esc(ex.address || '')}"></div>`;
+  if (kind === 'product') html += `<div class="grid grid-cols-2 gap-2">
+    <div><label class="lbl">Unit</label><input id="a_unit" class="field" value="${esc(ex.unit || 'pcs')}"></div>
+    <div><label class="lbl">Low-stock warning (pcs)</label><input type="number" id="a_low" class="field" value="${esc(ex.lowStock ?? 10)}"></div></div>`;
+  if (edit) html += `<button id="btnDeactivate" class="w-full py-2.5 text-sm font-bold rounded-xl mt-1" style="background:#fdecea;color:#c0392b">${kind === 'product' ? 'Product band karein (deactivate)' : 'Band karein (deactivate)'}</button>`;
+  $('addFormFields').innerHTML = html;
+  const deact = $('btnDeactivate');
+  if (deact) deact.addEventListener('click', async () => {
+    if (!confirm('Band kar dein? Purana hisaab mehfooz rahe ga, sirf nayi entry mein nazar nahi ayega.')) return;
+    const coll = kind === 'product' ? 'products' : kind === 'account' ? 'accounts' : 'parties';
+    await Store.updateMaster(coll, addCtx.editId, { active: false });
+    $('addModal').classList.add('hidden'); toast('Band kar diya gaya'); renderAll();
+  });
+}
+async function saveAdd() {
+  const kind = addCtx.kind, edit = !!addCtx.editId;
+  const name = fieldVal('a_name').trim();
+  if (!name) return toast('Naam lazmi hai');
+  if (edit) {
+    const coll = kind === 'product' ? 'products' : kind === 'account' ? 'accounts' : 'parties';
+    const patch = { name };
+    if (kind === 'buyer' || kind === 'seller') { patch.phone = fieldVal('a_phone').trim(); patch.address = fieldVal('a_address').trim(); }
+    if (kind === 'product') { patch.unit = fieldVal('a_unit') || 'pcs'; patch.lowStock = parseFloat(fieldVal('a_low')) || 0; }
+    await Store.updateMaster(coll, addCtx.editId, patch);
+    $('addModal').classList.add('hidden'); toast('Update ho gaya'); renderAll(); return;
+  }
+  const id = genId();
+  if (kind === 'buyer' || kind === 'seller') {
+    const codes = S.data.parties.filter(x => x.type === kind).map(x => x.code);
+    await Store.addMaster('parties', { id, code: nextCode(prefixFor(kind), codes), type: kind, name, phone: fieldVal('a_phone').trim(), address: fieldVal('a_address').trim(), active: true, createdAt: new Date().toISOString() });
+  } else if (kind === 'product') {
+    await Store.addMaster('products', { id, code: nextCode('P-', S.data.products.map(x => x.code)), name, unit: fieldVal('a_unit') || 'pcs', lowStock: parseFloat(fieldVal('a_low')) || 0, active: true, createdAt: new Date().toISOString() });
+  } else {
+    await Store.addMaster('accounts', { id, code: nextCode('A-', S.data.accounts.map(x => x.code)), name, active: true, createdAt: new Date().toISOString() });
+  }
+  $('addModal').classList.add('hidden');
+  toast('Add ho gaya');
+  if (addCtx.fromEntry && entryDraft) {
+    stashDraftKeep();
+    buildEntryForm();
+    // nayi cheez ko select kar do
+    const map = { buyer: 'f_party', seller: 'f_party', product: 'f_product', account: 'f_account' };
+    const el = $(map[kind]); if (el) el.value = id;
+    if (kind === 'product' && entryDraft.type === 'sale') { entryDraft.values.f_product = id; buildEntryForm(); const el2 = $('f_product'); if (el2) el2.value = id; }
+    updateCalc();
+  }
+  renderAll();
+}
+function stashDraftKeep() { /* values pehle stashDraft se mehfooz hain; form dobara bane par wahi lagte hain */ }
+/* ================= PRINT: Bill / Statement / Report ================= */
+function billHTML(e) {
+  const p = S.data.profile || DEFAULT_PROFILE;
+  const party = e.partyId ? partyById(e.partyId) : null;
+  return `<div style="font-family:'Segoe UI',sans-serif;color:#24303d;max-width:640px;margin:0 auto">
+  <div style="text-align:center;border-bottom:3px solid #53687f;padding-bottom:8px">
+    <div style="font-size:26px;font-weight:800;color:#53687f">${esc(p.name)}</div>
+    <div style="font-size:12px">Hamare haan Khes, Dari, Kambal, Crystal, Diamond dastiyab hain</div>
+    <div style="font-size:12px">${esc(p.phones || '')} ${p.phones ? '•' : ''} ${esc(p.address || '')}</div>
+  </div>
+  <div style="display:flex;justify-content:space-between;font-size:13px;margin:10px 0">
+    <div>Bill No: <b>${esc(e.code)}</b></div><div>Tareekh: <b>${esc(e.date)}</b></div></div>
+  <div style="font-size:13px;margin-bottom:8px">Naam Kharidaar: <b>${party ? esc(party.code) + ' • ' + esc(party.name) : ''}</b> ${party && party.phone ? '(' + esc(party.phone) + ')' : ''}</div>
+  <table style="width:100%;border-collapse:collapse;font-size:14px">
+    <tr style="background:#53687f;color:#fff"><th style="padding:7px;text-align:left">Number</th><th style="padding:7px;text-align:left">Tafseel</th><th style="padding:7px;text-align:right">Narkh</th><th style="padding:7px;text-align:right">Rupay</th></tr>
+    <tr style="border-bottom:1px solid #ccc"><td style="padding:7px">${e.qty}</td><td style="padding:7px">${esc(e.productName || '')}</td><td style="padding:7px;text-align:right">${fmtRs(e.rate)}</td><td style="padding:7px;text-align:right">${fmtRs(e.total)}</td></tr>
+  </table>
+  <table style="width:260px;margin-left:auto;font-size:14px;margin-top:8px">
+    <tr><td style="padding:4px">Total</td><td style="padding:4px;text-align:right"><b>${fmtRs(e.total)}</b></td></tr>
+    <tr><td style="padding:4px">Advance</td><td style="padding:4px;text-align:right">${fmtRs(e.amountReceived || 0)}</td></tr>
+    <tr style="border-top:2px solid #53687f"><td style="padding:4px"><b>Baqaya</b></td><td style="padding:4px;text-align:right"><b>${fmtRs((e.total || 0) - (e.amountReceived || 0))}</b></td></tr>
+  </table>
+  <div style="margin-top:36px;display:flex;justify-content:space-between;font-size:12px;color:#666"><span>Dastakhat: ____________________</span><span>Powered by Global Guru</span></div></div>`;
+}
+function printBill(entryId) { const e = S.data.entries.find(x => x.id === entryId); if (!e) return; $('printArea').innerHTML = billHTML(e); window.print(); }
+function printStatement(key) {
+  const d = derived(); const l = accountLabel(key);
+  const posts = d.postings.filter(x => x.account === key).sort((a, b) => (a.date < b.date ? -1 : 1) || (a.seq - b.seq));
+  let run = 0;
+  const rows = posts.map(x => { run = r2(run + x.dr - x.cr); return `<tr style="border-bottom:1px solid #ddd"><td style="padding:5px">${esc(x.date)}</td><td style="padding:5px">${esc(x.note || '')} (${esc(x.code)})</td><td style="padding:5px;text-align:right">${x.dr ? fmtRs(x.dr) : ''}</td><td style="padding:5px;text-align:right">${x.cr ? fmtRs(x.cr) : ''}</td><td style="padding:5px;text-align:right"><b>${fmtRs(run)}</b></td></tr>`; }).join('');
+  const p = S.data.profile || DEFAULT_PROFILE;
+  $('printArea').innerHTML = `<div style="font-family:'Segoe UI',sans-serif;color:#24303d;max-width:680px;margin:0 auto">
+  <div style="text-align:center;border-bottom:3px solid #53687f;padding-bottom:8px"><div style="font-size:22px;font-weight:800;color:#53687f">${esc(p.name)}</div>
+  <div style="font-size:12px">${esc(p.address || '')}</div></div>
+  <h3 style="margin:12px 0 6px">Khata Statement — ${esc(l.code)} • ${esc(l.name)}</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="background:#efe6d2"><th style="padding:6px;text-align:left">Tareekh</th><th style="padding:6px;text-align:left">Tafseel</th><th style="padding:6px;text-align:right">Naame</th><th style="padding:6px;text-align:right">Jama</th><th style="padding:6px;text-align:right">Baqaya</th></tr>${rows}</table>
+  <div style="margin-top:20px;font-size:11px;color:#666;text-align:center">Powered by Global Guru</div></div>`;
+  window.print();
+}
+function shareStatementWA(key) {
+  const p = key.startsWith('party:') ? partyById(key.slice(6)) : null;
+  if (!p || !p.phone) return toast('Party ka phone number nahi hai');
+  const d = derived(); const bal = d.partyBalances[p.id] || 0;
+  const balLine = p.type === 'buyer' ? (bal > 0 ? 'Aap ke zimme baqaya: ' + fmtRs(bal) : 'Aap ka hisaab saaf hai') : (bal < 0 ? 'Aap ko dena hai: ' + fmtRs(-bal) : 'Hisaab saaf hai');
+  const text = encodeURIComponent((S.data.profile.name || APP_NAME) + '\nAssalam o Alaikum ' + p.name + ',\n' + balLine + '.\nTafseel ke liye dukaan par rabta karein. Shukriya.');
+  let phone = String(p.phone).replace(/\D/g, '');
+  if (phone.startsWith('0')) phone = '92' + phone.slice(1);
+  window.open('https://wa.me/' + phone + '?text=' + text, '_blank');
+}
+function openDailyReport() {
+  const d = BA_CORE.dailySummary(S.data, selectedDate);
+  $('reportTitle').textContent = 'Roz ki Report — ' + selectedDate;
+  const row = (l, v) => `<div class="flex justify-between border-b py-2"><span>${l}</span><b>${v}</b></div>`;
+  $('reportBody').innerHTML = row('Kul Entries', d.entries) + row('Sale', fmtRs(d.sale)) + row('Purchase', fmtRs(d.purchase)) +
+    row('Wasooli (cash aya)', fmtRs(d.cashIn)) + row('Adaigi + Kharcha (cash gaya)', fmtRs(d.cashOut)) +
+    row('Aaj ka Munafa (sales par)', fmtRs(d.profit)) + row('Galla kul (aaj tak)', fmtRs(d.gallaTotal)) +
+    `<p class="text-xs text-gray-400 pt-2">Ye report Roznamcha ki entries se khud bani hai. Din band karne ka matlab: aaj ka hisaab check kar liya gaya.</p>`;
+  $('reportModal').classList.remove('hidden');
+}
+window.printReport = function () {
+  const d = BA_CORE.dailySummary(S.data, selectedDate);
+  const p = S.data.profile || DEFAULT_PROFILE;
+  $('printArea').innerHTML = `<div style="font-family:'Segoe UI',sans-serif;color:#24303d;max-width:640px;margin:0 auto">
+  <h2 style="color:#53687f;text-align:center">${esc(p.name)} — Roz ki Report</h2>
+  <p style="text-align:center;font-size:12px">Tareekh: ${esc(selectedDate)}</p>
+  <table style="width:100%;font-size:14px;border-collapse:collapse">
+  ${[['Sale', d.sale], ['Purchase', d.purchase], ['Wasooli (cash aya)', d.cashIn], ['Cash gaya', d.cashOut], ['Kharcha', d.kharcha], ['Aaj ka Munafa', d.profit], ['Galla kul', d.gallaTotal]].map(r => `<tr style="border-bottom:1px solid #ddd"><td style="padding:6px">${r[0]}</td><td style="padding:6px;text-align:right"><b>${fmtRs(r[1])}</b></td></tr>`).join('')}
+  </table><div style="margin-top:16px;font-size:11px;color:#666;text-align:center">Powered by Global Guru</div></div>`;
+  window.print();
+};
+/* ================= BACKUP ================= */
+function exportData() {
+  const blob = new Blob([JSON.stringify({ app: 'barkat-ali-khata', version: 1, exportedAt: new Date().toISOString(), data: S.data }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'barkat-ali-backup-' + todayStr() + '.json'; a.click();
+  toast('Backup download ho gaya');
+}
+async function importData(file) {
+  try {
+    const obj = JSON.parse(await file.text());
+    const data = obj.data || obj;
+    if (!data || !Array.isArray(data.entries)) throw new Error('ghalat file');
+    data.profile = { ...DEFAULT_PROFILE, ...(data.profile || {}) };
+    await Store.replaceAll(data);
+    toast('Backup import ho gaya'); applyProfile(); renderAll();
+  } catch (e) { toast('Import nahi hua — file theek nahi hai'); }
+}
+/* ================= WIRING + INIT ================= */
+document.querySelectorAll('.navbtn').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
+document.querySelectorAll('[data-add]').forEach(b => b.addEventListener('click', () => openAdd(b.dataset.add, false)));
+document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => $(b.dataset.close).classList.add('hidden')));
+$('entryTypeBtns').innerHTML = Object.keys(TYPE_META).map(t => `<button class="card p-3 text-center" onclick="openEntry('${t}')">
+  <div class="text-2xl">${TYPE_META[t].icon}</div><div class="text-[11px] font-bold mt-1 leading-tight">${TYPE_META[t].label}</div></button>`).join('');
+$('btnSaveEntry').addEventListener('click', saveEntry);
+$('btnSaveAdd').addEventListener('click', saveAdd);
+$('btnDailyReport').addEventListener('click', openDailyReport);
+$('searchBar').addEventListener('input', e => { const q = e.target.value.trim(); if (q) runSearch(q); else { $('searchResultsWrap').classList.add('hidden'); $('btnClearSearch').classList.add('hidden'); $('roznamchaMain').classList.remove('hidden'); } });
+$('btnClearSearch').addEventListener('click', () => { $('searchBar').value = ''; $('searchResultsWrap').classList.add('hidden'); $('btnClearSearch').classList.add('hidden'); $('roznamchaMain').classList.remove('hidden'); });
+$('khataSearch').addEventListener('input', renderKhata);
+$('invSearch').addEventListener('input', renderInventory);
+$('partySearch').addEventListener('input', renderParties);
+$('dayPicker').addEventListener('change', e => { selectedDate = e.target.value || todayStr(); renderRoznamcha(); });
+$('btnPrevDay').addEventListener('click', () => { const d = new Date(selectedDate); d.setDate(d.getDate() - 1); selectedDate = d.toISOString().slice(0, 10); renderRoznamcha(); });
+$('btnNextDay').addEventListener('click', () => { const d = new Date(selectedDate); d.setDate(d.getDate() + 1); selectedDate = d.toISOString().slice(0, 10); renderRoznamcha(); });
+$('btnToday').addEventListener('click', () => { selectedDate = todayStr(); renderRoznamcha(); });
+$('btnSaveProfile').addEventListener('click', async () => { await Store.saveProfile({ name: $('setBizName').value.trim() || APP_NAME, phones: $('setBizPhones').value.trim(), address: $('setBizAddress').value.trim() }); toast('Profile save ho gaya'); });
+$('btnExport').addEventListener('click', exportData);
+$('fileImport').addEventListener('change', e => { if (e.target.files[0]) importData(e.target.files[0]); e.target.value = ''; });
+$('btnResetDemo').addEventListener('click', () => { if (confirm('Demo data saaf kar dein? Saari demo entries mit jayengi.')) { localStorage.removeItem(LS_KEY); Store.loadDemo(); renderAll(); toast('Demo data saaf ho gaya'); } });
+$('btnGoogleLogin').addEventListener('click', googleLogin);
+$('btnDemoLogin').addEventListener('click', enterDemo);
+$('btnLogout').addEventListener('click', logout);
+// Init
+$('loginLogo').src = 'data:image/jpeg;base64,' + LOGO_B64;
+if (CONFIG_IS_PLACEHOLDER) {
+  $('loginModeNote').textContent = 'Note: Firebase config abhi placeholder hai, is liye app Demo Mode mein chalegi — data sirf isi browser mein mehfooz rahe ga.';
+  $('btnDemoLogin').classList.remove('hidden');
+} else {
+  $('loginModeNote').textContent = 'Apne Google account se login karein — aap ka data sirf aap ko dikhe ga.';
+  $('btnDemoLogin').classList.remove('hidden');
+  initFirebase().catch(e => { $('loginModeNote').textContent = 'Firebase start nahi hua: ' + e.message + ' — Demo Mode use karein.'; });
+}
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
