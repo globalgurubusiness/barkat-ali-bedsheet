@@ -158,7 +158,7 @@
         <input id="invSearch" class="w-full text-base placeholder-gray-400" style="border:none" placeholder="Product search: code ya naam...">
       </div>
       <div id="productList" class="space-y-2"></div>
-      <p class="text-xs text-gray-400 mt-3">Har purchase aik alag <b>Lot</b> banti hai apne rate ke saath. Sale FIFO se kategi — pehla lot pehle. Rate kabhi average nahi hota.</p>
+      <p class="text-xs text-gray-400 mt-3">Har purchase aik alag <b>Lot</b> banti hai apne rate ke saath. Sale mein purana maal pehle bikta hai — jo lot pehle aya, woh pehle katega. Rate kabhi average nahi hota.</p>
     </section>
 
     <!-- ===== VIEW: BAQAYA + TALPAT ===== -->
@@ -373,6 +373,16 @@ const BA_CORE = (() => {
     return { ok: true, alloc, cost: r2(alloc.reduce((s, a) => s + a.qty * a.rate, 0)) };
   }
 
+  // Sale ki item lines: nayi entries mein items[] hota hai; purani (legacy) entries mein
+  // top-level productId/qty/rate hai — un ko aik line ki shakal mein wapas karo taake
+  // saara hisaab aik hi tareeqe se chale aur purana data bilkul waisa hi compute ho.
+  function entryItems(e) {
+    if (!e) return [];
+    if (Array.isArray(e.items) && e.items.length) return e.items;
+    if (e.type === 'sale') return [{ productId: e.productId, productName: e.productName, qty: e.qty, rate: e.rate, lotId: e.overrideLotId || null, allocations: (e.allocations && e.allocations.length) ? e.allocations : null }];
+    return [];
+  }
+
   /* Poora derived hisaab aik hi jagah se.
      state = { entries:[], parties:[], products:[], accounts:[] }
      party:  {id, code, type:'buyer'|'seller', name, phone}
@@ -399,20 +409,29 @@ const BA_CORE = (() => {
         const received = r2(e.amountReceived);
         if (total - received > 0) P(e, 'party:' + e.partyId, total - received, 0, 'Sale udhaar');
         if (received > 0) P(e, 'cash', received, 0, 'Sale par wasooli');
-        P(e, 'sales', 0, total, 'Sale ' + (e.productName || ''));
-        // FIFO se lot deduction (agar allocations pehle se mehfooz hain to wohi, warna abhi banao)
-        const prodLots = Object.values(lots).filter(l => l.productId === e.productId && l.remaining > 0)
-          .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0) || (a.seq - b.seq));
-        let alloc = (e.allocations && e.allocations.length) ? e.allocations : null;
-        if (!alloc) { const plan = allocateFIFO(prodLots, +e.qty || 0, e.overrideLotId); alloc = plan.alloc; }
-        let cost = 0;
-        for (const a of alloc) {
-          const lot = lots[a.lotId]; if (!lot) continue;
-          lot.sold = r2(lot.sold + a.qty); lot.remaining = r2(lot.qtyIn - lot.sold);
-          cost = r2(cost + a.qty * a.rate);
+        // Postings hamesha ENTRY level par (statement mein aik hi bill nazar aye ga);
+        // stock/profit har item line se banta hai.
+        const items = entryItems(e);
+        const firstName = (items[0] && items[0].productName) || e.productName || '';
+        P(e, 'sales', 0, total, items.length > 1 ? 'Sale (' + items.length + ' items) — ' + firstName : 'Sale ' + firstName);
+        // FIFO se lot deduction, line by line (agar allocations pehle se mehfooz hain to wohi, warna abhi banao).
+        // Aik hi product ki agli line ko pehli line ke baad bacha hua stock hi milta hai.
+        let cost = 0; const allAlloc = [];
+        for (const it of items) {
+          let alloc = (it.allocations && it.allocations.length) ? it.allocations : null;
+          if (!alloc) {
+            const prodLots = Object.values(lots).filter(l => l.productId === it.productId && l.remaining > 0)
+              .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0) || (a.seq - b.seq));
+            alloc = allocateFIFO(prodLots, +it.qty || 0, it.lotId || undefined).alloc;
+          }
+          for (const a of alloc) {
+            const lot = lots[a.lotId]; if (!lot) continue;
+            lot.sold = r2(lot.sold + a.qty); lot.remaining = r2(lot.qtyIn - lot.sold);
+            cost = r2(cost + a.qty * a.rate); allAlloc.push(a);
+          }
         }
         if (cost > 0) { P(e, 'cogs', cost, 0, 'Bikey hue maal ki laagat'); P(e, 'stock', 0, cost, 'Stock se kata'); }
-        salesInfo[e.id] = { cost, profit: r2(total - cost), alloc };
+        salesInfo[e.id] = { cost, profit: r2(total - cost), alloc: allAlloc };
       } else if (e.type === 'payment_received') {
         P(e, 'cash', total, 0, 'Wasooli'); P(e, 'party:' + e.partyId, 0, total, 'Wasooli');
       } else if (e.type === 'payment_given') {
@@ -467,6 +486,37 @@ const BA_CORE = (() => {
     };
   }
 
+  // Multi-item sale ki planning: lines tartib se simulate hoti hain — aik hi product ki
+  // do lines aik hi stock se ladti nahi; har line ko pehli lines ke baad bacha stock milta hai.
+  // lines = [{productId, qty, rate, lotId}] → {ok, lines:[{..., allocations, lineTotal}], total, cost}
+  // Na ho sake to {ok:false, lineIndex, productId, shortBy, available} (available = product ka kul bacha stock).
+  function planSaleMulti(state, lines) {
+    const d = computeDerived(state);
+    const simLots = {};   // productId -> [{lotId, rate, remaining}] (simulate shuda bacha stock)
+    const getLots = pid => {
+      if (!simLots[pid]) {
+        const inv = d.inventory[pid];
+        simLots[pid] = inv ? inv.lots.filter(l => l.remaining > 0).map(l => ({ lotId: l.lotId, rate: l.rate, remaining: l.remaining })) : [];
+      }
+      return simLots[pid];
+    };
+    let total = 0, cost = 0; const outLines = [];
+    const src = lines || [];
+    for (let i = 0; i < src.length; i++) {
+      const ln = src[i], qty = +ln.qty || 0;
+      const lots = getLots(ln.productId);
+      const plan = allocateFIFO(lots, qty, ln.lotId || undefined);
+      if (!plan.ok) {
+        const inv = d.inventory[ln.productId];
+        return { ok: false, lineIndex: i, productId: ln.productId, shortBy: plan.shortBy, available: inv ? inv.remaining : 0, alloc: plan.alloc };
+      }
+      for (const a of plan.alloc) { const ls = lots.find(l => l.lotId === a.lotId); if (ls) ls.remaining = r2(ls.remaining - a.qty); }
+      total = r2(total + qty * (+ln.rate || 0)); cost = r2(cost + (plan.cost || 0));
+      outLines.push({ ...ln, allocations: plan.alloc, lineTotal: r2(qty * (+ln.rate || 0)) });
+    }
+    return { ok: true, lines: outLines, total, cost };
+  }
+
   // Sale ki planning save se pehle: stock check + FIFO allocations + cost/profit andaza
   function planSale(state, productId, qty, overrideLotId) {
     const d = computeDerived(state);
@@ -493,7 +543,7 @@ const BA_CORE = (() => {
     return { date, entries: day.length, sale, purchase, wasooli, adaigi, kharcha, profit, cashIn, cashOut, cashNet: r2(cashIn - cashOut), gallaTotal: d.cashBalance };
   }
 
-  return { r2, fmtRs, nextCode, activeEntries, allocateFIFO, computeDerived, planSale, dailySummary };
+  return { r2, fmtRs, nextCode, activeEntries, allocateFIFO, computeDerived, planSale, planSaleMulti, entryItems, dailySummary };
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = BA_CORE;
 </script>
@@ -747,7 +797,16 @@ function entryTitle(e) {
   const p = e.partyId ? partyById(e.partyId) : null;
   const prod = e.productId ? productById(e.productId) : null;
   const partyTxt = p ? `${esc(p.code)} • ${esc(p.name)}` : '';
-  if (e.type === 'sale' || e.type === 'purchase') return `${partyTxt} — ${esc(e.productName || (prod ? prod.name : ''))} ${e.qty} pcs @ ${fmtRs(e.rate)}`;
+  if (e.type === 'sale') {
+    const items = BA_CORE.entryItems(e);
+    if (items.length > 1) {
+      const shown = items.slice(0, 3).map(it => `${esc(it.productName || '')} ×${it.qty}`).join(', ');
+      return `${partyTxt} — ${items.length} items: ${shown}${items.length > 3 ? ' +' + (items.length - 3) + ' aur' : ''}`;
+    }
+    const it = items[0] || {};
+    return `${partyTxt} — ${esc(it.productName || e.productName || (prod ? prod.name : ''))} ${it.qty ?? e.qty} pcs @ ${fmtRs(it.rate ?? e.rate)}`;
+  }
+  if (e.type === 'purchase') return `${partyTxt} — ${esc(e.productName || (prod ? prod.name : ''))} ${e.qty} pcs @ ${fmtRs(e.rate)}`;
   if (e.type === 'expense') { const a = e.accountId ? accountById(e.accountId) : null; return `${a ? esc(a.code) + ' • ' + esc(a.name) : 'Kharcha'}${e.note ? ' — ' + esc(e.note) : ''}`; }
   if (partyTxt) return partyTxt + (e.note ? ' — ' + esc(e.note) : '');
   return TYPE_META[e.type] ? TYPE_META[e.type].label : e.type;
@@ -805,7 +864,8 @@ function runSearch(q) {
   const ql = q.toLowerCase();
   const hits = S.data.entries.filter(e => {
     const p = e.partyId ? partyById(e.partyId) : null;
-    const hay = [e.code, e.date, String(e.total), String(e.rate || ''), e.productName || '', p ? p.name : '', p ? p.code : '', p ? p.phone : '', e.note || '', (TYPE_META[e.type] || {}).label || ''].join(' ').toLowerCase();
+    const itemNames = e.type === 'sale' ? BA_CORE.entryItems(e).map(i => i.productName || '').join(' ') : '';
+    const hay = [e.code, e.date, String(e.total), String(e.rate || ''), e.productName || '', itemNames, p ? p.name : '', p ? p.code : '', p ? p.phone : '', e.note || '', (TYPE_META[e.type] || {}).label || ''].join(' ').toLowerCase();
     return ql.split(/\s+/).every(w => hay.includes(w));
   }).sort((a, b) => (b.date < a.date ? -1 : 1) || ((b.seq || 0) - (a.seq || 0))).slice(0, 60);
   const partyHits = S.data.parties.filter(p => (p.name + ' ' + p.code + ' ' + (p.phone || '')).toLowerCase().includes(ql));
@@ -987,7 +1047,7 @@ function accountOptions(sel) {
 }
 function lotOptions(productId, sel) {
   const d = derived(); const inv = d.inventory[productId];
-  let html = `<option value="">Auto (FIFO — pehla lot pehle)</option>`;
+  let html = `<option value="">Auto (purana maal pehle)</option>`;
   if (inv) inv.lots.filter(l => l.remaining > 0).forEach((l, i) => { html += `<option value="${l.lotId}" ${l.lotId === sel ? 'selected' : ''}>Lot ${i + 1} — ${esc(l.code)} • Rate ${fmtRs(l.rate)} • ${l.remaining} bache</option>`; });
   return html;
 }
@@ -1002,6 +1062,47 @@ function stashDraft() {
   ['f_date', 'f_party', 'f_product', 'f_qty', 'f_rate', 'f_amount', 'f_paid', 'f_account', 'f_lot', 'f_note'].forEach(id => {
     const el = $(id); if (el) entryDraft.values[id] = el.value;
   });
+  if (entryDraft.type === 'sale' && $('saleLines')) entryDraft.values.saleLines = readSaleLines();
+}
+/* ================= SALE: MULTI-ITEM LINES ================= */
+function saleLineRowHTML(l) {
+  l = l || {};
+  const pid = l.productId || '';
+  return `<div class="sale-line rounded-xl p-2.5 space-y-2" style="border:1.5px solid #d8dee5">
+    <div class="flex gap-2">
+      <div class="flex-1"><label class="lbl">Product</label><select class="field sl-product">${productOptions(pid)}</select></div>
+      <button type="button" class="sl-remove btn-cream px-3 shrink-0" style="align-self:flex-end;padding-top:10px;padding-bottom:10px" title="Item hataein">✕</button>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <div><label class="lbl">Quantity (pcs)</label><input type="number" class="field sl-qty" min="0" step="any" value="${esc(l.qty ?? '')}" placeholder="80"></div>
+      <div><label class="lbl">Sale Rate (per pc)</label><input type="number" class="field sl-rate" min="0" step="any" value="${esc(l.rate ?? '')}" placeholder="1200"></div>
+    </div>
+    <div><label class="lbl">Lot (khud chunna ho to)</label><select class="field sl-lot">${lotOptions(pid, l.lotId || '')}</select></div>
+    <div class="sl-calc text-sm"></div>
+  </div>`;
+}
+function readSaleLines() {
+  return [...document.querySelectorAll('#saleLines .sale-line')].map(row => ({
+    productId: row.querySelector('.sl-product').value,
+    qty: parseFloat(row.querySelector('.sl-qty').value) || 0,
+    rate: parseFloat(row.querySelector('.sl-rate').value) || 0,
+    lotId: row.querySelector('.sl-lot').value || null
+  }));
+}
+function refreshSaleRemoveBtns() {
+  const rows = document.querySelectorAll('#saleLines .sale-line');
+  rows.forEach(r => { const b = r.querySelector('.sl-remove'); if (b) b.style.visibility = rows.length > 1 ? 'visible' : 'hidden'; });
+}
+function wireSaleLine(row) {
+  const prod = row.querySelector('.sl-product');
+  prod.addEventListener('change', () => {
+    if (prod.value === '__add__') { stashDraft(); openAdd('product', true); }
+    else { const lotSel = row.querySelector('.sl-lot'); lotSel.innerHTML = lotOptions(prod.value, ''); updateCalc(); }
+  });
+  row.querySelector('.sl-qty').addEventListener('input', updateCalc);
+  row.querySelector('.sl-rate').addEventListener('input', updateCalc);
+  row.querySelector('.sl-lot').addEventListener('change', updateCalc);
+  row.querySelector('.sl-remove').addEventListener('click', () => { row.remove(); refreshSaleRemoveBtns(); updateCalc(); });
 }
 function buildEntryForm() {
   const t = entryDraft.type, v = entryDraft.values || {};
@@ -1010,13 +1111,11 @@ function buildEntryForm() {
   const noteF = `<div><label class="lbl">Note (ikhtiyari)</label><input id="f_note" class="field" placeholder="Koi tafseel..." value="${esc(v.f_note || '')}"></div>`;
   let html = dateF;
   if (t === 'sale') {
+    const initLines = (Array.isArray(v.saleLines) && v.saleLines.length) ? v.saleLines
+      : [{ productId: v.f_product || entryDraft.presetProductId || '', qty: v.f_qty || '', rate: v.f_rate || '', lotId: v.f_lot || '' }];
     html += `<div><label class="lbl">Buyer / Client</label><select id="f_party" class="field">${partyOptions('buyer', v.f_party)}</select></div>
-    <div><label class="lbl">Product</label><select id="f_product" class="field">${productOptions(v.f_product || entryDraft.presetProductId)}</select></div>
-    <div class="grid grid-cols-2 gap-2">
-      <div><label class="lbl">Quantity (pcs)</label><input type="number" id="f_qty" class="field" min="0" step="any" value="${esc(v.f_qty || '')}" placeholder="80"></div>
-      <div><label class="lbl">Sale Rate (per pc)</label><input type="number" id="f_rate" class="field" min="0" step="any" value="${esc(v.f_rate || '')}" placeholder="1200"></div>
-    </div>
-    <div><label class="lbl">Lot (khud chunna ho to)</label><select id="f_lot" class="field">${lotOptions(v.f_product || entryDraft.presetProductId, v.f_lot)}</select></div>
+    <div id="saleLines" class="space-y-2">${initLines.map(saleLineRowHTML).join('')}</div>
+    <button type="button" id="btnAddSaleLine" class="btn-cream w-full py-2 text-sm">+ Item add karein</button>
     <div><label class="lbl">Abhi Wasool Hua (Advance / Cash)</label><input type="number" id="f_paid" class="field" min="0" step="any" value="${esc(v.f_paid || '0')}"></div>` + noteF;
   } else if (t === 'purchase') {
     html += `<div><label class="lbl">Seller / Supplier</label><select id="f_party" class="field">${partyOptions('seller', v.f_party)}</select></div>
@@ -1047,23 +1146,47 @@ function buildEntryForm() {
   wire('f_party', t === 'purchase' || t === 'payment_given' ? 'seller' : 'buyer');
   wire('f_product', 'product'); wire('f_account', 'account');
   ['f_qty', 'f_rate', 'f_paid', 'f_amount', 'f_lot'].forEach(id => { const el = $(id); if (el) el.addEventListener('input', updateCalc); if (el && id === 'f_lot') el.addEventListener('change', updateCalc); });
+  if (t === 'sale') {
+    document.querySelectorAll('#saleLines .sale-line').forEach(wireSaleLine);
+    refreshSaleRemoveBtns();
+    const addBtn = $('btnAddSaleLine');
+    if (addBtn) addBtn.addEventListener('click', () => {
+      const wrap = $('saleLines'); if (!wrap) return;
+      wrap.insertAdjacentHTML('beforeend', saleLineRowHTML({}));
+      wireSaleLine(wrap.lastElementChild);
+      refreshSaleRemoveBtns(); updateCalc();
+    });
+  }
   updateCalc();
 }
 function updateCalc() {
   if (!entryDraft) return;
   const t = entryDraft.type, box = $('entryCalcBox');
-  const qty = parseFloat(fieldVal('f_qty')) || 0, rate = parseFloat(fieldVal('f_rate')) || 0;
-  if ((t === 'sale' || t === 'purchase') && qty > 0 && rate > 0) {
-    let txt = `Total: <b>${fmtRs(qty * rate)}</b>`;
-    if (t === 'sale') {
-      const pid = fieldVal('f_product');
-      if (pid) {
-        const plan = BA_CORE.planSale(S.data, pid, qty, fieldVal('f_lot') || undefined);
-        if (!plan.ok) txt += ` &nbsp;|&nbsp; <span style="color:#c0392b">Stock kam hai — sirf ${plan.available} pcs bache hain</span>`;
-        else txt += ` &nbsp;|&nbsp; Laagat: ${fmtRs(plan.cost)} &nbsp;|&nbsp; Andazi Munafa: <b>${fmtRs(qty * rate - plan.cost)}</b><br><span class="text-xs">Lot se katega: ${plan.alloc.map(a => a.qty + ' pcs @ ' + fmtRs(a.rate)).join(' + ')}</span>`;
-      }
-    } else txt += ` &nbsp;|&nbsp; Naya Lot bane ga: ${qty} pcs @ ${fmtRs(rate)}`;
+  if (t === 'sale') {
+    const lines = readSaleLines();
+    document.querySelectorAll('#saleLines .sale-line').forEach((row, i) => {
+      const l = lines[i], c = row.querySelector('.sl-calc');
+      if (c) c.innerHTML = (l && l.qty > 0 && l.rate > 0) ? `Line Total: <b>${fmtRs(l.qty * l.rate)}</b>` : '';
+    });
+    const planLines = lines.filter(l => l.productId && l.productId !== '__add__' && l.qty > 0);
+    const grand = lines.reduce((s, l) => s + ((l.qty > 0 && l.rate > 0) ? l.qty * l.rate : 0), 0);
+    if (!planLines.length || grand <= 0) { box.classList.add('hidden'); return; }
+    let txt = `Total: <b>${fmtRs(grand)}</b>`;
+    const plan = BA_CORE.planSaleMulti(S.data, planLines);
+    if (!plan.ok) {
+      const prod = productById(plan.productId);
+      txt += ` &nbsp;|&nbsp; <span style="color:#c0392b">Stock kam hai — ${esc(prod ? prod.name : '')} sirf ${plan.available} pcs bache hain (bill ki kul miqdar is se zyada hai)</span>`;
+    } else {
+      const splits = plan.lines.map(pl => { const pr = productById(pl.productId); return esc(pr ? pr.name : '') + ': ' + pl.allocations.map(a => a.qty + ' pcs @ ' + fmtRs(a.rate)).join(' + '); }).join('<br>');
+      txt += ` &nbsp;|&nbsp; Laagat: ${fmtRs(plan.cost)} &nbsp;|&nbsp; Andazi Munafa: <b>${fmtRs(plan.total - plan.cost)}</b><br><span class="text-xs">Lot se katega:<br>${splits}</span>`;
+    }
     box.innerHTML = txt; box.classList.remove('hidden');
+    return;
+  }
+  const qty = parseFloat(fieldVal('f_qty')) || 0, rate = parseFloat(fieldVal('f_rate')) || 0;
+  if (t === 'purchase' && qty > 0 && rate > 0) {
+    box.innerHTML = `Total: <b>${fmtRs(qty * rate)}</b> &nbsp;|&nbsp; Naya Lot bane ga: ${qty} pcs @ ${fmtRs(rate)}`;
+    box.classList.remove('hidden');
   } else box.classList.add('hidden');
 }
 async function saveEntry() {
@@ -1071,19 +1194,29 @@ async function saveEntry() {
   const date = fieldVal('f_date') || selectedDate;
   const seq = S.data.entries.reduce((m, e) => Math.max(m, e.seq || 0), 0) + 1;
   const base = { id: genId(), code: nextCode('E-', S.data.entries.map(e => e.code)), seq, date, type: t, note: fieldVal('f_note').trim(), status: 'active', createdAt: new Date().toISOString() };
-  if (t === 'sale' || t === 'purchase') {
+  if (t === 'sale') {
+    const partyId = fieldVal('f_party'), paid = parseFloat(fieldVal('f_paid')) || 0;
+    if (!partyId || partyId === '__add__') { sfx('error'); return toast('Buyer chunein'); }
+    const lines = readSaleLines().filter(l => l.productId || l.qty > 0 || l.rate > 0);
+    if (!lines.length) { sfx('error'); return toast('Kam az kam aik item add karein'); }
+    for (const l of lines) {
+      if (!l.productId || l.productId === '__add__') { sfx('error'); return toast('Har item ka Product chunein'); }
+      if (l.qty <= 0 || l.rate <= 0) { sfx('error'); return toast('Har item ki Quantity aur Rate theek likhein'); }
+    }
+    // Poori bill ki planning ikatthi: aik hi product ki lines ka sum bhi stock se zyada nahi ho sakta
+    const plan = BA_CORE.planSaleMulti(S.data, lines);
+    if (!plan.ok) { sfx('error'); const prod = productById(plan.productId); return toast('Stock kam hai — ' + (prod ? prod.name : 'Product') + ' sirf ' + plan.available + ' pcs bache hain'); }
+    const items = plan.lines.map(pl => { const pr = productById(pl.productId); return { productId: pl.productId, productName: pr ? pr.name : '', qty: pl.qty, rate: pl.rate, lotId: pl.lotId || null, allocations: pl.allocations }; });
+    Object.assign(base, { partyId, items, productId: items[0].productId, productName: items[0].productName, total: plan.total, amountReceived: Math.min(paid, plan.total) });
+  } else if (t === 'purchase') {
     const partyId = fieldVal('f_party'), productId = fieldVal('f_product');
     const qty = parseFloat(fieldVal('f_qty')) || 0, rate = parseFloat(fieldVal('f_rate')) || 0, paid = parseFloat(fieldVal('f_paid')) || 0;
-    if (!partyId || partyId === '__add__') { sfx('error'); return toast(t === 'sale' ? 'Buyer chunein' : 'Seller chunein'); }
+    if (!partyId || partyId === '__add__') { sfx('error'); return toast('Seller chunein'); }
     if (!productId || productId === '__add__') { sfx('error'); return toast('Product chunein'); }
     if (qty <= 0 || rate <= 0) { sfx('error'); return toast('Quantity aur Rate theek likhein'); }
     const prod = productById(productId);
     Object.assign(base, { partyId, productId, productName: prod ? prod.name : '', qty, rate, total: r2(qty * rate) });
-    if (t === 'sale') {
-      const plan = BA_CORE.planSale(S.data, productId, qty, fieldVal('f_lot') || undefined);
-      if (!plan.ok) { sfx('error'); return toast('Stock kam hai — sirf ' + plan.available + ' pcs bache hain'); }
-      base.allocations = plan.alloc; base.amountReceived = Math.min(paid, base.total);
-    } else base.amountPaid = Math.min(paid, base.total);
+    base.amountPaid = Math.min(paid, base.total);
   } else if (t === 'payment_received' || t === 'payment_given') {
     const partyId = fieldVal('f_party'), amount = parseFloat(fieldVal('f_amount')) || 0;
     if (!partyId || partyId === '__add__') { sfx('error'); return toast('Party chunein'); }
@@ -1180,12 +1313,18 @@ async function saveAdd() {
   $('addModal').classList.add('hidden');
   toast('Add ho gaya'); sfx('save');
   if (addCtx.fromEntry && entryDraft) {
-    stashDraftKeep();
-    buildEntryForm();
-    // nayi cheez ko select kar do
-    const map = { buyer: 'f_party', seller: 'f_party', product: 'f_product', account: 'f_account' };
-    const el = $(map[kind]); if (el) el.value = id;
-    if (kind === 'product' && entryDraft.type === 'sale') { entryDraft.values.f_product = id; buildEntryForm(); const el2 = $('f_product'); if (el2) el2.value = id; }
+    if (entryDraft.type === 'sale' && kind === 'product') {
+      // jis sale line par "naya product" chuna tha, usi line mein naya product lag jaye
+      (entryDraft.values.saleLines || []).forEach(l => { if (l.productId === '__add__') l.productId = id; });
+      buildEntryForm();
+    } else {
+      stashDraftKeep();
+      buildEntryForm();
+      // nayi cheez ko select kar do
+      const map = { buyer: 'f_party', seller: 'f_party', product: 'f_product', account: 'f_account' };
+      const el = $(map[kind]); if (el) el.value = id;
+      if (kind === 'product' && entryDraft.type === 'sale') { entryDraft.values.f_product = id; buildEntryForm(); const el2 = $('f_product'); if (el2) el2.value = id; }
+    }
     updateCalc();
   }
   renderAll();
@@ -1243,7 +1382,7 @@ function billHTML(e) {
   <div style="font-size:13px;margin-bottom:8px">Naam Kharidaar: <b>${party ? esc(party.code) + ' • ' + esc(party.name) : ''}</b> ${party && party.phone ? '(' + esc(party.phone) + ')' : ''}</div>
   <table style="width:100%;border-collapse:collapse;font-size:14px">
     <tr style="background:#6d1a2d;color:#fff"><th style="padding:7px;text-align:left">Number</th><th style="padding:7px;text-align:left">Tafseel</th><th style="padding:7px;text-align:right">Narkh</th><th style="padding:7px;text-align:right">Rupay</th></tr>
-    <tr style="border-bottom:1px solid #ccc"><td style="padding:7px">${e.qty}</td><td style="padding:7px">${esc(e.productName || '')}</td><td style="padding:7px;text-align:right">${fmtRs(e.rate)}</td><td style="padding:7px;text-align:right">${fmtRs(e.total)}</td></tr>
+    ${BA_CORE.entryItems(e).map(it => `<tr style="border-bottom:1px solid #ccc"><td style="padding:7px">${it.qty}</td><td style="padding:7px">${esc(it.productName || '')}</td><td style="padding:7px;text-align:right">${fmtRs(it.rate)}</td><td style="padding:7px;text-align:right">${fmtRs(r2((+it.qty || 0) * (+it.rate || 0)))}</td></tr>`).join('')}
   </table>
   <table style="width:260px;margin-left:auto;font-size:14px;margin-top:8px">
     <tr><td style="padding:4px">Total</td><td style="padding:4px;text-align:right"><b>${fmtRs(e.total)}</b></td></tr>
