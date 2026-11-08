@@ -70,17 +70,19 @@
   .pwrap,.psheet{ display:flex; flex-direction:column; }
   /* page-break ka usool base (screen) par bhi rakha hai: html2pdf ka CSS pagebreak mode computed style parhta hai,
      aur @media print ke andar wala rule screen par computed nahi hota — is ke baghair PDF mein sheets idhar udhar kat sakti thein */
-  .psheet{ page-break-after:always; }
+  .psheet{ page-break-after:always; box-sizing:border-box; padding:10px; }
   .psheet:last-child{ page-break-after:auto; }
   .pfoot{ margin-top:auto; padding-top:14px; }
   @media print{
     @page{ size:A4; margin:10mm; }
     body *{ visibility:hidden; }
     #printArea, #printArea *{ visibility:visible; }
-    #printArea{ position:absolute; inset:0; display:block!important; padding:10px; background:#fff; }
-    /* A4 height 297mm − @page margins (10mm upar + 10mm neeche) − 0.5mm safety: har sheet bilkul aik page ki,
-       footer usi page ke bilkul bottom par; sheet ke baad page break, aakhri sheet ke baad nahi (khaali page nahi banta) */
-    .psheet{ min-height:calc(100vh - 20.5mm); page-break-after:always; }
+    #printArea{ position:absolute; inset:0; display:block!important; padding:0; background:#fff; }
+    /* Padding printArea par nahi, har sheet ke ANDAR hai (border-box) — is liye sheet ki total height bilkul
+       min-height jitni hi rehti hai, koi chhupa hua extra nahi. A4 height 297mm − @page margins (10mm upar +
+       10mm neeche) − 0.5mm safety = 276.5mm ≤ printable 277mm: footer usi page ke bottom par rehta hai,
+       doosre page par nahi girta; sheet ke baad page break, aakhri sheet ke baad nahi (khaali page nahi banta) */
+    .psheet{ min-height:calc(100vh - 20.5mm); page-break-after:always; box-sizing:border-box; padding:10px; }
     .psheet:last-child{ page-break-after:auto; }
   }
 </style>
@@ -1677,7 +1679,7 @@ function printHeaderHTML(p) {
   // Aakhri item ke baad margin nahi (line ke aakhir mein fazool faasla nahi parta)
   if (items.length) items[items.length - 1] = items[items.length - 1].replace('margin-right:14px', 'margin-right:0');
   const contactRow = items.length ? `<div style="font-size:10.5px;color:#444;margin-top:2px;line-height:1.25">${items.join('')}</div>` : '';
-  return `<table style="width:100%;border-collapse:collapse"><tr><td style="width:120px;vertical-align:top;padding:0"><img src="logo.png" alt="logo" style="display:block;height:104px;width:auto;object-fit:contain"></td><td style="vertical-align:top;padding:0 0 0 8px;line-height:1.25"><div style="font-size:16px;font-weight:800;color:#6d1a2d;line-height:1.15;margin:0">${esc(prof.name || APP_NAME)}</div><div style="font-size:11px;color:#555;margin-top:1px;line-height:1.2">${esc(prof.address || '')}</div>${contactRow}</td></tr></table><div style="border-bottom:3px solid #6d1a2d;margin-top:4px"></div>`;
+  return `<table style="width:100%;border-collapse:collapse"><tr><td style="width:120px;vertical-align:middle;padding:0"><img src="logo.png" alt="logo" style="display:block;height:104px;width:auto;object-fit:contain"></td><td style="vertical-align:middle;padding:0 0 0 8px;line-height:1.25"><div style="font-size:16px;font-weight:800;color:#6d1a2d;line-height:1.15;margin:0">${esc(prof.name || APP_NAME)}</div><div style="font-size:11px;color:#555;margin-top:1px;line-height:1.2">${esc(prof.address || '')}</div>${contactRow}</td></tr></table><div style="border-bottom:3px solid #6d1a2d;margin-top:4px"></div>`;
 }
 function billHTML(e) {
   const p = normalizeProfile(S.data.profile || { ...DEFAULT_PROFILE });
@@ -1744,12 +1746,15 @@ async function downloadPDF(filename) {
   const ok = await loadHtml2Pdf().catch(() => false);
   if (ok && window.html2pdf) {
     const holder = document.createElement('div');
-    holder.style.cssText = 'position:absolute;left:0;top:0;width:780px;background:#fff;z-index:-1';
+    holder.style.cssText = 'position:absolute;left:0;top:0;width:794px;margin:0;padding:0;background:#fff;z-index:-1';
     const clone = $('printArea').cloneNode(true);
     clone.removeAttribute('id'); clone.classList.remove('hidden');
     holder.appendChild(clone); document.body.appendChild(holder);
-    // Clone page ke bilkul upar se shuru ho — koi inherited margin/padding upar ki khaali patti nahi banata
-    clone.style.margin = '0'; clone.style.padding = '0'; clone.style.display = 'block';
+    // Clone ki width 794px par PIN hai (A4 @96dpi): html2pdf ki aik-page wali slice height element ki width se
+    // banti hai (width × 297/210 = 794 × 1.4143 ≈ 1123px) — sheet ki height 1080px (border-box, padding andar
+    // shamil) is se ~43px kam hai, is liye branding line hamesha USI page par rehti hai, doosre page par nahi
+    // girti. Clone page ke bilkul upar se shuru ho — koi inherited margin/padding khaali patti nahi banata.
+    clone.style.margin = '0'; clone.style.padding = '0'; clone.style.display = 'block'; clone.style.width = '794px';
     // Har page-sheet ko A4 page ki height ke qareeb-tareen height do (1080px clone scale par — branding line
     // page ke ~96% neeche tak jati hai): har sheet apne page par aye gi — header upar, branding line
     // (flex margin-top:auto) page ke bilkul neeche. Page breaks CSS mode se hote hain (neeche pagebreak
