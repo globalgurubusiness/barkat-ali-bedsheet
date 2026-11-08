@@ -97,6 +97,10 @@
     </div>
   </header>
 
+  <div id="demoBanner" class="hidden" style="background:#f3e2c7;border-bottom:1px solid rgba(109,26,45,.18)">
+    <div class="max-w-3xl lg:max-w-6xl mx-auto px-4 py-1.5 text-center text-[11px] font-extrabold tracking-wide brand-text">Demo Session</div>
+  </div>
+
   <main class="max-w-3xl lg:max-w-6xl mx-auto px-3 sm:px-4 lg:px-6">
 
     <!-- ===== VIEW: ROZNAMCHA ===== -->
@@ -211,6 +215,12 @@
     <!-- ===== VIEW: SETTINGS ===== -->
     <section id="view-settings" class="view hidden pt-3">
       <h2 class="text-lg font-extrabold brand-text mb-2">Settings</h2>
+      <div id="ownerSetupCard" class="card p-4 space-y-3 mb-4 lg:max-w-3xl hidden">
+        <div class="font-bold text-sm brand-text">Owner Setup</div>
+        <div><label class="lbl">Owner ka Naam</label><input id="setupOwnerName" class="field"></div>
+        <div><label class="lbl">Gmail</label><div id="setupGmail" class="text-sm font-semibold"></div></div>
+        <button id="btnOwnerSetup" class="btn-brand w-full py-2.5">Apna Khata Shuru karein</button>
+      </div>
       <div class="card p-4 space-y-3 mb-4 lg:max-w-3xl">
         <div class="flex items-center justify-between gap-3">
           <div><div class="font-bold text-sm brand-text">Sound</div><div class="text-xs text-gray-400">Har action par usi ke hisaab ki halki awaaz</div></div>
@@ -239,7 +249,15 @@
       </div>
       <div id="sharingCard" class="card p-4 space-y-3 mb-4 lg:max-w-3xl hidden">
         <div class="font-bold text-sm brand-text">Khata Sharing</div>
-        <div><label class="lbl">Owner</label><div id="shareOwner" class="text-sm font-semibold"></div></div>
+        <div><label class="lbl">Owner</label><div id="shareOwner" class="text-sm font-semibold"></div>
+          <div id="shareOwnerNameEdit" class="hidden mt-2">
+            <label class="lbl">Owner ka Naam</label>
+            <div class="flex gap-2">
+              <input id="shareOwnerName" class="field flex-1">
+              <button id="btnSaveOwnerName" class="btn-brand px-4 shrink-0">Save</button>
+            </div>
+          </div>
+        </div>
         <div><label class="lbl">Members</label><div id="shareMembers" class="space-y-1.5"></div></div>
         <div id="shareOwnerTools">
           <label class="lbl">Gmail</label>
@@ -668,7 +686,7 @@ function normalizeProfile(p) {
 const SEED_PRODUCTS = ['Khes', 'Dari', 'Kambal', 'Crystal', 'Diamond'];
 const SEED_ACCOUNTS = ['Kirya / Transport', 'Mazdoori', 'Chai / Khana', 'Dukkan Kharcha', 'Deegar Kharcha'];
 
-let S = { mode: 'none', uid: null, wid: null, role: null, userEmail: '', userName: '', ws: null, data: { parties: [], products: [], accounts: [], entries: [], profile: { ...DEFAULT_PROFILE } }, derived: null };
+let S = { mode: 'none', uid: null, wid: null, role: null, userEmail: '', userName: '', ws: null, authDemo: false, authDone: false, data: { parties: [], products: [], accounts: [], entries: [], profile: { ...DEFAULT_PROFILE } }, derived: null };
 let selectedDate = todayStr();
 let fb = null;          // firebase handles (mode === 'firebase' par)
 let unsubs = [];
@@ -740,13 +758,22 @@ async function initFirebase() {
   authMod.getRedirectResult(auth).catch(() => {});
   authMod.onAuthStateChanged(auth, async user => {
     if (!user) return;
-    if (S.mode === 'firebase' && S.uid === user.uid && S.wid) return; // pehle se resolved hai
-    S.mode = 'firebase'; S.uid = user.uid;
+    if (S.uid === user.uid && S.authDone) return; // is login ki resolution pehle ho chuki hai
+    S.uid = user.uid;
     if (resolvingWs) return; resolvingWs = true;
     try { await resolveWorkspace(user); } catch (e) { sfx('error'); toast('Khata load nahi hua: ' + e.message); }
     resolvingWs = false;
-    if (!S.wid) return;
-    subscribeFirestore(); enterApp();
+    S.authDone = true;
+    if (S.wid) {
+      S.mode = 'firebase'; S.authDemo = false;
+      subscribeFirestore();
+    } else {
+      // Login hai lekin koi khata nahi mila — DEMO SESSION (local demo store hi chalega,
+      // cloud par kuch nahi parha/likha jayega). Asal khata Owner Setup se shuru hota hai.
+      S.mode = 'demo'; S.role = 'none'; S.authDemo = true;
+      Store.loadDemo();
+    }
+    enterApp();
   });
 }
 function subscribeFirestore() {
@@ -781,17 +808,18 @@ function subscribeFirestore() {
    Login ke baad active workspace is tartib se milta hai:
    1) Kisi workspace ke memberEmails mein mera email hai -> woh SHARED khata (role: member)
    2) Warna jo workspace maine khud banaya hai (ownerUid == mera uid) -> role: owner
-   3) Warna naya workspace banta hai aur purana data wahan migrate ho jata hai */
+   3) Warna DEMO SESSION — koi workspace NAHI banta. Asal khata sirf Settings ke
+      "Owner Setup" se banta hai (naam de kar). Us se pehle sab demo hai. */
 // Pure decision (koi Firebase nahi) — found = { inviteWs, ownedWs } (doc data + id, ya null)
 function pickWorkspace(found) {
   // NOTE: invite AUR apna workspace dono hon to invite wala jeet-ta hai —
   // is dukaan ke use-case mein family ka shared khata hi asal khata hai.
   if (found && found.inviteWs) return { action: 'use', wid: found.inviteWs.id, role: 'member', ws: found.inviteWs };
   if (found && found.ownedWs) return { action: 'use', wid: found.ownedWs.id, role: 'owner', ws: found.ownedWs };
-  return { action: 'create' };
+  return { action: 'demo' };
 }
 async function resolveWorkspace(user) {
-  const { collection, query, where, getDocs, addDoc } = fb.fs;
+  const { collection, query, where, getDocs } = fb.fs;
   const email = String(user.email || '').toLowerCase();
   S.userEmail = email;
   S.userName = user.displayName || (email ? email.split('@')[0] : '');
@@ -804,10 +832,42 @@ async function resolveWorkspace(user) {
   if (!own.empty) ownedWs = { id: own.docs[0].id, ...own.docs[0].data() };
   const pick = pickWorkspace({ inviteWs, ownedWs });
   if (pick.action === 'use') { S.wid = pick.wid; S.role = pick.role; S.ws = pick.ws; return; }
-  const wsData = { name: APP_NAME, ownerUid: user.uid, ownerEmail: email, memberEmails: [], createdAt: new Date().toISOString() };
-  const ref = await addDoc(collection(fb.db, 'workspaces'), wsData);
-  S.wid = ref.id; S.role = 'owner'; S.ws = { id: ref.id, ...wsData };
-  await migrateLegacyData(user.uid, ref.id);
+  // Demo session: wid null rehta hai, koi create/migration yahan NAHI hoti
+  S.wid = null; S.role = 'none'; S.ws = null;
+}
+/* ---------------- OWNER SETUP — demo session se asal khata ----------------
+   Workspace banane ki poori app mein YAHI aik jagah hai (login par auto-create khatam).
+   Client pehle apna naam + apni pehli Gmail deta hai — tab se asal kaam shuru hota hai. */
+const isAuthDemo = () => !!S.authDemo && S.mode === 'demo' && !S.wid;
+function renderOwnerSetup() {
+  const card = $('ownerSetupCard'); if (!card) return;
+  const show = isAuthDemo();
+  card.classList.toggle('hidden', !show);
+  if (show) $('setupGmail').textContent = S.userEmail || '';
+}
+function renderDemoBanner() {
+  const b = $('demoBanner'); if (!b) return;
+  b.classList.toggle('hidden', S.mode !== 'demo');
+}
+async function setupOwnerKhata() {
+  if (!isAuthDemo() || !fb) return;
+  const name = ($('setupOwnerName').value || '').trim();
+  if (!name) { sfx('error'); return toast('Owner ka naam likhein'); }
+  try {
+    const { collection, addDoc } = fb.fs;
+    const wsData = { name: APP_NAME, ownerUid: S.uid, ownerEmail: S.userEmail, ownerName: name, memberEmails: [], createdAt: new Date().toISOString() };
+    const ref = await addDoc(collection(fb.db, 'workspaces'), wsData);
+    S.wid = ref.id; S.role = 'owner'; S.ws = { id: ref.id, ...wsData };
+    // Purana per-user data ho to naye khate mein copy (legacy mehfooz rehta hai);
+    // na ho to subscribeFirestore wala pehli-dafa seed khud lag jata hai
+    await migrateLegacyData(S.uid, ref.id);
+    S.authDemo = false; S.mode = 'firebase';
+    // Demo (local) data cloud state se badal jaye — snapshots isay foran bhar denge
+    S.data = { parties: [], products: [], accounts: [], entries: [], profile: { ...DEFAULT_PROFILE } };
+    subscribeFirestore();
+    applyProfile(); renderAll();
+    toast('Khata shuru ho gaya'); sfx('save');
+  } catch (e) { sfx('error'); toast('Khata shuru nahi hua: ' + e.message); }
 }
 /* ONE-TIME migration: purana per-user data naye workspace mein COPY hota hai.
    Legacy data delete ya change NAHI hota — backup ke tor par waisa hi rehta hai.
@@ -843,15 +903,35 @@ function renderSharing() {
   if (S.mode !== 'firebase' || !S.ws) { card.classList.add('hidden'); return; }
   card.classList.remove('hidden');
   const ws = S.ws;
-  $('shareOwner').textContent = ws.ownerEmail || '';
+  const ownerName = String(ws.ownerName || '').trim();
+  // Owner pehle NAAM se, email us ke neeche — purane khate (ownerName nahi) par sirf email
+  $('shareOwner').innerHTML = ownerName
+    ? `<div>${esc(ownerName)}</div><div class="text-xs text-gray-400 font-normal">${esc(ws.ownerEmail || '')}</div>`
+    : esc(ws.ownerEmail || '');
   const members = Array.isArray(ws.memberEmails) ? ws.memberEmails : [];
   const isOwner = S.role === 'owner';
+  const nameEdit = $('shareOwnerNameEdit');
+  if (nameEdit) {
+    nameEdit.classList.toggle('hidden', !isOwner);
+    const nameInput = $('shareOwnerName');
+    if (isOwner && nameInput && document.activeElement !== nameInput) nameInput.value = ownerName;
+  }
   $('shareMembers').innerHTML = members.length ? members.map(em => `<div class="flex items-center gap-2">
       <span class="chip cream2-bg brand-text shrink-0">Member</span>
       <span class="flex-1 text-sm truncate">${esc(em)}</span>
       ${isOwner ? `<button type="button" class="btn-cream px-2.5 py-1 text-xs shrink-0" data-remove="${esc(em)}">✕</button>` : ''}
     </div>`).join('') : '<div class="text-sm text-gray-400">—</div>';
   $('shareOwnerTools').classList.toggle('hidden', !isOwner);
+}
+async function saveOwnerName() {
+  if (!fb || !S.wid || S.role !== 'owner') return;
+  const name = ($('shareOwnerName').value || '').trim();
+  if (!name) { sfx('error'); return toast('Owner ka naam likhein'); }
+  try {
+    const { doc, updateDoc } = fb.fs;
+    await updateDoc(doc(fb.db, 'workspaces', S.wid), { ownerName: name });
+    toast('Naam save ho gaya'); sfx('save');
+  } catch (e) { sfx('error'); toast('Save nahi hua: ' + e.message); }
 }
 async function shareAddMember() {
   if (!fb || !S.wid || S.role !== 'owner') return;
@@ -885,18 +965,20 @@ async function googleLogin() {
   try { await fb.authMod.signInWithPopup(fb.auth, provider); }
   catch (e) { try { await fb.authMod.signInWithRedirect(fb.auth, provider); } catch (e2) { sfx('error'); toast('Login error: ' + e2.message); } }
 }
-function enterDemo() { S.mode = 'demo'; S.uid = 'demo'; Store.loadDemo(); enterApp(); }
+function enterDemo() { S.mode = 'demo'; S.uid = 'demo'; S.authDemo = false; Store.loadDemo(); enterApp(); }
 function enterApp() {
   $('loginScreen').classList.add('hidden'); $('appScreen').classList.remove('hidden');
   $('modeBadge').classList.toggle('hidden', S.mode !== 'demo');
   $('btnResetDemo').classList.toggle('hidden', S.mode !== 'demo');
+  renderDemoBanner();
   applyProfile(); renderAll();
   sfx('login');
 }
 async function logout() {
-  if (S.mode === 'firebase' && fb) { try { await fb.authMod.signOut(fb.auth); } catch (e) {} }
+  if (fb && fb.auth && fb.auth.currentUser) { try { await fb.authMod.signOut(fb.auth); } catch (e) {} }
   unsubs.forEach(u => u()); unsubs = [];
   S.mode = 'none'; S.uid = null; S.wid = null; S.role = null; S.ws = null; S.userEmail = ''; S.userName = '';
+  S.authDemo = false; S.authDone = false; resolvingWs = false;
   $('appScreen').classList.add('hidden'); $('loginScreen').classList.remove('hidden');
 }
 function applyProfile() {
@@ -998,6 +1080,8 @@ function renderAll() {
   renderRoznamcha(); renderKhata(); renderInventory(); renderBaqaya(); renderParties(); renderPnL();
   if (typeof renderSharing === 'function') renderSharing();
   if (typeof renderResetCard === 'function') renderResetCard();
+  if (typeof renderOwnerSetup === 'function') renderOwnerSetup();
+  if (typeof renderDemoBanner === 'function') renderDemoBanner();
 }
 function renderRoznamcha() {
   const d = BA_CORE.dailySummary(S.data, selectedDate);
@@ -1612,13 +1696,16 @@ async function importData(file) {
    Saari entries / parties / products / heads delete ho kar pehli dafa wala seed dobara
    lagta hai aur profile defaults par wapas jati hai. Login, workspace doc aur sharing
    (memberEmails) ko NAHI chherta. Cloud mode mein card sirf OWNER ko dikhta hai —
-   member ko card hi nazar nahi ata. Demo mode mein card dikhta hai (local single user). */
+   member ko card hi nazar nahi ata. Classic Demo mode mein card dikhta hai (local
+   single user); logged-in DEMO SESSION mein card NAHI dikhta (asal khata hi nahi hai). */
 function renderResetCard() {
   const card = $('resetCard'); if (!card) return;
-  const show = S.mode === 'demo' || (S.mode === 'firebase' && S.role === 'owner');
+  // Classic demo ya cloud OWNER — logged-in demo session aur member ko card nahi dikhta
+  const show = (S.mode === 'demo' && !S.authDemo) || (S.mode === 'firebase' && S.role === 'owner');
   card.classList.toggle('hidden', !show);
 }
 async function factoryResetData() {
+  if (S.authDemo) return; // demo session mein asal reset nahi — pehle Owner Setup hoga
   if (S.mode !== 'demo' && S.role !== 'owner') return; // double safety: member reset nahi kar sakta
   if (!confirm('Saara data reset kar dein? Tamam entries, parties, products aur heads mit jayenge.')) return;
   if (!confirm('Akhri dafa confirm karein — reset ke baad purana data wapas nahi aayega.')) return;
@@ -1674,6 +1761,8 @@ $('setSound').addEventListener('change', async e => {
   toast(on ? 'Sound on ho gaya' : 'Sound band ho gaya');
 });
 $('btnAddContact').addEventListener('click', () => addContactRow());
+$('btnOwnerSetup').addEventListener('click', setupOwnerKhata);
+$('btnSaveOwnerName').addEventListener('click', saveOwnerName);
 $('btnShareAdd').addEventListener('click', shareAddMember);
 $('shareMembers').addEventListener('click', e => { const b = e.target.closest('[data-remove]'); if (b) shareRemoveMember(b.dataset.remove); });
 $('shareEmail').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); shareAddMember(); } });
