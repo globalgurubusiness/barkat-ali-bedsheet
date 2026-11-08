@@ -34,12 +34,21 @@
   .sfx-toggle .knob{ position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.3); transition:.2s; }
   .sfx-toggle input:checked + .track{ background:var(--brand); }
   .sfx-toggle input:checked + .track .knob{ left:25px; }
+  /* Lists ke andar apna scrollbar — ~5-7 rows ke baad list apne box mein scroll hoti hai, poora page disturb nahi hota */
+  .listscroll{ overflow-y:auto; overscroll-behavior:contain; max-height:calc(100dvh - 320px); scrollbar-width:thin; scrollbar-color:var(--brand) #efe6d2; }
+  .listscroll::-webkit-scrollbar{ width:8px; }
+  .listscroll::-webkit-scrollbar-track{ background:#efe6d2; border-radius:8px; }
+  .listscroll::-webkit-scrollbar-thumb{ background:var(--brand); border-radius:8px; }
+  #dayEntries.listscroll{ max-height:calc(100dvh - 400px); }
   /* Desktop (web) view — sirf bari screens; mobile bilkul waisa hi rehta hai */
   @media (min-width:1024px){
-    #view-khata:not(.hidden){ display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:0 1rem; align-items:start; }
-    #view-khata > *{ grid-column:1 / -1; }
-    #view-khata > #khataList{ grid-column:1; }
-    #view-khata > #statementWrap{ grid-column:2; margin-top:0; }
+    .listscroll{ max-height:calc(100dvh - 300px); }
+    #dayEntries.listscroll{ max-height:calc(100dvh - 330px); }
+    /* Khata: do-column split SIRF jab statement khula ho (.stmt-open); warna accounts list poori width par */
+    #view-khata.stmt-open:not(.hidden){ display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:0 1rem; align-items:start; }
+    #view-khata.stmt-open > *{ grid-column:1 / -1; }
+    #view-khata.stmt-open > #khataList{ grid-column:1; }
+    #view-khata.stmt-open > #statementWrap{ grid-column:2; margin-top:0; }
     #productList{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.5rem; }
     #productList > *{ margin-top:0 !important; }
     #buyerList, #sellerList{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.5rem; }
@@ -114,7 +123,7 @@
 
       <div id="searchResultsWrap" class="hidden mb-3">
         <div class="text-sm font-bold brand-text mb-2" id="searchResultsTitle"></div>
-        <div id="searchResults" class="space-y-2"></div>
+        <div id="searchResults" class="space-y-2 listscroll"></div>
       </div>
 
       <div id="roznamchaMain">
@@ -134,7 +143,7 @@
           <div class="text-sm font-bold brand-text" id="dayEntriesTitle">Aaj ki Entries</div>
           <button id="btnDailyReport" class="text-xs font-bold brand-text underline">Roz ki Report / Band</button>
         </div>
-        <div id="dayEntries" class="space-y-2"></div>
+        <div id="dayEntries" class="space-y-2 listscroll"></div>
       </div>
     </section>
 
@@ -148,7 +157,7 @@
       <div class="card p-3 mb-3">
         <input id="khataSearch" class="w-full text-base placeholder-gray-400" style="border:none">
       </div>
-      <div id="khataList" class="space-y-2"></div>
+      <div id="khataList" class="space-y-2 listscroll"></div>
       <div id="statementWrap" class="hidden mt-4"></div>
     </section>
 
@@ -162,7 +171,7 @@
       <div class="card p-3 mb-3">
         <input id="invSearch" class="w-full text-base placeholder-gray-400" style="border:none">
       </div>
-      <div id="productList" class="space-y-2"></div>
+      <div id="productList" class="space-y-2 listscroll"></div>
       <p class="text-xs text-gray-400 mt-3">Har purchase aik alag <b>Lot</b> banti hai apne rate ke saath. Sale mein purana maal pehle bikta hai — jo lot pehle aya, woh pehle katega. Rate kabhi average nahi hota.</p>
     </section>
 
@@ -170,9 +179,10 @@
     <section id="view-baqaya" class="view hidden pt-3">
       <h2 class="text-lg font-extrabold brand-text mb-2">Baqaya (Balances)</h2>
       <div id="baqayaCards" class="grid grid-cols-2 gap-2 mb-3"></div>
-      <div id="baqayaList" class="space-y-2 mb-5"></div>
+      <div id="baqayaList" class="space-y-2 mb-5 listscroll"></div>
       <h2 class="text-lg font-extrabold brand-text mb-2">Talpat (Trial Balance)</h2>
       <div class="card overflow-hidden mb-3">
+        <div class="listscroll">
         <table class="w-full text-sm">
           <thead><tr class="cream2-bg text-left">
             <th class="p-3 font-bold">Khata</th>
@@ -182,6 +192,7 @@
           <tbody id="talpatBody"></tbody>
           <tfoot id="talpatFoot"></tfoot>
         </table>
+        </div>
       </div>
       <div id="talpatStatus" class="mb-4"></div>
     </section>
@@ -199,9 +210,9 @@
         <input id="partySearch" class="w-full text-base placeholder-gray-400" style="border:none">
       </div>
       <div class="text-sm font-bold brand-text mb-2">Buyers / Clients</div>
-      <div id="buyerList" class="space-y-2 mb-4"></div>
+      <div id="buyerList" class="space-y-2 mb-4 listscroll"></div>
       <div class="text-sm font-bold brand-text mb-2">Sellers / Suppliers</div>
-      <div id="sellerList" class="space-y-2"></div>
+      <div id="sellerList" class="space-y-2 listscroll"></div>
     </section>
 
     <!-- ===== VIEW: MORE (Aakhri Hisaab) ===== -->
@@ -213,13 +224,13 @@
     <!-- ===== VIEW: SETTINGS ===== -->
     <section id="view-settings" class="view hidden pt-3">
       <h2 class="text-lg font-extrabold brand-text mb-2">Settings</h2>
-      <div id="ownerSetupCard" class="card p-4 space-y-3 mb-4 lg:max-w-3xl hidden">
+      <div id="ownerSetupCard" class="card p-4 space-y-3 mb-4 lg:max-w-3xl mx-auto hidden">
         <div class="font-bold text-sm brand-text">Owner Setup</div>
         <div><label class="lbl">Owner ka Naam</label><input id="setupOwnerName" class="field"></div>
         <div><label class="lbl">Gmail</label><div id="setupGmail" class="text-sm font-semibold"></div></div>
         <button id="btnOwnerSetup" class="btn-brand w-full py-2.5">Apna Khata Shuru karein</button>
       </div>
-      <div id="profileCard" class="card p-4 space-y-3 mb-4 lg:max-w-3xl">
+      <div id="profileCard" class="card p-4 space-y-3 mb-4 lg:max-w-3xl mx-auto">
         <div class="flex items-center justify-between gap-3">
           <div><div class="font-bold text-sm brand-text">Sound</div><div class="text-xs text-gray-400">Har action par usi ke hisaab ki halki awaaz</div></div>
           <label class="sfx-toggle"><input type="checkbox" id="setSound" class="hidden" checked><span class="track"><span class="knob"></span></span></label>
@@ -235,16 +246,16 @@
         <div><label class="lbl">Upar wala Naam</label><input id="setNameLine" class="field"></div>
         <button id="btnSaveProfile" class="btn-brand w-full py-2.5">Profile Save karein</button>
       </div>
-      <div id="backupCard" class="card p-4 space-y-2 mb-4 lg:max-w-3xl">
+      <div id="backupCard" class="card p-4 space-y-2 mb-4 lg:max-w-3xl mx-auto">
         <div class="font-bold text-sm brand-text">Data Backup</div>
         <button id="btnExport" class="btn-cream w-full py-2.5 text-sm">Poora Data Export (JSON)</button>
         <label class="btn-cream w-full py-2.5 text-sm block text-center cursor-pointer">Backup Import (JSON)<input id="fileImport" type="file" accept=".json" class="hidden"></label>
       </div>
-      <div id="resetCard" class="card p-4 space-y-2 mb-4 lg:max-w-3xl">
+      <div id="resetCard" class="card p-4 space-y-2 mb-4 lg:max-w-3xl mx-auto">
         <div class="font-bold text-sm brand-text">Default Reset</div>
         <button id="btnFactoryReset" class="btn-cream w-full py-2.5 text-sm" style="color:#c0392b">Saara Data Reset karein</button>
       </div>
-      <div id="sharingCard" class="card p-4 space-y-3 mb-4 lg:max-w-3xl hidden">
+      <div id="sharingCard" class="card p-4 space-y-3 mb-4 lg:max-w-3xl mx-auto hidden">
         <div class="font-bold text-sm brand-text">Khata Sharing</div>
         <div><label class="lbl">Owner</label><div id="shareOwner" class="text-sm font-semibold"></div>
           <div id="shareOwnerNameEdit" class="hidden mt-2">
@@ -264,7 +275,7 @@
           </div>
         </div>
       </div>
-      <div id="contactCard" class="card p-4 mb-4 lg:max-w-3xl">
+      <div id="contactCard" class="card p-4 mb-4 lg:max-w-3xl mx-auto">
         <div class="text-[11px] font-extrabold tracking-[.18em] text-gray-400 mb-3">CONTACT US</div>
         <a href="https://wa.me/923027374880?text=Assalam%20o%20Alaikum!%20Mujhe%20Barkat%20Ali%20Khata%20app%20ke%20baray%20mein%20madad%20chahiye." target="_blank" rel="noopener" class="flex items-center gap-3 rounded-2xl p-3.5" style="background:linear-gradient(135deg,#25d366,#1cb457)">
           <span class="flex items-center justify-center w-11 h-11 rounded-xl shrink-0" style="background:rgba(255,255,255,.22)">
@@ -1164,14 +1175,15 @@ function openStatement(key) {
     <td class="py-2 text-right font-bold">${fmtRs(run)}</td></tr>`; }).join('');
   const p = key.startsWith('party:') ? partyById(key.slice(6)) : null;
   $('statementWrap').classList.remove('hidden');
+  $('view-khata').classList.add('stmt-open');
   $('statementWrap').innerHTML = `<div class="card p-4">
     <div class="flex items-start justify-between">
       <div><div class="font-extrabold brand-text">${esc(l.code)} • ${esc(l.name)}</div>
       <div class="text-xs text-gray-500">Statement — Barkat Ali Bed Sheet</div></div>
-      <button class="text-gray-400 text-xl font-bold" onclick="document.getElementById('statementWrap').classList.add('hidden')">&times;</button>
+      <button class="text-gray-400 text-xl font-bold" onclick="closeStatement()">&times;</button>
     </div>
-    <table class="w-full text-sm mt-2"><thead><tr class="text-left text-xs text-gray-400"><th class="py-1">Tareekh</th><th>Tafseel</th><th class="text-right">Naame</th><th class="text-right">Jama</th><th class="text-right">Baqaya</th></tr></thead>
-    <tbody>${rows || '<tr><td colspan="5" class="py-3 text-gray-400">Koi entry nahi</td></tr>'}</tbody></table>
+    <div class="listscroll"><table class="w-full text-sm mt-2"><thead><tr class="text-left text-xs text-gray-400"><th class="py-1">Tareekh</th><th>Tafseel</th><th class="text-right">Naame</th><th class="text-right">Jama</th><th class="text-right">Baqaya</th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="5" class="py-3 text-gray-400">Koi entry nahi</td></tr>'}</tbody></table></div>
     <div class="flex gap-2 mt-3">
       <button class="btn-cream px-3 py-2 text-xs" onclick="printStatement('${key}')">${ico('printer', 'w-3.5 h-3.5 inline-block')} Print</button>
       <button class="btn-cream px-3 py-2 text-xs" onclick="downloadStatementPDF('${key}')">${ico('download', 'w-3.5 h-3.5 inline-block')} Download PDF</button>
@@ -1179,6 +1191,10 @@ function openStatement(key) {
     </div></div>`;
   $('statementWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
   switchView('khata');
+}
+function closeStatement() {
+  $('statementWrap').classList.add('hidden');
+  $('view-khata').classList.remove('stmt-open');
 }
 function renderInventory() {
   const d = derived(); const q = ($('invSearch').value || '').toLowerCase();
