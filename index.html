@@ -91,7 +91,7 @@
 
 <!-- ============ LOGIN ============ -->
 <div id="loginScreen" class="min-h-screen flex flex-col items-center justify-center px-6 py-10">
-  <img id="loginLogo" alt="Barkat Ali Bed Sheet logo" class="w-36 h-auto rounded-3xl shadow-lg mb-4">
+  <img id="loginLogo" src="logo-full.png" alt="Barkat Ali Bed Sheet logo" class="w-44 h-auto mb-4">
   <h1 class="text-2xl font-extrabold brand-text text-center" id="loginBizName">Barkat Ali Bed Sheet</h1>
   <p class="text-sm text-gray-500 text-center mt-1">Chungi No. 11, Nasir Wali Market, Shop No. 28, Multan</p>
   <p class="text-sm font-semibold text-gray-600 text-center mt-3">Roznamcha &bull; Khata &bull; Inventory &bull; Talpat</p>
@@ -120,6 +120,10 @@
 
   <div id="setupBanner" class="hidden" style="background:#f3e2c7;border-bottom:1px solid rgba(109,26,45,.18)">
     <div class="max-w-3xl lg:max-w-6xl mx-auto px-4 py-1.5 text-center text-[11px] font-extrabold tracking-wide brand-text">Khata Setup</div>
+  </div>
+
+  <div id="syncBar" class="hidden" style="background:#fdf3d7;border-bottom:1px solid rgba(176,106,0,.25)">
+    <div class="max-w-3xl lg:max-w-6xl mx-auto px-4 py-1.5 text-center text-[11px] font-bold" style="color:#8a5a00">Net nahi hai — entries is phone mein mehfooz hain, net ate hi khud pohanch jayengi</div>
   </div>
 
   <main class="max-w-3xl lg:max-w-6xl mx-auto px-3 sm:px-4 lg:px-6">
@@ -151,7 +155,7 @@
         <div class="grid grid-cols-3 gap-2 mb-3" id="daySummary"></div>
 
         <div class="text-sm font-bold brand-text mb-2">Nayi Entry — Roznamcha se</div>
-        <div class="grid grid-cols-4 lg:grid-cols-7 gap-2 mb-4" id="entryTypeBtns"></div>
+        <div class="grid grid-cols-4 lg:grid-cols-6 gap-2 mb-4" id="entryTypeBtns"></div>
 
         <div class="flex items-center justify-between mb-2">
           <div class="text-sm font-bold brand-text" id="dayEntriesTitle">Aaj ki Entries</div>
@@ -177,14 +181,18 @@
 
     <!-- ===== VIEW: INVENTORY ===== -->
     <section id="view-inventory" class="view hidden pt-3">
-      <div class="flex items-center justify-between mb-2">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
         <h2 class="text-lg font-extrabold brand-text">Inventory (Stock)</h2>
-        <button class="btn-brand px-3 py-2 text-sm" data-add="product">+ Add Product</button>
+        <div class="flex gap-2">
+          <button class="btn-cream px-3 py-2 text-sm" onclick="openEntry('opening_stock')">Opening Stock</button>
+          <button class="btn-brand px-3 py-2 text-sm" data-add="product">+ Add Product</button>
+        </div>
       </div>
       <div id="invSummary" class="grid grid-cols-2 gap-2 mb-3"></div>
       <div class="card p-3 mb-3">
         <input id="invSearch" class="w-full text-base placeholder-gray-400" style="border:none">
       </div>
+      <label class="flex items-center gap-2 text-xs font-semibold text-gray-500 mb-3"><input type="checkbox" id="invShowInactive" class="w-4 h-4"> Band shuda bhi dikhayein</label>
       <div id="productList" class="space-y-2 listscroll"></div>
       <p class="text-xs text-gray-400 mt-3">Har purchase aik alag <b>Lot</b> banti hai apne rate ke saath. Sale mein purana maal pehle bikta hai — jo lot pehle aya, woh pehle katega. Rate kabhi average nahi hota.</p>
     </section>
@@ -194,6 +202,9 @@
       <h2 class="text-lg font-extrabold brand-text mb-2">Baqaya (Balances)</h2>
       <div id="baqayaCards" class="grid grid-cols-2 gap-2 mb-3"></div>
       <div id="baqayaList" class="space-y-2 mb-5 listscroll"></div>
+      <h2 class="text-lg font-extrabold brand-text mb-2">Wasooli List</h2>
+      <div id="recoveryChips" class="mb-3"></div>
+      <div id="recoveryList" class="space-y-2 mb-5"></div>
       <h2 class="text-lg font-extrabold brand-text mb-2">Talpat (Trial Balance)</h2>
       <div class="card overflow-hidden mb-3">
         <div class="listscroll">
@@ -220,9 +231,11 @@
         <button class="btn-brand py-2.5 text-sm" data-add="buyer">+ Add Buyer (B-)</button>
         <button class="btn-brand py-2.5 text-sm" data-add="seller">+ Add Seller (S-)</button>
       </div>
+      <button class="btn-cream w-full py-2.5 text-sm mb-3" onclick="openEntry('opening_balance')">Opening Baqaya lagayein</button>
       <div class="card p-3 mb-3">
         <input id="partySearch" class="w-full text-base placeholder-gray-400" style="border:none">
       </div>
+      <label class="flex items-center gap-2 text-xs font-semibold text-gray-500 mb-3"><input type="checkbox" id="partyShowInactive" class="w-4 h-4"> Band shuda bhi dikhayein</label>
       <div class="text-sm font-bold brand-text mb-2">Buyers / Clients</div>
       <div id="buyerList" class="space-y-2 mb-4 listscroll"></div>
       <div class="text-sm font-bold brand-text mb-2">Sellers / Suppliers</div>
@@ -232,12 +245,44 @@
     <!-- ===== VIEW: MORE (Aakhri Hisaab) ===== -->
     <section id="view-more" class="view hidden pt-3">
       <h2 class="text-lg font-extrabold brand-text mb-2">Aakhri Hisaab (Final Accounts)</h2>
-      <div id="pnlWrap" class="mb-5"></div>
+      <div class="card p-3 mb-3">
+        <div class="flex flex-wrap items-end gap-2">
+          <div class="flex-1 min-w-[140px]"><label class="lbl">Period</label>
+            <select id="pnlPeriod" class="field">
+              <option value="month">Is Maheena</option>
+              <option value="lastmonth">Pichla Maheena</option>
+              <option value="year">Is Saal</option>
+              <option value="all">Shuru se ab tak</option>
+              <option value="custom">Apni Tareekhein</option>
+            </select></div>
+          <div id="pnlCustomWrap" class="hidden">
+            <div class="flex flex-wrap gap-2">
+              <div><label class="lbl">Se</label><input type="date" id="pnlFrom" class="field"></div>
+              <div><label class="lbl">Tak</label><input type="date" id="pnlTo" class="field"></div>
+            </div>
+          </div>
+          <button class="btn-cream px-3 py-2.5 text-sm" onclick="window.printPeriodReport()">Print</button>
+          <button class="btn-brand px-3 py-2.5 text-sm" onclick="window.downloadPeriodPDF()">Download PDF</button>
+        </div>
+      </div>
+      <div id="pnlWrap" class="mb-4"></div>
+      <h3 class="text-sm font-extrabold brand-text mb-2">Product Munafa</h3>
+      <div class="card overflow-hidden mb-4"><div class="overflow-x-auto"><table class="w-full text-sm min-w-[430px]">
+        <thead><tr class="cream2-bg text-left"><th class="p-3 font-bold">Product</th><th class="p-3 font-bold text-right">Bika (adad)</th><th class="p-3 font-bold text-right">Kul Sale</th><th class="p-3 font-bold text-right">Munafa</th></tr></thead>
+        <tbody id="productStatsBody"></tbody></table></div></div>
+      <h3 class="text-sm font-extrabold brand-text mb-2">Behtareen Buyers</h3>
+      <div class="card overflow-hidden mb-5"><div class="overflow-x-auto"><table class="w-full text-sm min-w-[380px]">
+        <thead><tr class="cream2-bg text-left"><th class="p-3 font-bold">Buyer</th><th class="p-3 font-bold text-right">Kul Sale</th><th class="p-3 font-bold text-right">Munafa</th></tr></thead>
+        <tbody id="buyerStatsBody"></tbody></table></div></div>
     </section>
 
     <!-- ===== VIEW: SETTINGS ===== -->
     <section id="view-settings" class="view hidden pt-3">
       <h2 class="text-lg font-extrabold brand-text mb-2">Settings</h2>
+      <div id="wsChooserCard" class="card p-4 space-y-3 mb-4 lg:max-w-3xl mx-auto hidden">
+        <div class="font-bold text-sm brand-text">Apna Khata chunein</div>
+        <div id="wsChooserList" class="space-y-2"></div>
+      </div>
       <div id="ownerSetupCard" class="card p-4 space-y-3 mb-4 lg:max-w-3xl mx-auto hidden">
         <div class="font-bold text-sm brand-text">Owner Setup</div>
         <div><label class="lbl">Owner ka Naam</label><input id="setupOwnerName" class="field"></div>
@@ -263,7 +308,7 @@
       <div id="backupCard" class="card p-4 space-y-2 mb-4 lg:max-w-3xl mx-auto">
         <div class="font-bold text-sm brand-text">Data Backup</div>
         <button id="btnExport" class="btn-cream w-full py-2.5 text-sm">Poora Data Export (JSON)</button>
-        <label class="btn-cream w-full py-2.5 text-sm block text-center cursor-pointer">Backup Import (JSON)<input id="fileImport" type="file" accept=".json" class="hidden"></label>
+        <label id="importLabel" class="btn-cream w-full py-2.5 text-sm block text-center cursor-pointer">Backup Import (JSON)<input id="fileImport" type="file" accept=".json" class="hidden"></label>
       </div>
       <div id="resetCard" class="card p-4 space-y-2 mb-4 lg:max-w-3xl mx-auto">
         <div class="font-bold text-sm brand-text">Default Reset</div>
@@ -406,7 +451,9 @@
    ===================================================================== */
 const BA_CORE = (() => {
   const r2 = n => Math.round(((+n) || 0) * 100) / 100;
+  const r4 = n => Math.round(((+n) || 0) * 10000) / 10000;
   const fmtRs = n => 'Rs ' + (Math.round((+n) || 0)).toLocaleString('en-IN');
+  let _dcCache = { arr: null, sig: '', val: null };   // computeDerived ki halki cache (neeche dekho)
 
   function nextCode(prefix, existingCodes) {
     let max = 0;
@@ -422,9 +469,13 @@ const BA_CORE = (() => {
   function activeEntries(entries) {
     return (entries || []).filter(e => !e.isReversal && e.status !== 'reversed');
   }
+  // Entry tartib: date, phir seq, phir createdAt, phir id — backdated entries aur aik hi
+  // din ki entries hamesha aik hi tay shuda (deterministic) tartib mein process hoti hain
   function bySeq(entries) {
     return entries.slice().sort((a, b) =>
-      (a.date < b.date ? -1 : a.date > b.date ? 1 : 0) || ((a.seq || 0) - (b.seq || 0)));
+      (a.date < b.date ? -1 : a.date > b.date ? 1 : 0) || ((a.seq || 0) - (b.seq || 0)) ||
+      (String(a.createdAt || '') < String(b.createdAt || '') ? -1 : String(a.createdAt || '') > String(b.createdAt || '') ? 1 : 0) ||
+      (String(a.id || '') < String(b.id || '') ? -1 : String(a.id || '') > String(b.id || '') ? 1 : 0));
   }
 
   // FIFO allocation: lotStates = [{lotId, rate, remaining, seq}] (purana pehle)
@@ -453,59 +504,260 @@ const BA_CORE = (() => {
     return [];
   }
 
+  /* Rakam parse — commas/spaces khatam, sirf digits + pehla '.' bachta hai, parseFloat;
+     na mile to 0. Minus sign bhi strip hota hai (money fields unsigned hain), is liye
+     "-500" → 500. "500.50" → 500.5 (purana integer-only parser isay 50050 bana deta tha —
+     wahi decimal bug yahan theek hai), "1,00,000" → 100000, "" / "abc" → 0. */
+  function parseAmt(s) {
+    let t = String(s ?? '').replace(/[\s,]/g, '').replace(/[^0-9.]/g, '');
+    const di = t.indexOf('.');
+    if (di >= 0) t = t.slice(0, di + 1) + t.slice(di + 1).replace(/\./g, '');
+    const v = parseFloat(t);
+    return isFinite(v) ? v : 0;
+  }
+
+  /* Sale ki raqmein: gross = itemsTotal (nayi entries) ya items ka sum ya e.total (legacy);
+     net = gross − discount. Nayi entries mein e.total hamesha NET mehfooz hota hai. */
+  function saleAmounts(e) {
+    const items = entryItems(e);
+    let gross;
+    if (e.itemsTotal != null) gross = r2(e.itemsTotal);
+    else if (items.length) gross = r2(items.reduce((s, it) => s + (+it.qty || 0) * (+it.rate || 0), 0));
+    else gross = r2(e.total);
+    const discount = Math.max(0, r2(e.discount || 0));
+    return { gross, discount, net: r2(gross - discount) };
+  }
+  /* Purchase ki raqmein: gross = itemsTotal ya e.total (legacy); net = gross − discount.
+     Lot ka rate discount ke tanasub se kam hota hai (inventory value = net cost). */
+  function purchaseAmounts(e) {
+    const gross = e.itemsTotal != null ? r2(e.itemsTotal) : r2(e.total);
+    const discount = Math.max(0, r2(e.discount || 0));
+    return { gross, discount, net: r2(gross - discount) };
+  }
+
+  /* Backup import ki tayyari (pure — Store isay istemal karta hai):
+     normalizeImport: file object se saaf data; entries lazmi array hon warna null.
+     planImportRestore: har collection ke liye upsert list + woh ids jo backup mein
+     NAHI hain (asal restore mein woh cloud se delete hongi). */
+  function normalizeImport(obj) {
+    const data = (obj && typeof obj === 'object') ? ((obj.data && typeof obj.data === 'object') ? obj.data : obj) : null;
+    if (!data || !Array.isArray(data.entries)) return null;
+    const arr = v => Array.isArray(v) ? v : [];
+    return { parties: arr(data.parties), products: arr(data.products), accounts: arr(data.accounts), entries: data.entries, profile: (data.profile && typeof data.profile === 'object') ? data.profile : null };
+  }
+  function planImportRestore(existingIds, data) {
+    const plan = {};
+    for (const coll of ['parties', 'products', 'accounts', 'entries']) {
+      const items = (data && Array.isArray(data[coll])) ? data[coll] : [];
+      const keep = new Set(items.map(o => o && o.id).filter(Boolean));
+      const existing = (existingIds && Array.isArray(existingIds[coll])) ? existingIds[coll] : [];
+      plan[coll] = { upsert: items, deleteIds: existing.filter(id => !keep.has(id)) };
+    }
+    return plan;
+  }
+
   /* Poora derived hisaab aik hi jagah se.
      state = { entries:[], parties:[], products:[], accounts:[] }
      party:  {id, code, type:'buyer'|'seller', name, phone}
      account(head): {id, code, name}  (kharcha heads waghera)             */
   function computeDerived(state) {
+    /* CACHE: entries ka array + us ka content-signature na badle to pichla result wapas —
+       render ke dauran computeDerived kai dafa call hota hai (derived/daily/plan), aur
+       entries immutable hain (sirf correction par status badalta hai, jo signature mein
+       ginna gaya hai). Naya snapshot = naya array = cache miss = fresh compute. */
+    const srcEntries = state.entries || [];
+    let sig = srcEntries.length + '|' + (state.parties || []).length;
+    { let seqSum = 0, totSum = 0, revCount = 0;
+      for (const e of srcEntries) { seqSum += (+e.seq || 0); totSum += (+e.total || 0); if (e.status === 'reversed') revCount++; }
+      sig += '|' + seqSum + '|' + totSum + '|' + revCount; }
+    if (_dcCache.arr === srcEntries && _dcCache.sig === sig) return _dcCache.val;
+
     const entries = bySeq(activeEntries(state.entries));
     const postings = [];   // {entryId, code, date, seq, account, dr, cr, note}
     const P = (e, account, dr, cr, note) => {
       if (!dr && !cr) return;
       postings.push({ entryId: e.id, code: e.code, date: e.date, seq: e.seq || 0, account, dr: r2(dr), cr: r2(cr), note: note || '' });
     };
-    const lots = {};       // lotId -> {lotId, entryId, code, productId, rate, qtyIn, sold, remaining, date, seq}
-    const salesInfo = {};  // entryId -> {cost, profit, alloc}
+    // Payment kis hisaab mein: method/payMethod 'bank' ho to Bank, warna Galla (cash)
+    const payAcctOf = e => (e.method === 'bank' || e.payMethod === 'bank') ? 'bank' : 'cash';
+
+    /* ---- LOT UNIVERSE (DYNAMIC ALLOCATION) ----
+       Saare stock-in lots pehle bante hain. Kisi bhi stock-out (sale, purchase_return,
+       exchange, stock_adjust-out) ki allocation mehfooz data se NAHI — compute ke waqt
+       is universe se dobara banti hai. Isi liye backdated entry ya purani sale ki
+       correction ke baad baqi hisaab (cost/munafa/stock) khud theek ho jata hai.
+       Lot tartib = entry ki tartib (date, seq, createdAt, id) — purana lot pehle. */
+    const lots = {};       // lotId -> {lotId, entryId, code, productId, rate, qtyIn, sold, remaining, date, seq, createdAt, fromReturn}
+    const lotOrder = [];
+    const keyOf = x => [x.date || '', +x.seq || 0, x.createdAt || '', x.lotId || x.id || ''];
+    const cmpKey = (a, b) => { const ka = keyOf(a), kb = keyOf(b); for (let i = 0; i < 4; i++) { if (ka[i] < kb[i]) return -1; if (ka[i] > kb[i]) return 1; } return 0; };
+    const mkLot = (e, suffix, productId, rate, qty, fromReturn) => {
+      const lot = { lotId: e.id + suffix, entryId: e.id, code: e.code, productId, rate: r2(rate), qtyIn: +qty || 0, sold: 0, remaining: +qty || 0, date: e.date, seq: e.seq || 0, createdAt: e.createdAt || '', fromReturn: !!fromReturn };
+      lots[lot.lotId] = lot; lotOrder.push(lot); return lot;
+    };
+    for (const e of entries) {
+      if (e.type === 'purchase') {
+        const amt = purchaseAmounts(e);
+        const lotRate = (+e.qty || 0) > 0 && amt.gross > 0 ? r4((+e.rate || 0) * amt.net / amt.gross) : r2(e.rate);
+        mkLot(e, '', e.productId, lotRate, e.qty, false);
+      } else if (e.type === 'opening_stock') mkLot(e, '', e.productId, e.rate, e.qty, false);
+      else if (e.type === 'stock_adjust' && e.direction === 'in') mkLot(e, '', e.productId, e.rate, e.qty, false);
+    }
+    lotOrder.sort(cmpKey);
+    // Sale-return ke lot ka default cost rate: us tareekh tak ka sab se aakhri non-return lot
+    const defaultCostRate = (e, productId) => {
+      let best = null;
+      for (const l of lotOrder) { if (l.productId !== productId || l.fromReturn) continue; if (cmpKey(l, e) <= 0 && (!best || cmpKey(l, best) > 0)) best = l; }
+      return best ? best.rate : null;
+    };
+    for (const e of entries) {
+      if (e.type !== 'sale_return') continue;
+      entryItems(e).forEach((it, i) => {
+        const saved = (it.costRate != null && isFinite(+it.costRate)) ? r2(+it.costRate) : null;
+        const crate = saved != null ? saved : (defaultCostRate(e, it.productId) ?? r2(it.rate));
+        mkLot(e, '#' + i, it.productId, crate, it.qty, true);
+      });
+    }
+    lotOrder.sort(cmpKey);
+    const lotsByProduct = {};
+    for (const l of lotOrder) (lotsByProduct[l.productId] || (lotsByProduct[l.productId] = [])).push(l);
+
+    /* Stock-out allocation — compute ke waqt, universe ki maujooda halat se:
+       chosen lot (line.lotId) sirf tab pehle, jab us mein abhi qty bachi ho;
+       warna sab se purana lot pehle (FIFO). Mehfooz allocations kabhi nahi parhi jatin. */
+    const allocateOut = (productId, qty, chosenLotId) => {
+      const cands = (lotsByProduct[productId] || []).filter(l => l.remaining > 0);
+      const plan = allocateFIFO(cands, +qty || 0, chosenLotId || undefined);
+      for (const a of plan.alloc) { const lot = lots[a.lotId]; if (lot) { lot.sold = r2(lot.sold + a.qty); lot.remaining = r2(lot.qtyIn - lot.sold); } }
+      return { alloc: plan.alloc.map(a => ({ ...a, productId })), cost: r2(plan.alloc.reduce((s, a) => s + a.qty * a.rate, 0)) };
+    };
+
+    const salesInfo = {};  // sale entryId -> {cost, profit, alloc, revenue, gross, discount}
+    const returnInfo = {}; // sale_return entryId -> {value, cost, margin}
+    const outInfo = {};    // purchase_return / stock_adjust-out entryId -> {value, cost, alloc}
+    const exchangeInfo = {}; // purchase entryId -> {total, cost, alloc} (exchange wala hissa)
+    const productStats = {}, buyerStats = {};
+    const pstat = pid => productStats[pid] || (productStats[pid] = { productId: pid, soldQty: 0, revenue: 0, cogs: 0, profit: 0 });
+    const bstat = pid => buyerStats[pid] || (buyerStats[pid] = { partyId: pid, totalSale: 0, profit: 0 });
 
     for (const e of entries) {
       const total = r2(e.total);
       if (e.type === 'purchase') {
+        const amt = purchaseAmounts(e);           // net = gross − discount (lot rate bhi isi tanasub se)
         const paid = r2(e.amountPaid);
-        P(e, 'stock', total, 0, 'Purchase ' + (e.productName || ''));
-        if (total - paid > 0) P(e, 'party:' + e.partyId, 0, total - paid, 'Purchase udhaar');
-        if (paid > 0) P(e, 'cash', 0, paid, 'Purchase par advance/paid');
-        lots[e.id] = { lotId: e.id, entryId: e.id, code: e.code, productId: e.productId, rate: r2(e.rate), qtyIn: +e.qty || 0, sold: 0, remaining: +e.qty || 0, date: e.date, seq: e.seq || 0 };
+        P(e, 'stock', amt.net, 0, 'Purchase ' + (e.productName || ''));
+        /* EXCHANGE (maal ke badlay maal): seller ko diya gaya maal adaigi ki aik surat hai —
+           stock se laagat (computed allocation) par katega; tay shuda qeemat aur laagat ka
+           farq 'adj' (PnL adjustment) mein jata hai. Postings ka jama hamesha barabar:
+           Dr: stock(net) + party(advance agar zyada diya) + adj(nuqsan) + paid-account...
+           asal hisaab: party ko net ada = paid + exchangeTotal; baqaya = net − woh ada. */
+        let xTotal = 0, xCost = 0; const xAlloc = [];
+        for (const it of (Array.isArray(e.exchangeItems) ? e.exchangeItems : [])) {
+          xTotal = r2(xTotal + (+it.qty || 0) * (+it.rate || 0));
+          const a = allocateOut(it.productId, it.qty, it.lotId); xCost = r2(xCost + a.cost); xAlloc.push(...a.alloc);
+        }
+        if (xTotal > 0 || xCost > 0) {
+          if (xCost > 0) P(e, 'stock', 0, xCost, 'Exchange maal ki laagat');
+          const farq = r2(xTotal - xCost);
+          if (farq > 0) P(e, 'adj', 0, farq, 'Exchange farq (munafa)');
+          else if (farq < 0) P(e, 'adj', -farq, 0, 'Exchange farq (nuqsan)');
+          exchangeInfo[e.id] = { total: xTotal, cost: xCost, alloc: xAlloc };
+        }
+        const owed = r2(amt.net - paid - xTotal);
+        if (owed > 0) P(e, 'party:' + e.partyId, 0, owed, 'Purchase udhaar');
+        else if (owed < 0) P(e, 'party:' + e.partyId, -owed, 0, 'Purchase par advance');
+        if (paid > 0) P(e, payAcctOf(e), 0, paid, 'Purchase par advance/paid');
       } else if (e.type === 'sale') {
+        const amt = saleAmounts(e);               // net = gross − discount; munafa/revenue net par
         const received = r2(e.amountReceived);
-        if (total - received > 0) P(e, 'party:' + e.partyId, total - received, 0, 'Sale udhaar');
-        if (received > 0) P(e, 'cash', received, 0, 'Sale par wasooli');
+        const diff = r2(amt.net - received);      // zyada wasooli = buyer ka advance (party Cr)
+        if (diff > 0) P(e, 'party:' + e.partyId, diff, 0, 'Sale udhaar');
+        else if (diff < 0) P(e, 'party:' + e.partyId, 0, -diff, 'Sale par advance');
+        if (received > 0) P(e, payAcctOf(e), received, 0, 'Sale par wasooli');
         // Postings hamesha ENTRY level par (statement mein aik hi bill nazar aye ga);
-        // stock/profit har item line se banta hai.
+        // stock/profit har item line se banta hai — allocation hamesha DYNAMIC (universe se).
         const items = entryItems(e);
         const firstName = (items[0] && items[0].productName) || e.productName || '';
-        P(e, 'sales', 0, total, items.length > 1 ? 'Sale (' + items.length + ' items) — ' + firstName : 'Sale ' + firstName);
-        // FIFO se lot deduction, line by line (agar allocations pehle se mehfooz hain to wohi, warna abhi banao).
-        // Aik hi product ki agli line ko pehli line ke baad bacha hua stock hi milta hai.
+        P(e, 'sales', 0, amt.net, items.length > 1 ? 'Sale (' + items.length + ' items) — ' + firstName : 'Sale ' + firstName);
         let cost = 0; const allAlloc = [];
-        for (const it of items) {
-          let alloc = (it.allocations && it.allocations.length) ? it.allocations : null;
-          if (!alloc) {
-            const prodLots = Object.values(lots).filter(l => l.productId === it.productId && l.remaining > 0)
-              .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0) || (a.seq - b.seq));
-            alloc = allocateFIFO(prodLots, +it.qty || 0, it.lotId || undefined).alloc;
-          }
-          for (const a of alloc) {
-            const lot = lots[a.lotId]; if (!lot) continue;
-            lot.sold = r2(lot.sold + a.qty); lot.remaining = r2(lot.qtyIn - lot.sold);
-            cost = r2(cost + a.qty * a.rate); allAlloc.push(a);
-          }
-        }
+        const lineTotals = items.map(it => r2((+it.qty || 0) * (+it.rate || 0)));
+        let shareAcc = 0;
+        items.forEach((it, idx) => {
+          const a = allocateOut(it.productId, it.qty, it.lotId);
+          cost = r2(cost + a.cost); allAlloc.push(...a.alloc);
+          // Discount har line par us ke total ke tanasub se (aakhri line rounding ka baqi le leti hai)
+          let share = 0;
+          if (amt.discount > 0 && amt.gross > 0) { share = idx === items.length - 1 ? r2(amt.discount - shareAcc) : r2(amt.discount * lineTotals[idx] / amt.gross); shareAcc = r2(shareAcc + share); }
+          const ps = pstat(it.productId);
+          ps.soldQty = r2(ps.soldQty + (+it.qty || 0)); ps.revenue = r2(ps.revenue + lineTotals[idx] - share); ps.cogs = r2(ps.cogs + a.cost);
+        });
         if (cost > 0) { P(e, 'cogs', cost, 0, 'Bikey hue maal ki laagat'); P(e, 'stock', 0, cost, 'Stock se kata'); }
-        salesInfo[e.id] = { cost, profit: r2(total - cost), alloc: allAlloc };
+        salesInfo[e.id] = { cost, profit: r2(amt.net - cost), alloc: allAlloc, revenue: amt.net, gross: amt.gross, discount: amt.discount };
+        if (e.partyId) { const bs = bstat(e.partyId); bs.totalSale = r2(bs.totalSale + amt.net); bs.profit = r2(bs.profit + amt.net - cost); }
+      } else if (e.type === 'sale_return') {
+        /* Buyer ne maal wapis kiya: revenue kam (sales Dr), buyer ka lena kam (party Cr),
+           maal stock mein laagat par wapis (stock Dr / cogs Cr) — wapis aya maal pass 0 mein
+           NAYA lot ban chuka hai (rate = line.costRate ya default latest lot cost).
+           Cash refund ho to woh party credit cash se ada hota hai (cash Cr / party Dr).
+           Postings: Dr sales(RT) + stock(RC) + party(refund) = Cr cogs(RC) + party(RT) + cash(refund) */
+        const items = entryItems(e);
+        let RT = 0, RC = 0;
+        items.forEach((it, i) => {
+          const lt = r2((+it.qty || 0) * (+it.rate || 0)); RT = r2(RT + lt);
+          const lot = lots[e.id + '#' + i]; const crate = lot ? lot.rate : r2(it.rate);
+          const lc = r2((+it.qty || 0) * crate); RC = r2(RC + lc);
+          const ps = pstat(it.productId);
+          ps.soldQty = r2(ps.soldQty - (+it.qty || 0)); ps.revenue = r2(ps.revenue - lt); ps.cogs = r2(ps.cogs - lc);
+        });
+        if (RT > 0) { P(e, 'sales', RT, 0, 'Sale wapsi'); P(e, 'party:' + e.partyId, 0, RT, 'Sale wapsi'); }
+        if (RC > 0) { P(e, 'stock', RC, 0, 'Wapis maal stock mein'); P(e, 'cogs', 0, RC, 'Wapsi par laagat wapis'); }
+        const refund = r2(e.cashRefund);
+        if (refund > 0) { const refundAcct = payAcctOf(e); const refundNote = refundAcct === 'bank' ? 'Wapsi par bank se wapis' : 'Wapsi par cash wapis'; P(e, refundAcct, 0, refund, refundNote); P(e, 'party:' + e.partyId, refund, 0, refundNote); }
+        returnInfo[e.id] = { value: RT, cost: RC, margin: r2(RT - RC) };
+        if (e.partyId) { const bs = bstat(e.partyId); bs.totalSale = r2(bs.totalSale - RT); bs.profit = r2(bs.profit - (RT - RC)); }
+      } else if (e.type === 'purchase_return') {
+        /* Seller ko maal wapis: seller ka dena kam (party Dr, tay qeemat par), stock se
+           laagat par kata (computed allocation), tay qeemat − laagat ka farq 'adj' mein.
+           Seller ne cash wapis kiya ho to cash Dr / party Cr (dena us hisse se aur kam nahi,
+           cash alag aya). Dr party(RT) + adj(nuqsan) + cash(refund) = Cr stock(AC) +
+           adj(munafa) + party(refund) — hamesha barabar. */
+        const items = entryItems(e);
+        let RT = 0, AC = 0; const allAlloc = [];
+        for (const it of items) {
+          RT = r2(RT + (+it.qty || 0) * (+it.rate || 0));
+          const a = allocateOut(it.productId, it.qty, it.lotId); AC = r2(AC + a.cost); allAlloc.push(...a.alloc);
+        }
+        if (RT > 0) P(e, 'party:' + e.partyId, RT, 0, 'Purchase wapsi');
+        if (AC > 0) P(e, 'stock', 0, AC, 'Wapis maal stock se kata');
+        const farq = r2(RT - AC);
+        if (farq > 0) P(e, 'adj', 0, farq, 'Purchase wapsi farq (munafa)');
+        else if (farq < 0) P(e, 'adj', -farq, 0, 'Purchase wapsi farq (nuqsan)');
+        const refund = r2(e.cashRefund);
+        if (refund > 0) { const refundAcct = payAcctOf(e); const refundNote = refundAcct === 'bank' ? 'Wapsi par bank se mila' : 'Wapsi par cash mila'; P(e, refundAcct, refund, 0, refundNote); P(e, 'party:' + e.partyId, 0, refund, refundNote); }
+        outInfo[e.id] = { value: RT, cost: AC, alloc: allAlloc };
+      } else if (e.type === 'opening_stock') {
+        // Shuru ka stock: maal andar, badlay sarmaya (capital) — lot pass 0 mein ban chuka hai
+        const oTotal = e.total != null ? total : r2((+e.qty || 0) * (+e.rate || 0));
+        P(e, 'stock', oTotal, 0, 'Opening Stock'); P(e, 'capital', 0, oTotal, 'Opening Stock (Sarmaya)');
+      } else if (e.type === 'opening_balance') {
+        // Party ka purana baqaya setup par: 'lena' = party Dr / capital Cr; 'dena' = ulta
+        if (e.obSide === 'dena') { P(e, 'party:' + e.partyId, 0, total, 'Opening Balance'); P(e, 'capital', total, 0, 'Opening Balance (Sarmaya)'); }
+        else { P(e, 'party:' + e.partyId, total, 0, 'Opening Balance'); P(e, 'capital', 0, total, 'Opening Balance (Sarmaya)'); }
+      } else if (e.type === 'stock_adjust') {
+        // Ginti mein farq: IN = naya lot + adjustment aamdani (adj Cr); OUT = computed
+        // allocation ki laagat nuqsan (adj Dr) — koi party/cash posting nahi
+        if (e.direction === 'in') {
+          const iTotal = e.total != null ? total : r2((+e.qty || 0) * (+e.rate || 0));
+          P(e, 'stock', iTotal, 0, 'Stock barha (adjustment)'); P(e, 'adj', 0, iTotal, 'Stock adjustment (aamdani)');
+        } else {
+          const a = allocateOut(e.productId, e.qty, e.lotId);
+          if (a.cost > 0) { P(e, 'adj', a.cost, 0, 'Stock kam (nuqsan)'); P(e, 'stock', 0, a.cost, 'Stock kam (adjustment)'); }
+          outInfo[e.id] = { value: 0, cost: a.cost, alloc: a.alloc };
+        }
       } else if (e.type === 'payment_received') {
-        P(e, 'cash', total, 0, 'Wasooli'); P(e, 'party:' + e.partyId, 0, total, 'Wasooli');
+        P(e, payAcctOf(e), total, 0, 'Wasooli'); P(e, 'party:' + e.partyId, 0, total, 'Wasooli');
       } else if (e.type === 'payment_given') {
-        P(e, 'party:' + e.partyId, total, 0, 'Adaigi'); P(e, 'cash', 0, total, 'Adaigi');
+        P(e, 'party:' + e.partyId, total, 0, 'Adaigi'); P(e, payAcctOf(e), 0, total, 'Adaigi');
       } else if (e.type === 'expense') {
         P(e, 'acct:' + e.accountId, total, 0, e.note || 'Kharcha'); P(e, 'cash', 0, total, 'Kharcha');
       } else if (e.type === 'capital') {
@@ -538,22 +790,59 @@ const BA_CORE = (() => {
     const partyBalances = {};
     (state.parties || []).forEach(p => { partyBalances[p.id] = accBal['party:' + p.id] || 0; });
 
-    // Aakhri Hisaab (P&L)
+    // Product stats ka munafa aakhir mein (revenue − cogs, returns shamil)
+    Object.values(productStats).forEach(ps => { ps.profit = r2(ps.revenue - ps.cogs); });
+
+    // Kharcha/income heads ke totals (acct: accounts se)
+    const headTotals = {};
+    for (const p of postings) {
+      if (!p.account.startsWith('acct:')) continue;
+      const id = p.account.slice(5);
+      const h = headTotals[id] || (headTotals[id] = { accountId: id, dr: 0, cr: 0, net: 0 });
+      h.dr = r2(h.dr + p.dr); h.cr = r2(h.cr + p.cr); h.net = r2(h.dr - h.cr);
+    }
+
+    /* Recovery info (buyers jin ka baqaya hai): oldestOpenDate ka tareeqa —
+       buyer ki postings tartib se chalo; jo balance aik dafa positive ho kar us ke baad
+       kabhi zero/negative par NAHI gaya, us stretch ki pehli posting ki tareekh hi
+       sab se purani khuli (unpaid) entry ki tareekh hai. Ye mukammal FIFO payment
+       matching nahi, lekin wasooli ki list ke liye durust andaza hai. */
+    const recovery = {};
+    for (const party of (state.parties || [])) {
+      if (party.type !== 'buyer') continue;
+      const bal = partyBalances[party.id] || 0;
+      if (bal <= 0.004) continue;
+      const posts = postings.filter(p => p.account === 'party:' + party.id)
+        .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0) || ((a.seq || 0) - (b.seq || 0)));
+      let run = 0, openSince = null, lastDate = null;
+      for (const p of posts) {
+        const prev = run; run = r2(run + p.dr - p.cr); lastDate = p.date;
+        if (prev <= 0.004 && run > 0.004) openSince = p.date;
+        if (run <= 0.004) openSince = null;
+      }
+      recovery[party.id] = { partyId: party.id, balance: bal, oldestOpenDate: openSince, lastActivityDate: lastDate };
+    }
+
+    // Aakhri Hisaab (P&L) — 'adj' (farq/adjustment) Cr ho to munafa, Dr ho to nuqsan
     const salesRevenue = r2(-(accBal['sales'] || 0));
     const cogs = r2(accBal['cogs'] || 0);
     let expenses = 0; Object.keys(accBal).forEach(k => { if (k.startsWith('acct:')) expenses = r2(expenses + accBal[k]); });
     const grossProfit = r2(salesRevenue - cogs);
-    const netProfit = r2(grossProfit - expenses);
+    const adjustment = r2(-(accBal['adj'] || 0));
+    const netProfit = r2(grossProfit - expenses + adjustment);
 
-    return {
-      postings, lots, salesInfo, accBal, talpat, talpatDr, talpatCr,
+    const result = {
+      postings, lots, salesInfo, returnInfo, outInfo, exchangeInfo, accBal, talpat, talpatDr, talpatCr,
       talpatBalanced: Math.abs(talpatDr - talpatCr) < 0.01,
-      inventory, partyBalances,
+      inventory, partyBalances, productStats, buyerStats, recovery, headTotals,
       cashBalance: r2(accBal['cash'] || 0),
+      bankBalance: r2(accBal['bank'] || 0),
       stockValue: r2(Object.values(inventory).reduce((s, i) => s + i.value, 0)),
-      pnl: { salesRevenue, cogs, grossProfit, expenses, netProfit },
+      pnl: { salesRevenue, cogs, grossProfit, expenses, adjustment, netProfit },
       capital: r2(-(accBal['capital'] || 0)), drawing: r2(accBal['drawing'] || 0)
     };
+    _dcCache = { arr: srcEntries, sig, val: result };
+    return result;
   }
 
   // Multi-item sale ki planning: lines tartib se simulate hoti hain — aik hi product ki
@@ -597,23 +886,64 @@ const BA_CORE = (() => {
   }
 
   // Kisi din ka khulasa (Roznamcha home + roz ki report)
+  // Galla = SIRF cash; bank ka hisaab alag (bankIn/bankOut/bankTotal)
   function dailySummary(state, date) {
     const d = computeDerived(state);
     const day = activeEntries(state.entries).filter(e => e.date === date);
-    let sale = 0, purchase = 0, wasooli = 0, adaigi = 0, kharcha = 0, profit = 0, cashIn = 0, cashOut = 0;
+    let sale = 0, purchase = 0, wasooli = 0, adaigi = 0, kharcha = 0, profit = 0, cashIn = 0, cashOut = 0, bankIn = 0, bankOut = 0, saleReturn = 0, purchaseReturn = 0;
     for (const e of day) {
       const t = r2(e.total);
-      if (e.type === 'sale') { sale = r2(sale + t); wasooli = r2(wasooli + (e.amountReceived || 0)); profit = r2(profit + (d.salesInfo[e.id] ? d.salesInfo[e.id].profit : 0)); }
-      if (e.type === 'purchase') { purchase = r2(purchase + t); adaigi = r2(adaigi + (e.amountPaid || 0)); }
+      if (e.type === 'sale') { sale = r2(sale + saleAmounts(e).net); wasooli = r2(wasooli + (e.amountReceived || 0)); profit = r2(profit + (d.salesInfo[e.id] ? d.salesInfo[e.id].profit : 0)); }
+      if (e.type === 'sale_return') { saleReturn = r2(saleReturn + (d.returnInfo[e.id] ? d.returnInfo[e.id].value : 0)); profit = r2(profit - (d.returnInfo[e.id] ? d.returnInfo[e.id].margin : 0)); wasooli = r2(wasooli - (e.cashRefund || 0)); }
+      if (e.type === 'purchase') { purchase = r2(purchase + purchaseAmounts(e).net); adaigi = r2(adaigi + (e.amountPaid || 0)); }
+      if (e.type === 'purchase_return') { purchaseReturn = r2(purchaseReturn + (d.outInfo[e.id] ? d.outInfo[e.id].value : 0)); adaigi = r2(adaigi - (e.cashRefund || 0)); }
       if (e.type === 'payment_received') wasooli = r2(wasooli + t);
       if (e.type === 'payment_given') adaigi = r2(adaigi + t);
       if (e.type === 'expense') kharcha = r2(kharcha + t);
     }
-    for (const p of d.postings) if (p.account === 'cash' && p.date === date) { cashIn = r2(cashIn + p.dr); cashOut = r2(cashOut + p.cr); }
-    return { date, entries: day.length, sale, purchase, wasooli, adaigi, kharcha, profit, cashIn, cashOut, cashNet: r2(cashIn - cashOut), gallaTotal: d.cashBalance };
+    for (const p of d.postings) {
+      if (p.date !== date) continue;
+      if (p.account === 'cash') { cashIn = r2(cashIn + p.dr); cashOut = r2(cashOut + p.cr); }
+      if (p.account === 'bank') { bankIn = r2(bankIn + p.dr); bankOut = r2(bankOut + p.cr); }
+    }
+    return { date, entries: day.length, sale, purchase, wasooli, adaigi, kharcha, profit, saleReturn, purchaseReturn, cashIn, cashOut, cashNet: r2(cashIn - cashOut), bankIn, bankOut, bankNet: r2(bankIn - bankOut), gallaTotal: d.cashBalance, bankTotal: d.bankBalance };
   }
 
-  return { r2, fmtRs, nextCode, activeEntries, allocateFIFO, computeDerived, planSale, planSaleMulti, entryItems, dailySummary };
+  /* Aik period ka hisaab (Aakhri Hisaab ke period view ke liye):
+     flows sirf [from, to] ki postings/entries se; closing balances un tamam
+     entries par jo 'to' tak ki hain (bilkul waisi hi derived machine se) */
+  function periodSummary(state, from, to) {
+    const d = computeDerived(state);
+    const inR = p => p.date >= from && p.date <= to;
+    let sale = 0, cogsNet = 0, adjNet = 0, expTotal = 0; const expenses = {};
+    for (const p of d.postings) {
+      if (!inR(p)) continue;
+      if (p.account === 'sales') sale = r2(sale + p.cr - p.dr);
+      else if (p.account === 'cogs') cogsNet = r2(cogsNet + p.dr - p.cr);
+      else if (p.account === 'adj') adjNet = r2(adjNet + p.cr - p.dr);
+      else if (p.account.startsWith('acct:')) {
+        const id = p.account.slice(5);
+        const h = expenses[id] || (expenses[id] = { accountId: id, dr: 0, cr: 0, net: 0 });
+        h.dr = r2(h.dr + p.dr); h.cr = r2(h.cr + p.cr); h.net = r2(h.dr - h.cr);
+      }
+    }
+    Object.values(expenses).forEach(h => { expTotal = r2(expTotal + h.net); });
+    let wasooli = 0, adaigi = 0;
+    for (const e of activeEntries(state.entries)) {
+      if (e.date < from || e.date > to) continue;
+      if (e.type === 'payment_received') wasooli = r2(wasooli + (e.total || 0));
+      if (e.type === 'sale') wasooli = r2(wasooli + (e.amountReceived || 0));
+      if (e.type === 'sale_return') wasooli = r2(wasooli - (e.cashRefund || 0));
+      if (e.type === 'payment_given') adaigi = r2(adaigi + (e.total || 0));
+      if (e.type === 'purchase') adaigi = r2(adaigi + (e.amountPaid || 0));
+      if (e.type === 'purchase_return') adaigi = r2(adaigi - (e.cashRefund || 0));
+    }
+    const upto = { ...state, entries: (state.entries || []).filter(e => e.date <= to) };
+    const dTo = computeDerived(upto);
+    return { from, to, sale, cogs: cogsNet, expenses, totalExpenses: expTotal, adjustment: adjNet, netProfit: r2(sale - cogsNet - expTotal + adjNet), wasooli, adaigi, closingCash: dTo.cashBalance, closingBank: dTo.bankBalance };
+  }
+
+  return { r2, fmtRs, nextCode, activeEntries, allocateFIFO, computeDerived, planSale, planSaleMulti, entryItems, dailySummary, periodSummary, parseAmt, saleAmounts, purchaseAmounts, normalizeImport, planImportRestore };
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = BA_CORE;
 </script>
@@ -636,7 +966,6 @@ const firebaseConfig = {
   appId: "1:36416253966:web:9abfb166b2c33fd25ecc5f"
 };
 const CONFIG_IS_PLACEHOLDER = String(firebaseConfig.apiKey).includes('PASTE_');
-const LOGO_B64 = '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';
 const GG_LOGO_B64 = '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';
 const GG_BRAND_LINE = 'Barkat Ali Khata • Powered by Global Guru';
 const ggBrandHTML = () => `<img src="logo.png" alt="Barkat Ali" style="display:inline-block;width:20px;height:20px;object-fit:contain;vertical-align:-5px;margin-right:6px"><span>Barkat Ali Khata • </span><img src="data:image/png;base64,${GG_LOGO_B64}" alt="Global Guru" style="display:inline-block;width:20px;height:20px;object-fit:contain;vertical-align:-5px;margin-right:6px"><span>Powered By Global Guru</span>`;
@@ -704,13 +1033,13 @@ function sfx(name) {
     }
   } catch (e) { /* awaaz na bane to app par koi farq nahi parta */ }
 }
-const SFX_FOR_TYPE = { sale: 'sale', purchase: 'purchase', payment_received: 'cashin', payment_given: 'cashout', expense: 'expense', capital: 'capital', drawing: 'drawing' };
+const SFX_FOR_TYPE = { sale: 'sale', purchase: 'purchase', payment_received: 'cashin', payment_given: 'cashout', sale_return: 'cashout', purchase_return: 'cashin', expense: 'expense', capital: 'capital', drawing: 'drawing' };
 
 // Bill contacts: naam pehle se bhare hain, NUMBERS jaan boojh kar khaali hain — number kabhi code mein nahi, user Settings mein bharta hai (sirf us ke apne data/Firestore mein rehte hain)
 const DEFAULT_CONTACTS = [
   { name: 'Talib Hussain', phone1: '', phone2: '' },
-  { name: 'Aqib Hussain', phone1: '', phone2: '' },
-  { name: 'Muhammad Aqeel', phone1: '', phone2: '' }
+  { name: 'Muhammad Aqeel', phone1: '', phone2: '' },
+  { name: 'Aqib Hussain', phone1: '', phone2: '' }
 ];
 const DEFAULT_NAME_LINE = 'Muhammad Javeed Talib Hussain';
 const DEFAULT_PROFILE = { name: APP_NAME, phones: '', address: 'Chungi No. 11, Nasir Wali Market, Shop No. 28, Multan', contacts: DEFAULT_CONTACTS.map(c => ({ ...c })), nameLine: DEFAULT_NAME_LINE, sound: true };
@@ -725,15 +1054,25 @@ function normalizeProfile(p) {
 const SEED_PRODUCTS = ['Khes', 'Dari', 'Kambal', 'Crystal', 'Diamond'];
 const SEED_ACCOUNTS = ['Kirya / Transport', 'Mazdoori', 'Chai / Khana', 'Dukkan Kharcha', 'Deegar Kharcha'];
 
-let S = { mode: 'none', uid: null, wid: null, role: null, userEmail: '', userName: '', ws: null, needsSetup: false, authDone: false, data: { parties: [], products: [], accounts: [], entries: [], profile: { ...DEFAULT_PROFILE } }, derived: null };
+let S = { mode: 'none', uid: null, wid: null, role: null, userEmail: '', userName: '', ws: null, wsChoices: null, needsSetup: false, authDone: false, data: { parties: [], products: [], accounts: [], entries: [], profile: { ...DEFAULT_PROFILE } }, derived: null };
 let selectedDate = todayStr();
 let fb = null;          // firebase handles (mode === 'firebase' par)
 let unsubs = [];
 let resolvingWs = false;
 
 function seedMasters(data) {
-  if (!data.products.length) data.products = SEED_PRODUCTS.map((n, i) => ({ id: genId() + i, code: 'P-' + String(i + 1).padStart(3, '0'), name: n, unit: 'pcs', lowStock: 10, active: true }));
-  if (!data.accounts.length) data.accounts = SEED_ACCOUNTS.map((n, i) => ({ id: genId() + 'a' + i, code: 'A-' + String(i + 1).padStart(3, '0'), name: n, active: true }));
+  // Idempotent: jo naam pehle se maujood hai woh SKIP — dobara seed par duplicate kabhi
+  // nahi banta, aur codes bhi maujooda codes se takrate nahi (nextCode se agla khaali number)
+  const pNames = new Set(data.products.map(p => String(p.name || '').trim().toLowerCase()));
+  SEED_PRODUCTS.forEach(n => {
+    if (pNames.has(n.toLowerCase())) return;
+    data.products.push({ id: genId() + Math.random().toString(36).slice(2, 6), code: nextCode('P-', data.products.map(p => p.code)), name: n, unit: 'pcs', lowStock: 10, active: true });
+  });
+  const aNames = new Set(data.accounts.map(a => String(a.name || '').trim().toLowerCase()));
+  SEED_ACCOUNTS.forEach(n => {
+    if (aNames.has(n.toLowerCase())) return;
+    data.accounts.push({ id: genId() + Math.random().toString(36).slice(2, 6), code: nextCode('A-', data.accounts.map(a => a.code)), name: n, active: true });
+  });
 }
 
 /* ---------------- STORE (Firestore) ----------------
@@ -767,13 +1106,51 @@ const Store = {
     if (!S.wid) return;
     const { setDoc } = fb.fs; await setDoc(wsDocRef('profile', 'main'), p);
   },
-  async replaceAll(data) { // backup import
+  /* Agla entry seq — Firestore TRANSACTION se (workspaces/{wid}/counters/main.entrySeq):
+     do members aik hi waqt entry lagayein to seq/code kabhi takrata nahi. Transaction
+     fail/offline ho to local max+1 fallback (ordering ka tie-break createdAt + id bhi hai).
+     NOTE: counters subcollection ko Firestore rules mein workspace access hona chahiye. */
+  async nextEntrySeq(localNext) {
+    if (!S.wid || !fb || !fb.fs.runTransaction) return localNext;
+    try {
+      const { doc, runTransaction } = fb.fs;
+      const ref = doc(fb.db, 'workspaces', S.wid, 'counters', 'main');
+      return await runTransaction(fb.db, async tx => {
+        const snap = await tx.get(ref);
+        const cur = snap.exists() ? (+snap.data().entrySeq || 0) : 0;
+        const next = Math.max(cur, (localNext || 1) - 1) + 1;
+        tx.set(ref, { entrySeq: next }, { merge: true });
+        return next;
+      });
+    } catch (e) { return localNext; }
+  },
+  async replaceAll(data) { // backup import — ASAL RESTORE (sirf OWNER)
     if (!S.wid) return;
-    S.data = data;
-    const { setDoc } = fb.fs;
-    for (const coll of ['parties', 'products', 'accounts', 'entries'])
-      for (const o of (data[coll] || [])) await setDoc(wsDocRef(coll, o.id), o);
-    await Store.saveProfile(data.profile || { ...DEFAULT_PROFILE });
+    if (S.role !== 'owner') throw new Error('Sirf owner backup import kar sakta hai');
+    const { getDocs, writeBatch } = fb.fs;
+    const existingIds = {};
+    for (const coll of ['parties', 'products', 'accounts', 'entries']) {
+      const snap = await getDocs(wsCollRef(coll));
+      existingIds[coll] = snap.docs.map(d => d.id);
+    }
+    const plan = BA_CORE.planImportRestore(existingIds, data);
+    for (const coll of ['parties', 'products', 'accounts', 'entries']) {
+      // Pehle woh docs delete jo backup mein NAHI hain (warna purana data wapas aa jata tha)
+      const dels = plan[coll].deleteIds;
+      for (let i = 0; i < dels.length; i += 450) {
+        const batch = writeBatch(fb.db);
+        dels.slice(i, i + 450).forEach(id => batch.delete(wsDocRef(coll, id)));
+        await batch.commit();
+      }
+      const ups = plan[coll].upsert;
+      for (let i = 0; i < ups.length; i += 450) {
+        const batch = writeBatch(fb.db);
+        ups.slice(i, i + 450).forEach(o => { if (o && o.id) batch.set(wsDocRef(coll, o.id), o); });
+        await batch.commit();
+      }
+    }
+    S.data = { parties: data.parties || [], products: data.products || [], accounts: data.accounts || [], entries: data.entries || [], profile: data.profile || { ...DEFAULT_PROFILE } };
+    await Store.saveProfile(S.data.profile);
   }
 };
 
@@ -808,33 +1185,61 @@ async function initFirebase() {
     enterApp();
   });
 }
+/* ---------------- SYNC / OFFLINE NISHAANI ----------------
+   Header ke neeche patli patti: browser offline ho YA koi snapshot cache se aya ho /
+   us mein pending writes hon to dikhti hai — user ko pata rahe ke entries is phone
+   mein mehfooz hain aur net ate hi khud cloud tak pohanch jayengi. */
+let _syncPending = false;
+function noteSync(meta) {
+  if (!meta) return;
+  const p = !!(meta.hasPendingWrites || meta.fromCache);
+  if (p !== _syncPending) { _syncPending = p; updateSyncBar(); }
+}
+function updateSyncBar() {
+  const bar = $('syncBar'); if (!bar) return;
+  const show = S.mode === 'firebase' && (!navigator.onLine || _syncPending);
+  bar.classList.toggle('hidden', !show);
+}
+window.addEventListener('online', updateSyncBar);
+window.addEventListener('offline', updateSyncBar);
 function subscribeFirestore() {
   unsubs.forEach(u => u()); unsubs = [];
   const { onSnapshot, doc } = fb.fs;
   // Workspace doc live rahe: members ki list badle to sab ko foran nazar aye
   unsubs.push(onSnapshot(doc(fb.db, 'workspaces', S.wid), snap => {
+    noteSync(snap.metadata);
     if (snap.exists()) { S.ws = { id: snap.id, ...snap.data() }; if (typeof renderSharing === 'function') renderSharing(); }
   }, () => {}));
+  /* SEED (pehli dafa ke masters): koi timer nahi — seed SIRF tab hota hai jab products,
+     accounts AUR entries teeno ki PEHLI server snapshot aa jaye aur teeno khaali hon,
+     aur sirf OWNER ke liye (member join kare to seed kabhi nahi lagta). Is se do devices
+     ke aik saath pehli-dafa khulne par duplicate seed ka race khatam ho gaya. */
+  const _firstSnap = { products: false, accounts: false, entries: false };
+  let _seedDone = false;
+  const maybeSeed = async () => {
+    if (_seedDone) return;
+    if (!(_firstSnap.products && _firstSnap.accounts && _firstSnap.entries)) return;
+    if (S.mode !== 'firebase' || S.role !== 'owner') return;
+    if (S.data.products.length || S.data.accounts.length || S.data.entries.length) return;
+    _seedDone = true;
+    const seed = { parties: [], products: [], accounts: [], entries: [], profile: { ...DEFAULT_PROFILE } };
+    seedMasters(seed);
+    for (const p of seed.products) await Store.addMaster('products', p);
+    for (const a of seed.accounts) await Store.addMaster('accounts', a);
+  };
   const bind = (coll, key) => {
     unsubs.push(onSnapshot(wsCollRef(coll), snap => {
+      noteSync(snap.metadata);
       S.data[key] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      if (key === 'products' || key === 'accounts') { /* seed sirf bilkul khali account par */ }
+      if (key in _firstSnap && !_firstSnap[key]) { _firstSnap[key] = true; maybeSeed(); }
       renderAll();
     }, err => { sfx('error'); toast('Data load error: ' + err.message); }));
   };
   bind('parties', 'parties'); bind('products', 'products'); bind('accounts', 'accounts'); bind('entries', 'entries');
   unsubs.push(onSnapshot(wsDocRef('profile', 'main'), snap => {
+    noteSync(snap.metadata);
     if (snap.exists()) { S.data.profile = { ...DEFAULT_PROFILE, ...snap.data() }; applyProfile(); }
   }));
-  // Pehli dafa: seed products/accounts agar dono khali hain aur entries bhi nahi
-  setTimeout(async () => {
-    if (S.mode === 'firebase' && !S.data.products.length && !S.data.entries.length) {
-      const seed = { parties: [], products: [], accounts: [], entries: [], profile: { ...DEFAULT_PROFILE } };
-      seedMasters(seed);
-      for (const p of seed.products) await Store.addMaster('products', p);
-      for (const a of seed.accounts) await Store.addMaster('accounts', a);
-    }
-  }, 2500);
 }
 /* ---------------- KHATA SHARING: workspace resolution ----------------
    Login ke baad active workspace is tartib se milta hai:
@@ -842,30 +1247,61 @@ function subscribeFirestore() {
    2) Warna jo workspace maine khud banaya hai (ownerUid == mera uid) -> role: owner
    3) Warna SETUP GATE — koi workspace NAHI banta aur koi data NAHI dikhta.
       Asal khata sirf Settings ke "Owner Setup" se banta hai (naam de kar). */
-// Pure decision (koi Firebase nahi) — found = { inviteWs, ownedWs } (doc data + id, ya null)
-function pickWorkspace(found) {
-  // NOTE: invite AUR apna workspace dono hon to invite wala jeet-ta hai —
-  // is dukaan ke use-case mein family ka shared khata hi asal khata hai.
-  if (found && found.inviteWs) return { action: 'use', wid: found.inviteWs.id, role: 'member', ws: found.inviteWs };
-  if (found && found.ownedWs) return { action: 'use', wid: found.ownedWs.id, role: 'owner', ws: found.ownedWs };
-  return { action: 'setup' };
+/* Candidates: invited (member) + owned (owner) — id se dedup (apna khata dono
+   lists mein aye to role owner hi rehta hai). Aik candidate ho to wohi khata khulta
+   hai; AIK SE ZYADA hon to setup gate par CHOOSER (S.wsChoices) dikhta hai — user
+   khud chunta hai; koi na ho to seedha setup gate (Owner Setup). */
+function collectWsCandidates(invDocs, ownDocs) {
+  const map = new Map();
+  (ownDocs || []).forEach(ws => map.set(ws.id, { id: ws.id, role: 'owner', ws }));
+  (invDocs || []).forEach(ws => { if (!map.has(ws.id)) map.set(ws.id, { id: ws.id, role: 'member', ws }); });
+  return [...map.values()];
 }
 async function resolveWorkspace(user) {
   const { collection, query, where, getDocs } = fb.fs;
   const email = String(user.email || '').toLowerCase();
   S.userEmail = email;
   S.userName = user.displayName || (email ? email.split('@')[0] : '');
-  let inviteWs = null, ownedWs = null;
+  let invDocs = [], ownDocs = [];
   if (email) {
     const inv = await getDocs(query(collection(fb.db, 'workspaces'), where('memberEmails', 'array-contains', email)));
-    if (!inv.empty) inviteWs = { id: inv.docs[0].id, ...inv.docs[0].data() };
+    invDocs = inv.docs.map(d => ({ id: d.id, ...d.data() }));
   }
   const own = await getDocs(query(collection(fb.db, 'workspaces'), where('ownerUid', '==', user.uid)));
-  if (!own.empty) ownedWs = { id: own.docs[0].id, ...own.docs[0].data() };
-  const pick = pickWorkspace({ inviteWs, ownedWs });
-  if (pick.action === 'use') { S.wid = pick.wid; S.role = pick.role; S.ws = pick.ws; return; }
+  ownDocs = own.docs.map(d => ({ id: d.id, ...d.data() }));
+  const cands = collectWsCandidates(invDocs, ownDocs);
+  if (cands.length === 1) { S.wid = cands[0].id; S.role = cands[0].role; S.ws = cands[0].ws; S.wsChoices = null; return; }
+  if (cands.length > 1) {
+    // Chooser: wid null rehta hai, gate par list dikhe gi; create/migration yahan NAHI hoti
+    S.wsChoices = cands; S.wid = null; S.role = 'none'; S.ws = null; return;
+  }
   // Setup gate: wid null rehta hai, koi create/migration yahan NAHI hoti
-  S.wid = null; S.role = 'none'; S.ws = null;
+  S.wid = null; S.role = 'none'; S.ws = null; S.wsChoices = null;
+}
+/* ---------------- WORKSPACE CHOOSER — gate par khate ki list ---------------- */
+function renderWsChooser() {
+  const card = $('wsChooserCard'); if (!card) return;
+  const show = !!S.needsSetup && Array.isArray(S.wsChoices) && S.wsChoices.length > 1;
+  card.classList.toggle('hidden', !show);
+  if (!show) return;
+  $('wsChooserList').innerHTML = S.wsChoices.map(c => {
+    const ws = c.ws || {};
+    const ownerTxt = String(ws.ownerName || '').trim() || ws.ownerEmail || '';
+    return `<button class="card w-full text-left p-3 flex items-center gap-3" style="border:1.5px solid #d8dee5" onclick="chooseWorkspace('${c.id}')">
+      <div class="flex-1 min-w-0"><div class="font-bold text-sm truncate">${esc(ws.name || APP_NAME)}</div>
+      <div class="text-xs text-gray-400 truncate">Owner: ${esc(ownerTxt)}</div></div>
+      <span class="chip ${c.role === 'owner' ? 'brand-bg text-white' : 'cream2-bg brand-text'}">${c.role === 'owner' ? 'Mera Khata' : 'Member'}</span></button>`;
+  }).join('');
+}
+async function chooseWorkspace(wid) {
+  const c = (S.wsChoices || []).find(x => x.id === wid);
+  if (!c || !fb) return;
+  S.wid = c.id; S.role = c.role; S.ws = c.ws; S.wsChoices = null;
+  S.needsSetup = false; S.mode = 'firebase';
+  subscribeFirestore();
+  applyProfile(); renderAll();
+  switchView('roznamcha');
+  toast('Khata khul gaya'); sfx('login');
 }
 /* ---------------- OWNER SETUP — setup gate se asal khata ----------------
    Workspace banane ki poori app mein YAHI aik jagah hai (login par auto-create khatam).
@@ -1018,7 +1454,7 @@ function enterApp() {
 async function logout() {
   if (fb && fb.auth && fb.auth.currentUser) { try { await fb.authMod.signOut(fb.auth); } catch (e) {} }
   unsubs.forEach(u => u()); unsubs = [];
-  S.mode = 'none'; S.uid = null; S.wid = null; S.role = null; S.ws = null; S.userEmail = ''; S.userName = '';
+  S.mode = 'none'; S.uid = null; S.wid = null; S.role = null; S.ws = null; S.wsChoices = null; S.userEmail = ''; S.userName = '';
   S.needsSetup = false; S.authDone = false; resolvingWs = false;
   $('appScreen').classList.add('hidden'); $('loginScreen').classList.remove('hidden');
 }
@@ -1038,6 +1474,7 @@ function applyProfile() {
 const partyById = id => S.data.parties.find(p => p.id === id);
 const productById = id => S.data.products.find(p => p.id === id);
 const accountById = id => S.data.accounts.find(a => a.id === id);
+const unitOf = pid => { const p = pid ? productById(pid) : null; return (p && p.unit) || 'pcs'; };
 /* Saaf professional line icons (SVG) — emoji icons khatam (owner ka locked UI rule).
    Sab aik hi style: 24x24 viewBox, stroke currentColor, stroke-width 1.8, round caps. */
 const ICON_PATHS = {
@@ -1051,7 +1488,12 @@ const ICON_PATHS = {
   file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
   printer: '<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
   download: '<path d="M12 3v11"/><path d="m7 10.5 5 5 5-5"/><path d="M4 21h16"/>',
-  settings: '<circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.51 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.24.6.86 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/>'
+  settings: '<circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.51 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.24.6.86 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/>',
+  returnIn: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5A5.5 5.5 0 0 1 20 14.5v.5a5 5 0 0 1-5 5h-4"/>',
+  returnOut: '<path d="m15 14 5-5-5-5"/><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v.5a5 5 0 0 0 5 5h4"/>',
+  layers: '<path d="m12 2 9 5-9 5-9-5z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/>',
+  scale: '<path d="M12 3v18"/><path d="M8 21h8"/><path d="M5 7h14"/><path d="m5 7-2 6a3.2 3.2 0 0 0 4 0z"/><path d="m19 7-2 6a3.2 3.2 0 0 0 4 0z"/>',
+  sliders: '<path d="M4 7h9"/><path d="M17 7h3"/><circle cx="15" cy="7" r="2.2"/><path d="M4 17h3"/><path d="M11 17h9"/><circle cx="9" cy="17" r="2.2"/>'
 };
 const ico = (name, cls) => `<svg viewBox="0 0 24 24" class="${cls || 'w-6 h-6'}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON_PATHS[name] || ICON_PATHS.file}</svg>`;
 const TYPE_META = {
@@ -1059,7 +1501,12 @@ const TYPE_META = {
   purchase:         { label: 'Purchase (Khareed)',  color: '#6d1a2d', icon: 'box' },
   payment_received: { label: 'Wasooli (Paisa Aya)', color: '#1f8a70', icon: 'downCircle' },
   payment_given:    { label: 'Adaigi (Paisa Diya)', color: '#b06a00', icon: 'upCircle' },
+  sale_return:      { label: 'Sale Wapsi',          color: '#c25e10', icon: 'returnIn' },
+  purchase_return:  { label: 'Purchase Wapsi',      color: '#8a6d1f', icon: 'returnOut' },
   expense:          { label: 'Kharcha',             color: '#a03b3b', icon: 'receipt' },
+  opening_stock:    { label: 'Opening Stock',       color: '#4e7a3a', icon: 'layers' },
+  opening_balance:  { label: 'Opening Baqaya',      color: '#3f6d8e', icon: 'scale' },
+  stock_adjust:     { label: 'Stock Theek Karna',   color: '#96762a', icon: 'sliders' },
   capital:          { label: 'Sarmaya Jama',        color: '#5b5bd6', icon: 'landmark' },
   drawing:          { label: 'Owner ne Nikala',     color: '#7a4b9e', icon: 'ownerOut' }
 };
@@ -1072,7 +1519,9 @@ function partyBalanceText(p) {
 function entryTitle(e) {
   const p = e.partyId ? partyById(e.partyId) : null;
   const prod = e.productId ? productById(e.productId) : null;
-  const partyTxt = p ? `${esc(p.code)} • ${esc(p.name)}` : '';
+  // Entry par mehfooz snapshot naam ko tarjeeh — party ka naam baad mein badle to
+  // purani entry par wohi naam rahe ga jo entry ke waqt tha (purani entries: live naam)
+  const partyTxt = p ? `${esc(p.code)} • ${esc(e.partyName || p.name)}` : (e.partyName ? esc(e.partyName) : '');
   if (e.type === 'sale') {
     const items = BA_CORE.entryItems(e);
     if (items.length > 1) {
@@ -1080,9 +1529,17 @@ function entryTitle(e) {
       return `${partyTxt} — ${items.length} items: ${shown}${items.length > 3 ? ' +' + (items.length - 3) + ' aur' : ''}`;
     }
     const it = items[0] || {};
-    return `${partyTxt} — ${esc(it.productName || e.productName || (prod ? prod.name : ''))} ${it.qty ?? e.qty} pcs @ ${fmtRs(it.rate ?? e.rate)}`;
+    return `${partyTxt} — ${esc(it.productName || e.productName || (prod ? prod.name : ''))} ${it.qty ?? e.qty} ${unitOf(it.productId || e.productId)} @ ${fmtRs(it.rate ?? e.rate)}`;
   }
-  if (e.type === 'purchase') return `${partyTxt} — ${esc(e.productName || (prod ? prod.name : ''))} ${e.qty} pcs @ ${fmtRs(e.rate)}`;
+  if (e.type === 'purchase') return `${partyTxt} — ${esc(e.productName || (prod ? prod.name : ''))} ${e.qty} ${unitOf(e.productId)} @ ${fmtRs(e.rate)}`;
+  if (e.type === 'sale_return' || e.type === 'purchase_return') {
+    const items = BA_CORE.entryItems(e);
+    const sum = items.map(it => `${esc(it.productName || '')} ${it.qty}`).join(', ');
+    return `${partyTxt} — Wapsi: ${sum}`;
+  }
+  if (e.type === 'opening_stock') return `Opening Stock — ${esc(e.productName || (prod ? prod.name : ''))} ${e.qty} ${unitOf(e.productId)} @ ${fmtRs(e.rate)}`;
+  if (e.type === 'opening_balance') return `${partyTxt} — Opening Baqaya (${e.obSide === 'dena' ? 'Dena side' : 'Lena side'})`;
+  if (e.type === 'stock_adjust') return `${esc(e.productName || (prod ? prod.name : ''))} — Stock ${e.direction === 'in' ? 'barha' : 'ghata'} ${e.qty} ${unitOf(e.productId)}`;
   if (e.type === 'expense') { const a = e.accountId ? accountById(e.accountId) : null; return `${a ? esc(a.code) + ' • ' + esc(a.name) : 'Kharcha'}${e.note ? ' — ' + esc(e.note) : ''}`; }
   if (partyTxt) return partyTxt + (e.note ? ' — ' + esc(e.note) : '');
   return TYPE_META[e.type] ? TYPE_META[e.type].label : e.type;
@@ -1107,15 +1564,23 @@ function entryCard(e, showDate) {
       <div class="text-right">
         <div class="font-extrabold" style="color:${m.color}">${fmtRs(e.total)}</div>
         ${e.type === 'sale' ? `<div class="text-[11px] text-gray-400">Wasool ${fmtRs(e.amountReceived || 0)} • Baqaya ${fmtRs((e.total || 0) - (e.amountReceived || 0))}</div>` : ''}
-        ${e.type === 'purchase' ? `<div class="text-[11px] text-gray-400">Diya ${fmtRs(e.amountPaid || 0)} • Baqaya ${fmtRs((e.total || 0) - (e.amountPaid || 0))}</div>` : ''}
+        ${e.type === 'purchase' ? `<div class="text-[11px] text-gray-400">Diya ${fmtRs(e.amountPaid || 0)}${d.exchangeInfo[e.id] && d.exchangeInfo[e.id].total ? ' • Exchange ' + fmtRs(d.exchangeInfo[e.id].total) : ''} • Baqaya ${fmtRs((e.total || 0) - (e.amountPaid || 0) - (d.exchangeInfo[e.id] ? d.exchangeInfo[e.id].total : 0))}</div>` : ''}
+        ${(e.type === 'sale_return' || e.type === 'purchase_return') ? `<div class="text-[11px] text-gray-400">Cash wapis ${fmtRs(e.cashRefund || 0)}</div>` : ''}
       </div>
     </div>
     <div class="flex gap-2 mt-2">
-      ${e.type === 'sale' && !isRev ? `<button class="btn-cream px-3 py-1.5 text-xs" onclick="printBill('${e.id}')">${ico('printer', 'w-3.5 h-3.5 inline-block')} Print</button><button class="btn-cream px-3 py-1.5 text-xs" onclick="downloadBillPDF('${e.id}')">${ico('download', 'w-3.5 h-3.5 inline-block')} Download PDF</button>` : ''}
+      ${e.type === 'sale' && !isRev ? `<button class="btn-cream px-3 py-1.5 text-xs" onclick="printBill('${e.id}')">${ico('printer', 'w-3.5 h-3.5 inline-block')} Print</button><button class="btn-cream px-3 py-1.5 text-xs" onclick="downloadBillPDF('${e.id}')">${ico('download', 'w-3.5 h-3.5 inline-block')} Download PDF</button><button class="btn-cream px-3 py-1.5 text-xs" onclick="shareBillWA('${e.id}')">WhatsApp</button>` : ''}
       ${e.partyId ? `<button class="btn-cream px-3 py-1.5 text-xs" onclick="openStatement('party:${e.partyId}')">Statement</button>` : ''}
       ${canCorrect ? `<button class="px-3 py-1.5 text-xs font-bold rounded-xl" style="background:#fdecea;color:#c0392b" onclick="makeCorrection('${e.id}')">Correction</button>` : ''}
     </div>
   </div>`;
+}
+/* Member ko Import aur Profile Save nazar nahi ate (rules par bhi sirf owner likh
+   sakta hai — ye sirf UI ki safai hai, asal guard core/rules mein hai) */
+function renderRoleGuards() {
+  const memberBlocked = S.mode === 'firebase' && S.role !== 'owner';
+  const imp = $('importLabel'); if (imp) imp.classList.toggle('hidden', memberBlocked);
+  const ps = $('btnSaveProfile'); if (ps) ps.classList.toggle('hidden', memberBlocked);
 }
 function renderAll() {
   if (S.mode === 'none') return;
@@ -1124,8 +1589,11 @@ function renderAll() {
   if (typeof renderSharing === 'function') renderSharing();
   if (typeof renderResetCard === 'function') renderResetCard();
   if (typeof renderOwnerSetup === 'function') renderOwnerSetup();
+  if (typeof renderWsChooser === 'function') renderWsChooser();
   if (typeof renderSetupBanner === 'function') renderSetupBanner();
   if (typeof applySetupGate === 'function') applySetupGate();
+  renderRoleGuards();
+  if (typeof updateSyncBar === 'function') updateSyncBar();
 }
 function renderRoznamcha() {
   const d = BA_CORE.dailySummary(S.data, selectedDate);
@@ -1144,25 +1612,31 @@ function renderRoznamcha() {
 }
 function runSearch(q) {
   const ql = q.toLowerCase();
-  const hits = S.data.entries.filter(e => {
+  // Pehle KUL hits gino (title mein asal tadaad), render sirf pehle 60
+  const allHits = S.data.entries.filter(e => {
     const p = e.partyId ? partyById(e.partyId) : null;
     const itemNames = e.type === 'sale' ? BA_CORE.entryItems(e).map(i => i.productName || '').join(' ') : '';
     const hay = [e.code, e.date, String(e.total), String(e.rate || ''), e.productName || '', itemNames, p ? p.name : '', p ? p.code : '', p ? p.phone : '', e.note || '', (TYPE_META[e.type] || {}).label || ''].join(' ').toLowerCase();
     return ql.split(/\s+/).every(w => hay.includes(w));
-  }).sort((a, b) => (b.date < a.date ? -1 : 1) || ((b.seq || 0) - (a.seq || 0))).slice(0, 60);
+  }).sort((a, b) => (b.date < a.date ? -1 : 1) || ((b.seq || 0) - (a.seq || 0)));
+  const totalHits = allHits.length;
+  const hits = allHits.slice(0, 60);
   const partyHits = S.data.parties.filter(p => (p.name + ' ' + p.code + ' ' + (p.phone || '')).toLowerCase().includes(ql));
   const prodHits = S.data.products.filter(p => (p.name + ' ' + p.code).toLowerCase().includes(ql));
   $('roznamchaMain').classList.add('hidden'); $('searchResultsWrap').classList.remove('hidden');
   $('btnClearSearch').classList.remove('hidden');
-  $('searchResultsTitle').textContent = `Search: "${q}" — ${hits.length} entries, ${partyHits.length} parties, ${prodHits.length} products`;
+  $('searchResultsTitle').textContent = `Search: "${q}" — ${totalHits} entries, ${partyHits.length} parties, ${prodHits.length} products`;
   let html = partyHits.map(p => `<div class="card p-3 flex justify-between items-center"><div><b>${esc(p.code)}</b> • ${esc(p.name)} <span class="text-xs text-gray-400">${p.type === 'buyer' ? 'Buyer' : 'Seller'} ${esc(p.phone || '')}</span></div><div class="text-sm">${partyBalanceText(p)}</div></div>`).join('');
-  html += prodHits.map(p => { const inv = derived().inventory[p.id]; return `<div class="card p-3 flex justify-between"><div><b>${esc(p.code)}</b> • ${esc(p.name)}</div><div class="text-sm font-bold brand-text">Stock: ${inv ? inv.remaining : 0} pcs</div></div>`; }).join('');
+  html += prodHits.map(p => { const inv = derived().inventory[p.id]; return `<div class="card p-3 flex justify-between"><div><b>${esc(p.code)}</b> • ${esc(p.name)}</div><div class="text-sm font-bold brand-text">Stock: ${inv ? inv.remaining : 0} ${esc(p.unit || 'pcs')}</div></div>`; }).join('');
   html += hits.map(e => entryCard(e, true)).join('');
+  if (totalHits > 60) html += '<div class="card p-3 text-center text-xs text-gray-500">Pehle 60 dikha rahe hain — search aur chhota likhein</div>';
   $('searchResults').innerHTML = html || '<div class="card p-5 text-center text-gray-400 text-sm">Kuch nahi mila.</div>';
 }
 function accountLabel(key) {
   const d = derived();
   if (key === 'cash') return { code: 'CASH', name: 'Galla / Cash' };
+  if (key === 'bank') return { code: 'BANK', name: 'Bank' };
+  if (key === 'adj') return { code: 'ADJ', name: 'Farq / Adjustment' };
   if (key === 'sales') return { code: 'SALE', name: 'Bikri (Sales)' };
   if (key === 'cogs') return { code: 'COST', name: 'Bikey Maal ki Laagat' };
   if (key === 'stock') return { code: 'STOK', name: 'Stock / Inventory' };
@@ -1218,31 +1692,39 @@ function closeStatement() {
   $('statementWrap').classList.add('hidden');
   $('view-khata').classList.remove('stmt-open');
 }
+async function reactivateMaster(coll, id) {
+  await Store.updateMaster(coll, id, { active: true });
+  toast('Dobara chalu ho gaya'); sfx('save'); renderAll();
+}
 function renderInventory() {
   const d = derived(); const q = ($('invSearch').value || '').toLowerCase();
+  const showIn = !!($('invShowInactive') && $('invShowInactive').checked);
   const totalQty = Object.values(d.inventory).reduce((s, i) => s + i.remaining, 0);
   $('invSummary').innerHTML =
     `<div class="card p-3 text-center"><div class="text-[11px] font-bold text-gray-400">KUL STOCK</div><div class="font-extrabold brand-text">${totalQty} pcs</div></div>` +
     `<div class="card p-3 text-center"><div class="text-[11px] font-bold text-gray-400">STOCK KI LAAGAT VALUE</div><div class="font-extrabold brand-text">${fmtRs(d.stockValue)}</div></div>`;
-  const list = S.data.products.filter(p => p.active !== false).filter(p => !q || (p.name + ' ' + p.code).toLowerCase().includes(q));
+  const list = S.data.products.filter(p => showIn || p.active !== false).filter(p => !q || (p.name + ' ' + p.code).toLowerCase().includes(q));
   $('productList').innerHTML = list.length ? list.map(p => {
     const inv = d.inventory[p.id] || { remaining: 0, value: 0, lots: [], sold: 0 };
-    const low = inv.remaining <= (p.lowStock ?? 10);
+    const unit = p.unit || 'pcs';
+    const low = p.active !== false && inv.remaining <= (p.lowStock ?? 10);
     const lotsHtml = (inv.lots || []).map((l, i) => `<div class="lotrow bg-[#faf7ef] rounded-lg p-2.5 mt-2 text-sm flex justify-between">
       <div><b>Lot ${i + 1}</b> <span class="text-gray-400 text-xs">(${esc(l.code)} • ${esc(l.date)})</span><br><span class="text-xs text-gray-500">Rate ${fmtRs(l.rate)} • Aye ${l.qtyIn} • Bike ${l.sold}</span></div>
       <div class="text-right"><div class="font-extrabold brand-text">${l.remaining} bache</div><div class="text-xs text-gray-400">${fmtRs(l.remaining * l.rate)}</div></div></div>`).join('');
     return `<div class="card p-3 ${low ? 'lowstock' : ''}">
       <div class="flex items-center gap-3">
         <div class="chip cream2-bg brand-text">${esc(p.code)}</div>
-        <div class="flex-1"><div class="font-bold">${esc(p.name)} ${low ? '<span class="chip" style="background:#fdecea;color:#c0392b">Stock kam hai</span>' : ''}</div>
-        <div class="text-xs text-gray-400">Bike kul: ${inv.sold || 0} pcs</div></div>
-        <div class="text-right"><div class="font-extrabold text-lg brand-text">${inv.remaining} pcs</div><div class="text-xs text-gray-400">${fmtRs(inv.value)}</div></div>
+        <div class="flex-1"><div class="font-bold">${esc(p.name)} ${p.active === false ? '<span class="chip" style="background:#fdecea;color:#c0392b">Band hai</span>' : ''} ${low ? '<span class="chip" style="background:#fdecea;color:#c0392b">Stock kam hai</span>' : ''}</div>
+        <div class="text-xs text-gray-400">Bike kul: ${inv.sold || 0} ${esc(unit)}</div></div>
+        <div class="text-right"><div class="font-extrabold text-lg brand-text">${inv.remaining} ${esc(unit)}</div><div class="text-xs text-gray-400">${fmtRs(inv.value)}</div></div>
       </div>
       ${inv.lots && inv.lots.length ? `<details class="lots mt-1"><summary class="text-xs font-bold brand-text">Lot-wise tafseel dekhein (${inv.lots.length} lots)</summary>${lotsHtml}</details>` : '<div class="text-xs text-gray-400 mt-1">Abhi koi lot nahi — Purchase entry se pehla lot banega.</div>'}
-      <div class="flex gap-2 mt-2">
+      <div class="flex flex-wrap gap-2 mt-2">
         <button class="btn-cream px-3 py-1.5 text-xs" onclick="openEntry('purchase','${p.id}')">+ Purchase (Lot)</button>
         <button class="btn-cream px-3 py-1.5 text-xs" onclick="openEntry('sale','${p.id}')">+ Sale</button>
+        <button class="btn-cream px-3 py-1.5 text-xs" onclick="openEntry('opening_stock','${p.id}')">Opening Stock</button>
         <button class="btn-cream px-3 py-1.5 text-xs" onclick="editProduct('${p.id}')">Edit</button>
+        ${p.active === false ? `<button class="btn-cream px-3 py-1.5 text-xs" onclick="reactivateMaster('products','${p.id}')">Dobara chalu karein</button>` : ''}
       </div></div>`;
   }).join('') : '<div class="card p-5 text-center text-gray-400 text-sm">Koi product nahi.</div>';
 }
@@ -1280,40 +1762,137 @@ function renderBaqaya() {
   $('talpatStatus').innerHTML = d.talpatBalanced
     ? '<div class="card p-3 text-center font-bold" style="background:#e7f3ec;color:#2e7d4f">Talpat mil gaya — Naame = Jama. Hisaab theek hai.</div>'
     : '<div class="card p-3 text-center font-bold" style="background:#fdecea;color:#c0392b">Talpat NAHI mila — farq: ' + fmtRs(Math.abs(d.talpatDr - d.talpatCr)) + '</div>';
+  renderRecovery();
+}
+/* ================= WASOOLI LIST (Recovery) =================
+   Sirf buyers jin ka balance > 0 (core ki recovery info: balance + sab se purana
+   khula baqaya kis tareekh se hai). Sort: waada guzar gaya pehle, phir waade ki
+   tareekh qareeb wala, phir sab se purana baqaya. Upar aging chips (30/60/90+ din). */
+function daysOld(dateStr) {
+  if (!dateStr) return null;
+  const ms = Date.parse(todayStr()) - Date.parse(dateStr);
+  if (isNaN(ms)) return null;
+  return Math.max(0, Math.floor(ms / 86400000));
+}
+function renderRecovery() {
+  const wrap = $('recoveryList'); if (!wrap) return;
+  const d = derived(); const today = todayStr();
+  const items = Object.values(d.recovery || {}).map(r => {
+    const p = partyById(r.partyId);
+    if (!p) return null;
+    const pd = p.promiseDate || '';
+    return { p, r, pd, overdue: !!(pd && pd < today), age: daysOld(r.oldestOpenDate) };
+  }).filter(Boolean);
+  const sumAge = n => items.filter(x => x.age != null && x.age >= n).reduce((s, x) => r2(s + x.r.balance), 0);
+  const chips = $('recoveryChips');
+  if (chips) chips.innerHTML = items.length ? `<div class="card p-3 text-center text-sm font-bold brand-text">30+ din: ${fmtRs(sumAge(30))} &nbsp;•&nbsp; 60+ din: ${fmtRs(sumAge(60))} &nbsp;•&nbsp; 90+ din: ${fmtRs(sumAge(90))}</div>` : '';
+  items.sort((a, b) => {
+    const ga = a.overdue ? 0 : a.pd ? 1 : 2, gb = b.overdue ? 0 : b.pd ? 1 : 2;
+    if (ga !== gb) return ga - gb;
+    if (a.pd && b.pd && a.pd !== b.pd) return a.pd < b.pd ? -1 : 1;
+    const ad = a.r.oldestOpenDate || '9999-99-99', bd = b.r.oldestOpenDate || '9999-99-99';
+    return ad < bd ? -1 : ad > bd ? 1 : 0;
+  });
+  wrap.innerHTML = items.length ? items.map(x => {
+    const badge = x.pd ? (x.overdue
+      ? `<span class="chip" style="background:#fdecea;color:#c0392b">Waada guzar gaya — ${daysOld(x.pd)} din</span>`
+      : `<span class="chip cream2-bg brand-text">Waada: ${esc(x.pd)}</span>`) : '';
+    const ageTxt = x.age != null ? `<div class="text-xs text-gray-400">${x.age} din se baqaya</div>` : '';
+    const waBtn = x.p.phone ? `<button class="btn-cream px-3 py-1.5 text-xs shrink-0" onclick="shareRecoveryWA('${x.p.id}')">WhatsApp Reminder</button>` : '';
+    return `<div class="card p-3">
+      <div class="flex items-center gap-3 cursor-pointer" onclick="openStatement('party:${x.p.id}')">
+        <div class="chip cream2-bg brand-text shrink-0">${esc(x.p.code)}</div>
+        <div class="flex-1 min-w-0"><div class="font-semibold text-sm truncate">${esc(x.p.name)}</div>${ageTxt}</div>
+        <div class="font-extrabold text-green-700 shrink-0">${fmtRs(x.r.balance)}</div>
+      </div>
+      ${(badge || waBtn) ? `<div class="flex flex-wrap items-center gap-2 mt-2">${badge}${waBtn}</div>` : ''}
+    </div>`;
+  }).join('') : '<div class="card p-5 text-center text-gray-400 text-sm">Kisi buyer ka baqaya nahi — saari wasooli saaf hai.</div>';
+}
+function shareRecoveryWA(partyId) {
+  const p = partyById(partyId); if (!p || !p.phone) { sfx('error'); return toast('Party ka phone number nahi hai'); }
+  const d = derived(); const rec = (d.recovery || {})[partyId];
+  const bal = rec ? rec.balance : (d.partyBalances[partyId] || 0);
+  const text = encodeURIComponent((S.data.profile.name || APP_NAME) + '\nAssalam o Alaikum ' + p.name + ',\nAap ke zimme hamara baqaya ' + fmtRs(bal) + ' hai. Meherbani karke adaigi ka bandobast kar dein. Shukriya.\n' + 'Apna hisaab bhi aise hi saaf rakhein!\nApna GG Khata Banayein — FREE Sign Up: ' + GG_KHATA_URL + '\nSirf Google account chahiye — 1 minute mein khata tayyar\n' + GG_BRAND_LINE);
+  let phone = String(p.phone).replace(/\D/g, '');
+  if (phone.startsWith('0')) phone = '92' + phone.slice(1);
+  window.open('https://wa.me/' + phone + '?text=' + text, '_blank');
 }
 function renderParties() {
   const q = ($('partySearch').value || '').toLowerCase();
+  const showIn = !!($('partyShowInactive') && $('partyShowInactive').checked);
   const match = p => !q || (p.name + ' ' + p.code + ' ' + (p.phone || '')).toLowerCase().includes(q);
   const card = p => `<div class="card p-3 flex items-center gap-3">
     <div class="chip cream2-bg brand-text">${esc(p.code)}</div>
-    <div class="flex-1 min-w-0"><div class="font-semibold text-sm truncate">${esc(p.name)}</div>
+    <div class="flex-1 min-w-0"><div class="font-semibold text-sm truncate">${esc(p.name)} ${p.active === false ? '<span class="chip" style="background:#fdecea;color:#c0392b">Band hai</span>' : ''}</div>
     <div class="text-xs text-gray-400">${esc(p.phone || '')} ${p.address ? '• ' + esc(p.address) : ''}</div></div>
     <div class="text-right"><div class="text-sm">${partyBalanceText(p)}</div>
-    <div class="flex gap-1 mt-1 justify-end">
+    <div class="flex flex-wrap gap-1 mt-1 justify-end">
       <button class="btn-cream px-2 py-1 text-[11px]" onclick="openStatement('party:${p.id}')">Statement</button>
       <button class="btn-cream px-2 py-1 text-[11px]" onclick="editParty('${p.id}')">Edit</button>
+      ${p.active === false ? `<button class="btn-cream px-2 py-1 text-[11px]" onclick="reactivateMaster('parties','${p.id}')">Dobara chalu karein</button>` : ''}
     </div></div></div>`;
-  const buyers = S.data.parties.filter(p => p.type === 'buyer' && p.active !== false && match(p));
-  const sellers = S.data.parties.filter(p => p.type === 'seller' && p.active !== false && match(p));
+  const buyers = S.data.parties.filter(p => p.type === 'buyer' && (showIn || p.active !== false) && match(p));
+  const sellers = S.data.parties.filter(p => p.type === 'seller' && (showIn || p.active !== false) && match(p));
   $('buyerList').innerHTML = buyers.length ? buyers.map(card).join('') : '<div class="text-sm text-gray-400">Koi buyer nahi — + Add Buyer se pehla buyer banayein.</div>';
   $('sellerList').innerHTML = sellers.length ? sellers.map(card).join('') : '<div class="text-sm text-gray-400">Koi seller nahi — + Add Seller se pehla seller banayein.</div>';
 }
+/* ================= AAKHRI HISAAB — period ke hisaab se ================= */
+let pnlPeriod = 'month', pnlFrom = '', pnlTo = '';
+function periodRange() {
+  const today = todayStr();
+  const y = +today.slice(0, 4), m = +today.slice(5, 7);
+  const iso = dt => dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
+  if (pnlPeriod === 'month') return { from: iso(new Date(y, m - 1, 1)), to: today };
+  if (pnlPeriod === 'lastmonth') return { from: iso(new Date(y, m - 2, 1)), to: iso(new Date(y, m - 1, 0)) };
+  if (pnlPeriod === 'year') return { from: iso(new Date(y, 0, 1)), to: today };
+  if (pnlPeriod === 'custom') return { from: pnlFrom || iso(new Date(y, m - 1, 1)), to: pnlTo || today };
+  return { from: '1970-01-01', to: today };
+}
 function renderPnL() {
   const d = derived();
-  const row = (label, val, bold, color) => `<div class="flex justify-between py-2 ${bold ? 'font-extrabold text-base' : ''}" style="${color ? 'color:' + color : ''}"><span>${label}</span><span>${fmtRs(val)}</span></div>`;
+  const { from, to } = periodRange();
+  const ps = BA_CORE.periodSummary(S.data, from, to);
+  const row = (label, val, bold, color) => `<div class="flex justify-between gap-3 py-2 ${bold ? 'font-extrabold text-base' : ''}" style="${color ? 'color:' + color : ''}"><span>${label}</span><span class="shrink-0">${fmtRs(val)}</span></div>`;
+  const headRows = Object.values(ps.expenses || {}).filter(h => Math.abs(h.net) > 0.004)
+    .map(h => row('Kharcha — ' + accountLabel('acct:' + h.accountId).name, -h.net)).join('');
+  let totalLena = 0, totalDena = 0;
+  S.data.parties.forEach(p => {
+    const b = d.partyBalances[p.id] || 0;
+    if (p.type === 'buyer') totalLena = r2(totalLena + b);
+    if (p.type === 'seller') totalDena = r2(totalDena - b);
+  });
   $('pnlWrap').innerHTML = `<div class="card p-4 divide-y">
-    ${row('Kul Bikri (Sales)', d.pnl.salesRevenue)}
-    ${row('Bikey Maal ki Laagat (COGS)', -d.pnl.cogs)}
-    ${row('Kham Munafa (Gross Profit)', d.pnl.grossProfit, true, '#2e7d4f')}
-    ${row('Kul Kharchay (Expenses)', -d.pnl.expenses)}
-    ${row('Asal Munafa (Net Profit)', d.pnl.netProfit, true, d.pnl.netProfit >= 0 ? '#2e7d4f' : '#c0392b')}
+    <div class="text-xs text-gray-400 pb-1">Period: ${esc(from)} — ${esc(to)}</div>
+    ${row('Kul Bikri (Sales)', ps.sale)}
+    ${row('Bikey Maal ki Laagat (COGS)', -ps.cogs)}
+    ${row('Kham Munafa (Gross Profit)', r2(ps.sale - ps.cogs), true, '#2e7d4f')}
+    ${headRows}
+    ${row('Kul Kharchay (Expenses)', -ps.totalExpenses)}
+    ${row('Farq / Adjustment', ps.adjustment)}
+    ${row('Khalaas Munafa (Net Profit)', ps.netProfit, true, ps.netProfit >= 0 ? '#2e7d4f' : '#c0392b')}
+    ${row('Wasooli (is period mein)', ps.wasooli)}
+    ${row('Adaigi (is period mein)', ps.adaigi)}
     <div class="pt-2"></div>
+    ${row('Galla / Cash (period ke aakhir par)', ps.closingCash)}
+    ${row('Bank (period ke aakhir par)', ps.closingBank)}
     ${row('Stock ki Value (aaj)', d.stockValue)}
-    ${row('Galla / Cash Balance', d.cashBalance)}
-    ${row('Owner ka Sarmaya (Capital)', d.capital)}
-    ${row('Owner ne Nikala (Drawing)', -d.drawing)}
+    ${row('Kul Lena Hai (Buyers)', totalLena)}
+    ${row('Kul Dena Hai (Sellers)', totalDena)}
   </div>
   <p class="text-xs text-gray-400 mt-2">Ye hisaab Roznamcha ki tamam entries se khud banta hai — koi rakam haath se nahi likhi jati.</p>`;
+  const pstats = Object.values(d.productStats || {}).sort((a, b) => b.profit - a.profit);
+  const psBody = $('productStatsBody');
+  if (psBody) psBody.innerHTML = pstats.length ? pstats.map(s => {
+    const pr = productById(s.productId);
+    return `<tr class="border-t"><td class="p-3">${esc(pr ? pr.name : s.productId)}</td><td class="p-3 text-right">${s.soldQty}</td><td class="p-3 text-right">${fmtRs(s.revenue)}</td><td class="p-3 text-right font-semibold" style="color:${s.profit >= 0 ? '#2e7d4f' : '#c0392b'}">${fmtRs(s.profit)}</td></tr>`;
+  }).join('') : '<tr><td colspan="4" class="p-4 text-gray-400">Abhi koi sale nahi</td></tr>';
+  const bstats = Object.values(d.buyerStats || {}).sort((a, b) => b.totalSale - a.totalSale).slice(0, 10);
+  const bsBody = $('buyerStatsBody');
+  if (bsBody) bsBody.innerHTML = bstats.length ? bstats.map(s => {
+    const pr = partyById(s.partyId);
+    return `<tr class="border-t"><td class="p-3">${esc(pr ? pr.code + ' • ' + pr.name : s.partyId)}</td><td class="p-3 text-right">${fmtRs(s.totalSale)}</td><td class="p-3 text-right font-semibold" style="color:${s.profit >= 0 ? '#2e7d4f' : '#c0392b'}">${fmtRs(s.profit)}</td></tr>`;
+  }).join('') : '<tr><td colspan="3" class="p-4 text-gray-400">Abhi koi sale nahi</td></tr>';
 }
 function switchView(name) {
   if (S.needsSetup && name !== 'settings') name = 'settings'; // setup gate: sirf Settings
@@ -1353,30 +1932,45 @@ function openEntry(type, presetProductId) {
 }
 function fieldVal(id) { const el = $(id); return el ? el.value : ''; }
 /* ============ COMMA RULE — amount wale tamam khaanon mein comma khud lagta hai (display wala hi grouping: en-IN / lakh style) ============ */
-const fmtNum = n => ((+n) || 0).toLocaleString('en-IN');
-const parseAmt = s => parseInt(String(s ?? '').replace(/[^0-9]/g, ''), 10) || 0;
+const fmtNum = n => { const v = (+n) || 0; return v.toLocaleString('en-IN', { maximumFractionDigits: 2 }); };
+// Rakam parse BA_CORE se (decimal durust: "500.50" → 500.5; purana parser 50050 bana deta tha)
+const parseAmt = s => BA_CORE.parseAmt(s);
 const amtVal = x => (x === '' || x === null || x === undefined) ? '' : fmtNum(parseAmt(x));
-function fmtAmtInput(el) { if (!el) return; const digits = String(el.value).replace(/[^0-9]/g, ''); el.value = digits === '' ? '' : fmtNum(parseInt(digits, 10) || 0); }
+function fmtAmtInput(el) {
+  if (!el) return;
+  let t = String(el.value).replace(/[\s,]/g, '').replace(/[^0-9.]/g, '');
+  const di = t.indexOf('.');
+  if (di >= 0) t = t.slice(0, di + 1) + t.slice(di + 1).replace(/\./g, '');
+  if (t === '') { el.value = ''; return; }
+  const parts = t.split('.');
+  const intFmt = fmtNum(parseInt(parts[0] || '0', 10) || 0);
+  el.value = parts.length > 1 ? intFmt + '.' + parts[1].slice(0, 2) : intFmt;
+}
 document.addEventListener('input', e => { const el = e.target; if (el && el.classList && el.classList.contains('amt-in')) fmtAmtInput(el); });
 function stashDraft() {
   if (!entryDraft) return;
-  ['f_date', 'f_party', 'f_product', 'f_qty', 'f_rate', 'f_amount', 'f_paid', 'f_account', 'f_lot', 'f_note'].forEach(id => {
+  ['f_date', 'f_party', 'f_product', 'f_qty', 'f_rate', 'f_amount', 'f_paid', 'f_account', 'f_lot', 'f_note', 'f_discount', 'f_method', 'f_refund', 'f_promise', 'f_billno', 'f_obside', 'f_direction'].forEach(id => {
     const el = $(id); if (el) entryDraft.values[id] = el.value;
   });
+  const exT = $('f_exToggle'); if (exT) entryDraft.values.f_exToggle = exT.checked ? '1' : '';
   if (entryDraft.type === 'sale' && $('saleLines')) entryDraft.values.saleLines = readSaleLines();
+  if ((entryDraft.type === 'sale_return' || entryDraft.type === 'purchase_return') && $('returnLines')) entryDraft.values.retLines = readRetLines(entryDraft.type === 'sale_return');
+  if (entryDraft.type === 'purchase' && $('exchangeLines')) entryDraft.values.exLines = readExchangeLinesRaw();
 }
 /* ================= SALE: MULTI-ITEM LINES ================= */
 function saleLineRowHTML(l) {
   l = l || {};
   const pid = l.productId || '';
+  // Rate khaali ho aur product ka tay shuda Sale Rate ho to wahi prefill (baad mein badla ja sakta hai)
+  const rateVal = (l.rate === undefined || l.rate === null || l.rate === '') && pid ? ((productById(pid) || {}).saleRate || '') : (l.rate ?? '');
   return `<div class="sale-line rounded-xl p-2.5 space-y-2" style="border:1.5px solid #d8dee5">
     <div class="flex gap-2">
       <div class="flex-1"><label class="lbl">Product</label><select class="field sl-product">${productOptions(pid)}</select></div>
       <button type="button" class="sl-remove btn-cream px-3 shrink-0" style="align-self:flex-end;padding-top:10px;padding-bottom:10px" title="Item hataein">✕</button>
     </div>
     <div class="grid grid-cols-2 gap-2">
-      <div><label class="lbl">Quantity</label><input type="number" class="field sl-qty" min="0" step="any" value="${esc(l.qty ?? '')}"></div>
-      <div><label class="lbl">Rate</label><input type="text" inputmode="numeric" class="field sl-rate amt-in" value="${esc(amtVal(l.rate ?? ''))}"></div>
+      <div><label class="lbl">Adad</label><input type="number" class="field sl-qty" min="0" step="1" value="${esc(l.qty ?? '')}"></div>
+      <div><label class="lbl">Rate</label><input type="text" inputmode="numeric" class="field sl-rate amt-in" value="${esc(amtVal(rateVal))}"></div>
     </div>
     <div><label class="lbl">Lot</label><select class="field sl-lot">${lotOptions(pid, l.lotId || '')}</select></div>
     <div class="sl-calc text-sm"></div>
@@ -1398,18 +1992,135 @@ function wireSaleLine(row) {
   const prod = row.querySelector('.sl-product');
   prod.addEventListener('change', () => {
     if (prod.value === '__add__') { stashDraft(); openAdd('product', true); }
-    else { const lotSel = row.querySelector('.sl-lot'); lotSel.innerHTML = lotOptions(prod.value, ''); updateCalc(); }
+    else {
+      const lotSel = row.querySelector('.sl-lot'); lotSel.innerHTML = lotOptions(prod.value, '');
+      const pr = productById(prod.value);
+      if (pr && (+pr.saleRate || 0) > 0) row.querySelector('.sl-rate').value = amtVal(pr.saleRate);
+      updateCalc();
+    }
   });
   row.querySelector('.sl-qty').addEventListener('input', updateCalc);
   row.querySelector('.sl-rate').addEventListener('input', updateCalc);
   row.querySelector('.sl-lot').addEventListener('change', updateCalc);
   row.querySelector('.sl-remove').addEventListener('click', () => { row.remove(); refreshSaleRemoveBtns(); updateCalc(); });
 }
+/* ================= WAPSI (RETURN) LINES — sale/purchase dono wapsi ke liye =================
+   Sale Wapsi ki line mein Laagat Rate bhi ata hai: auto = product ke sab se aakhri
+   (latest) lot ki laagat; user badal sakta hai; khaali chhore to core khud latest
+   lot cost laga deta hai. Purchase Wapsi mein laagat ki line nahi (core stock se
+   khud laagat par kaat deta hai). */
+function latestLotCost(productId) {
+  const d = derived(); const inv = d.inventory[productId];
+  if (!inv || !inv.lots || !inv.lots.length) return '';
+  const lots = inv.lots.filter(l => !l.fromReturn);
+  if (!lots.length) return '';
+  return lots[lots.length - 1].rate;
+}
+function retLineRowHTML(l, withCost) {
+  l = l || {};
+  const pid = l.productId || '';
+  return `<div class="ret-line rounded-xl p-2.5 space-y-2" style="border:1.5px solid #d8dee5">
+    <div class="flex gap-2">
+      <div class="flex-1"><label class="lbl">Product</label><select class="field rl-product">${productOptions(pid)}</select></div>
+      <button type="button" class="rl-remove btn-cream px-3 shrink-0" style="align-self:flex-end;padding-top:10px;padding-bottom:10px" title="Item hataein">✕</button>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <div><label class="lbl">Adad</label><input type="number" class="field rl-qty" min="0" step="1" value="${esc(l.qty ?? '')}"></div>
+      <div><label class="lbl">Rate</label><input type="text" inputmode="numeric" class="field rl-rate amt-in" value="${esc(amtVal(l.rate ?? ''))}"></div>
+    </div>
+    ${withCost ? `<div><label class="lbl">Laagat Rate</label><input type="text" inputmode="numeric" class="field rl-cost amt-in" value="${esc(l.costRate === null || l.costRate === undefined || l.costRate === '' ? '' : amtVal(l.costRate))}"></div>` : ''}
+    <div class="rl-calc text-sm"></div>
+  </div>`;
+}
+function readRetLines(withCost) {
+  return [...document.querySelectorAll('#returnLines .ret-line')].map(row => {
+    const costEl = row.querySelector('.rl-cost');
+    return {
+      productId: row.querySelector('.rl-product').value,
+      qty: parseFloat(row.querySelector('.rl-qty').value) || 0,
+      rate: parseAmt(row.querySelector('.rl-rate').value),
+      costRate: (withCost && costEl && costEl.value.trim() !== '') ? parseAmt(costEl.value) : null
+    };
+  });
+}
+function refreshRetRemoveBtns() {
+  const rows = document.querySelectorAll('#returnLines .ret-line');
+  rows.forEach(r => { const b = r.querySelector('.rl-remove'); if (b) b.style.visibility = rows.length > 1 ? 'visible' : 'hidden'; });
+}
+function wireRetLine(row, withCost) {
+  const prod = row.querySelector('.rl-product');
+  prod.addEventListener('change', () => {
+    if (prod.value === '__add__') { stashDraft(); openAdd('product', true); }
+    else {
+      if (withCost) { const c = row.querySelector('.rl-cost'); if (c) c.value = amtVal(latestLotCost(prod.value)); }
+      updateCalc();
+    }
+  });
+  row.querySelector('.rl-qty').addEventListener('input', updateCalc);
+  row.querySelector('.rl-rate').addEventListener('input', updateCalc);
+  const costEl = row.querySelector('.rl-cost');
+  if (costEl) costEl.addEventListener('input', updateCalc);
+  row.querySelector('.rl-remove').addEventListener('click', () => { row.remove(); refreshRetRemoveBtns(); updateCalc(); });
+}
+/* ================= EXCHANGE LINES (purchase mein maal ke badlay maal) ================= */
+function exLineRowHTML(l) {
+  l = l || {};
+  const pid = l.productId || '';
+  return `<div class="ex-line rounded-xl p-2.5 space-y-2" style="border:1.5px solid #d8dee5">
+    <div class="flex gap-2">
+      <div class="flex-1"><label class="lbl">Product</label><select class="field ex-product">${productOptions(pid)}</select></div>
+      <button type="button" class="ex-remove btn-cream px-3 shrink-0" style="align-self:flex-end;padding-top:10px;padding-bottom:10px" title="Item hataein">✕</button>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <div><label class="lbl">Adad</label><input type="number" class="field ex-qty" min="0" step="1" value="${esc(l.qty ?? '')}"></div>
+      <div><label class="lbl">Rate</label><input type="text" inputmode="numeric" class="field ex-rate amt-in" value="${esc(amtVal(l.rate ?? ''))}"></div>
+    </div>
+    <div><label class="lbl">Lot</label><select class="field ex-lot">${lotOptions(pid, l.lotId || '')}</select></div>
+  </div>`;
+}
+function readExchangeLinesRaw() {
+  return [...document.querySelectorAll('#exchangeLines .ex-line')].map(row => ({
+    productId: row.querySelector('.ex-product').value,
+    qty: row.querySelector('.ex-qty').value,
+    rate: row.querySelector('.ex-rate').value,
+    lotId: row.querySelector('.ex-lot') ? row.querySelector('.ex-lot').value : ''
+  }));
+}
+function wireExLine(row) {
+  const prod = row.querySelector('.ex-product');
+  prod.addEventListener('change', () => {
+    if (prod.value === '__add__') { stashDraft(); openAdd('product', true); }
+    else { const lotSel = row.querySelector('.ex-lot'); if (lotSel) lotSel.innerHTML = lotOptions(prod.value, ''); updateCalc(); }
+  });
+  row.querySelector('.ex-qty').addEventListener('input', updateCalc);
+  row.querySelector('.ex-rate').addEventListener('input', updateCalc);
+  const lotSel = row.querySelector('.ex-lot');
+  if (lotSel) lotSel.addEventListener('change', updateCalc);
+  row.querySelector('.ex-remove').addEventListener('click', () => { row.remove(); updateCalc(); });
+}
+/* Opening Baqaya ke liye: saari parties aik select mein (Buyers/Sellers groups) */
+function allPartyOptions(sel) {
+  const grp = (type, label) => {
+    const list = S.data.parties.filter(p => p.type === type && p.active !== false);
+    return list.length ? `<optgroup label="${label}">` + list.map(p => `<option value="${p.id}" ${p.id === sel ? 'selected' : ''}>${esc(p.code)} • ${esc(p.name)}${p.phone ? ' (' + esc(p.phone) + ')' : ''}</option>`).join('') + '</optgroup>' : '';
+  };
+  return `<option value="">— Chunain —</option>` + grp('buyer', 'Buyers') + grp('seller', 'Sellers');
+}
+/* Opening Baqaya ki taraf (side) — core ki convention: 'lena' = party ke naam (Dr),
+   'dena' = party ke jama (Cr). Labels party ki type ke hisaab se badalte hain taake
+   dukandaar ko seedha matlab samajh aye. Pehla option hi default hai. */
+function obSideOptions(partyType, sel) {
+  const opts = partyType === 'seller'
+    ? [['dena', 'Dena hai — seller ko paisa dena hai'], ['lena', 'Advance diya hua hai — paisa pehle de diya hai']]
+    : [['lena', 'Lena hai — party par baqaya hai'], ['dena', 'Advance aya hua hai — paisa pehle aa gaya hai']];
+  return opts.map(o => `<option value="${o[0]}" ${o[0] === sel ? 'selected' : ''}>${o[1]}</option>`).join('');
+}
 function buildEntryForm() {
   const t = entryDraft.type, v = entryDraft.values || {};
   $('entryModalTitle').textContent = 'Nayi Entry — ' + (TYPE_META[t] ? TYPE_META[t].label : t);
   const dateF = `<div><label class="lbl">Tareekh</label><input type="date" id="f_date" class="field" value="${esc(v.f_date || selectedDate)}"></div>`;
   const noteF = `<div><label class="lbl">Note</label><input id="f_note" class="field" value="${esc(v.f_note || '')}"></div>`;
+  const methodF = `<div><label class="lbl">Tareeqa</label><select id="f_method" class="field"><option value="cash" ${v.f_method !== 'bank' ? 'selected' : ''}>Cash</option><option value="bank" ${v.f_method === 'bank' ? 'selected' : ''}>Bank</option></select></div>`;
   let html = dateF;
   if (t === 'sale') {
     const initLines = (Array.isArray(v.saleLines) && v.saleLines.length) ? v.saleLines
@@ -1417,21 +2128,79 @@ function buildEntryForm() {
     html += `<div><label class="lbl">Buyer / Client</label><select id="f_party" class="field">${partyOptions('buyer', v.f_party)}</select></div>
     <div id="saleLines" class="space-y-2">${initLines.map(saleLineRowHTML).join('')}</div>
     <button type="button" id="btnAddSaleLine" class="btn-cream w-full py-2 text-sm">+ Item add karein</button>
-    <div><label class="lbl">Wasool Hua</label><input type="text" inputmode="numeric" id="f_paid" class="field amt-in" value="${esc(amtVal(v.f_paid || '0'))}"></div>` + noteF;
+    <div><label class="lbl">Discount</label><input type="text" inputmode="numeric" id="f_discount" class="field amt-in" value="${esc(amtVal(v.f_discount || ''))}"></div>
+    <div class="grid grid-cols-2 gap-2">
+      <div><label class="lbl">Wasool Hua</label><input type="text" inputmode="numeric" id="f_paid" class="field amt-in" value="${esc(amtVal(v.f_paid || '0'))}"></div>
+      ${methodF}
+    </div>` + noteF;
   } else if (t === 'purchase') {
+    const exLines = Array.isArray(v.exLines) ? v.exLines : [];
+    const exOn = exLines.length > 0 || v.f_exToggle === '1';
     html += `<div><label class="lbl">Seller / Supplier</label><select id="f_party" class="field">${partyOptions('seller', v.f_party)}</select></div>
     <div><label class="lbl">Product</label><select id="f_product" class="field">${productOptions(v.f_product || entryDraft.presetProductId)}</select></div>
     <div class="grid grid-cols-2 gap-2">
-      <div><label class="lbl">Quantity</label><input type="number" id="f_qty" class="field" min="0" step="any" value="${esc(v.f_qty || '')}"></div>
+      <div><label class="lbl">Adad</label><input type="number" id="f_qty" class="field" min="0" step="1" value="${esc(v.f_qty || '')}"></div>
       <div><label class="lbl">Rate</label><input type="text" inputmode="numeric" id="f_rate" class="field amt-in" value="${esc(amtVal(v.f_rate || ''))}"></div>
     </div>
-    <div><label class="lbl">Ada Kiya</label><input type="text" inputmode="numeric" id="f_paid" class="field amt-in" value="${esc(amtVal(v.f_paid || '0'))}"></div>` + noteF;
+    <div><label class="lbl">Discount</label><input type="text" inputmode="numeric" id="f_discount" class="field amt-in" value="${esc(amtVal(v.f_discount || ''))}"></div>
+    <div class="grid grid-cols-2 gap-2">
+      <div><label class="lbl">Ada Kiya</label><input type="text" inputmode="numeric" id="f_paid" class="field amt-in" value="${esc(amtVal(v.f_paid || '0'))}"></div>
+      ${methodF}
+    </div>
+    <div class="rounded-xl p-2.5" style="border:1.5px solid #d8dee5">
+      <label class="flex items-center gap-2 text-sm font-bold brand-text"><input type="checkbox" id="f_exToggle" class="w-4 h-4" ${exOn ? 'checked' : ''}> Maal ke badlay maal (Exchange)</label>
+      <div id="exchangeWrap" class="${exOn ? '' : 'hidden'} mt-2">
+        <div id="exchangeLines" class="space-y-2">${exLines.map(exLineRowHTML).join('')}</div>
+        <button type="button" id="btnAddExLine" class="btn-cream w-full py-2 text-sm mt-2">+ Exchange Item add karein</button>
+      </div>
+    </div>` + noteF;
   } else if (t === 'payment_received') {
     html += `<div><label class="lbl">Buyer / Client</label><select id="f_party" class="field">${partyOptions('buyer', v.f_party)}</select></div>
-    <div><label class="lbl">Rakam</label><input type="text" inputmode="numeric" id="f_amount" class="field amt-in" value="${esc(amtVal(v.f_amount || ''))}"></div>` + noteF;
+    <div class="grid grid-cols-2 gap-2">
+      <div><label class="lbl">Rakam</label><input type="text" inputmode="numeric" id="f_amount" class="field amt-in" value="${esc(amtVal(v.f_amount || ''))}"></div>
+      ${methodF}
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <div><label class="lbl">Waade ki Tareekh</label><input type="date" id="f_promise" class="field" value="${esc(v.f_promise || '')}"></div>
+      <div><label class="lbl">Bill No</label><input id="f_billno" class="field" value="${esc(v.f_billno || '')}"></div>
+    </div>` + noteF;
   } else if (t === 'payment_given') {
     html += `<div><label class="lbl">Seller / Supplier</label><select id="f_party" class="field">${partyOptions('seller', v.f_party)}</select></div>
-    <div><label class="lbl">Rakam</label><input type="text" inputmode="numeric" id="f_amount" class="field amt-in" value="${esc(amtVal(v.f_amount || ''))}"></div>` + noteF;
+    <div class="grid grid-cols-2 gap-2">
+      <div><label class="lbl">Rakam</label><input type="text" inputmode="numeric" id="f_amount" class="field amt-in" value="${esc(amtVal(v.f_amount || ''))}"></div>
+      ${methodF}
+    </div>` + noteF;
+  } else if (t === 'sale_return' || t === 'purchase_return') {
+    const isSaleRet = t === 'sale_return';
+    const rawLines = (Array.isArray(v.retLines) && v.retLines.length) ? v.retLines : [{}];
+    const initLines = rawLines.map(l => (l && l.costRate === undefined && l.productId) ? { ...l, costRate: latestLotCost(l.productId) } : (l || {}));
+    html += `<div><label class="lbl">${isSaleRet ? 'Buyer / Client' : 'Seller / Supplier'}</label><select id="f_party" class="field">${partyOptions(isSaleRet ? 'buyer' : 'seller', v.f_party)}</select></div>
+    <div id="returnLines" class="space-y-2">${initLines.map(l => retLineRowHTML(l, isSaleRet)).join('')}</div>
+    <button type="button" id="btnAddRetLine" class="btn-cream w-full py-2 text-sm">+ Item add karein</button>
+    <div class="grid grid-cols-2 gap-2">
+      <div><label class="lbl">${isSaleRet ? 'Cash Wapis Diya' : 'Cash Wapis Mila'}</label><input type="text" inputmode="numeric" id="f_refund" class="field amt-in" value="${esc(amtVal(v.f_refund || ''))}"></div>
+      ${methodF}
+    </div>` + noteF;
+  } else if (t === 'opening_stock') {
+    html += `<div><label class="lbl">Product</label><select id="f_product" class="field">${productOptions(v.f_product || entryDraft.presetProductId)}</select></div>
+    <div class="grid grid-cols-2 gap-2">
+      <div><label class="lbl">Adad</label><input type="number" id="f_qty" class="field" min="0" step="1" value="${esc(v.f_qty || '')}"></div>
+      <div><label class="lbl">Laagat Rate</label><input type="text" inputmode="numeric" id="f_rate" class="field amt-in" value="${esc(amtVal(v.f_rate || ''))}"></div>
+    </div>` + noteF;
+  } else if (t === 'opening_balance') {
+    const selParty = v.f_party ? partyById(v.f_party) : null;
+    html += `<div><label class="lbl">Party</label><select id="f_party" class="field">${allPartyOptions(v.f_party)}</select></div>
+    <div><label class="lbl">Rakam</label><input type="text" inputmode="numeric" id="f_amount" class="field amt-in" value="${esc(amtVal(v.f_amount || ''))}"></div>
+    <div><label class="lbl">Taraf</label><select id="f_obside" class="field">${obSideOptions(selParty ? selParty.type : 'buyer', v.f_obside)}</select></div>` + noteF;
+  } else if (t === 'stock_adjust') {
+    html += `<div><label class="lbl">Product</label><select id="f_product" class="field">${productOptions(v.f_product || entryDraft.presetProductId)}</select></div>
+    <div><label class="lbl">Kya Hua</label><select id="f_direction" class="field">
+      <option value="in" ${v.f_direction !== 'out' ? 'selected' : ''}>Stock barha (mila / ginti zyada)</option>
+      <option value="out" ${v.f_direction === 'out' ? 'selected' : ''}>Stock ghata (toota, phata, kho gaya)</option></select></div>
+    <div class="grid grid-cols-2 gap-2">
+      <div><label class="lbl">Adad</label><input type="number" id="f_qty" class="field" min="0" step="1" value="${esc(v.f_qty || '')}"></div>
+      <div id="f_rateWrap" class="${v.f_direction === 'out' ? 'hidden' : ''}"><label class="lbl">Laagat Rate</label><input type="text" inputmode="numeric" id="f_rate" class="field amt-in" value="${esc(amtVal(v.f_rate || ''))}"></div>
+    </div>` + noteF;
   } else if (t === 'expense') {
     html += `<div><label class="lbl">Kharcha Head</label><select id="f_account" class="field">${accountOptions(v.f_account)}</select></div>
     <div><label class="lbl">Rakam</label><input type="text" inputmode="numeric" id="f_amount" class="field amt-in" value="${esc(amtVal(v.f_amount || ''))}"></div>` + noteF;
@@ -1443,9 +2212,10 @@ function buildEntryForm() {
   const wire = (id, kind) => { const el = $(id); if (!el) return; el.addEventListener('change', () => {
     if (el.value === '__add__') { stashDraft(); openAdd(kind, true); } else { stashDraft(); if (id === 'f_product' && t === 'sale') { entryDraft.values.f_product = el.value; buildEntryForm(); } else updateCalc(); }
   }); };
-  wire('f_party', t === 'purchase' || t === 'payment_given' ? 'seller' : 'buyer');
+  const partyKind = (t === 'purchase' || t === 'purchase_return' || t === 'payment_given') ? 'seller' : 'buyer';
+  wire('f_party', partyKind);
   wire('f_product', 'product'); wire('f_account', 'account');
-  ['f_qty', 'f_rate', 'f_paid', 'f_amount', 'f_lot'].forEach(id => { const el = $(id); if (el) el.addEventListener('input', updateCalc); if (el && id === 'f_lot') el.addEventListener('change', updateCalc); });
+  ['f_qty', 'f_rate', 'f_paid', 'f_amount', 'f_lot', 'f_discount', 'f_refund'].forEach(id => { const el = $(id); if (el) el.addEventListener('input', updateCalc); if (el && id === 'f_lot') el.addEventListener('change', updateCalc); });
   if (t === 'sale') {
     document.querySelectorAll('#saleLines .sale-line').forEach(wireSaleLine);
     refreshSaleRemoveBtns();
@@ -1455,6 +2225,52 @@ function buildEntryForm() {
       wrap.insertAdjacentHTML('beforeend', saleLineRowHTML({}));
       wireSaleLine(wrap.lastElementChild);
       refreshSaleRemoveBtns(); updateCalc();
+    });
+  }
+  if (t === 'purchase') {
+    document.querySelectorAll('#exchangeLines .ex-line').forEach(wireExLine);
+    const tog = $('f_exToggle');
+    if (tog) tog.addEventListener('change', () => {
+      $('exchangeWrap').classList.toggle('hidden', !tog.checked);
+      if (tog.checked && $('exchangeLines') && !$('exchangeLines').children.length) {
+        $('exchangeLines').insertAdjacentHTML('beforeend', exLineRowHTML({}));
+        wireExLine($('exchangeLines').lastElementChild);
+      }
+      updateCalc();
+    });
+    const ab = $('btnAddExLine');
+    if (ab) ab.addEventListener('click', () => {
+      const w = $('exchangeLines'); if (!w) return;
+      w.insertAdjacentHTML('beforeend', exLineRowHTML({}));
+      wireExLine(w.lastElementChild);
+      updateCalc();
+    });
+  }
+  if (t === 'sale_return' || t === 'purchase_return') {
+    const withCost = t === 'sale_return';
+    document.querySelectorAll('#returnLines .ret-line').forEach(r => wireRetLine(r, withCost));
+    refreshRetRemoveBtns();
+    const ab = $('btnAddRetLine');
+    if (ab) ab.addEventListener('click', () => {
+      const w = $('returnLines'); if (!w) return;
+      w.insertAdjacentHTML('beforeend', retLineRowHTML({}, withCost));
+      wireRetLine(w.lastElementChild, withCost);
+      refreshRetRemoveBtns(); updateCalc();
+    });
+  }
+  if (t === 'opening_balance') {
+    const pSel = $('f_party');
+    if (pSel) pSel.addEventListener('change', () => {
+      const p = partyById(pSel.value);
+      const os = $('f_obside');
+      if (os) os.innerHTML = obSideOptions(p ? p.type : 'buyer', fieldVal('f_obside'));
+    });
+  }
+  if (t === 'stock_adjust') {
+    const dirSel = $('f_direction');
+    if (dirSel) dirSel.addEventListener('change', () => {
+      const w = $('f_rateWrap'); if (w) w.classList.toggle('hidden', dirSel.value === 'out');
+      updateCalc();
     });
   }
   updateCalc();
@@ -1471,29 +2287,93 @@ function updateCalc() {
     const planLines = lines.filter(l => l.productId && l.productId !== '__add__' && l.qty > 0);
     const grand = lines.reduce((s, l) => s + ((l.qty > 0 && l.rate > 0) ? l.qty * l.rate : 0), 0);
     if (!planLines.length || grand <= 0) { box.classList.add('hidden'); return; }
-    let txt = `Total: <b>${fmtRs(grand)}</b>`;
+    const discount = Math.min(parseAmt(fieldVal('f_discount')), grand);
+    const paid = parseAmt(fieldVal('f_paid'));
+    const net = r2(grand - discount);
+    let txt = `Kul: <b>${fmtRs(grand)}</b>${discount > 0 ? ` — Discount: ${fmtRs(discount)} = Bill: <b>${fmtRs(net)}</b>` : ''} &nbsp;|&nbsp; Wasool: ${fmtRs(paid)} &nbsp;|&nbsp; Baqaya: <b>${fmtRs(net - paid)}</b>`;
     const plan = BA_CORE.planSaleMulti(S.data, planLines);
     if (!plan.ok) {
       const prod = productById(plan.productId);
-      txt += ` &nbsp;|&nbsp; <span style="color:#c0392b">Stock kam hai — ${esc(prod ? prod.name : '')} sirf ${plan.available} pcs bache hain (bill ki kul miqdar is se zyada hai)</span>`;
+      txt += `<br><span style="color:#c0392b">Stock kam hai — ${esc(prod ? prod.name : '')} sirf ${plan.available} ${unitOf(plan.productId)} bache hain (bill ki kul miqdar is se zyada hai)</span>`;
     } else {
-      const splits = plan.lines.map(pl => { const pr = productById(pl.productId); return esc(pr ? pr.name : '') + ': ' + pl.allocations.map(a => a.qty + ' pcs @ ' + fmtRs(a.rate)).join(' + '); }).join('<br>');
-      txt += ` &nbsp;|&nbsp; Laagat: ${fmtRs(plan.cost)} &nbsp;|&nbsp; Andazi Munafa: <b>${fmtRs(plan.total - plan.cost)}</b><br><span class="text-xs">Lot se katega:<br>${splits}</span>`;
+      const splits = plan.lines.map(pl => { const pr = productById(pl.productId); return esc(pr ? pr.name : '') + ': ' + pl.allocations.map(a => a.qty + ' ' + unitOf(pl.productId) + ' @ ' + fmtRs(a.rate)).join(' + '); }).join('<br>');
+      txt += `<br>Laagat: ${fmtRs(plan.cost)} &nbsp;|&nbsp; Andazi Munafa: <b>${fmtRs(net - plan.cost)}</b><br><span class="text-xs">Lot se katega:<br>${splits}</span>`;
     }
     box.innerHTML = txt; box.classList.remove('hidden');
     return;
   }
   const qty = parseFloat(fieldVal('f_qty')) || 0, rate = parseAmt(fieldVal('f_rate'));
-  if (t === 'purchase' && qty > 0 && rate > 0) {
-    box.innerHTML = `Total: <b>${fmtRs(qty * rate)}</b> &nbsp;|&nbsp; Naya Lot bane ga: ${qty} pcs @ ${fmtRs(rate)}`;
-    box.classList.remove('hidden');
-  } else box.classList.add('hidden');
+  if (t === 'purchase') {
+    const discount = parseAmt(fieldVal('f_discount')), paid = parseAmt(fieldVal('f_paid'));
+    const exTotal = readExchangeLines().reduce((s, l) => s + l.qty * l.rate, 0);
+    if (qty > 0 && rate > 0) {
+      const gross = r2(qty * rate), disc = Math.min(discount, gross), net = r2(gross - disc);
+      box.innerHTML = `Kul: <b>${fmtRs(gross)}</b>${disc > 0 ? ` — Discount: ${fmtRs(disc)} = Net: <b>${fmtRs(net)}</b>` : ''} &nbsp;|&nbsp; Ada Kiya: ${fmtRs(paid)}${exTotal > 0 ? ` &nbsp;|&nbsp; Exchange: ${fmtRs(exTotal)}` : ''} &nbsp;|&nbsp; Baqaya: <b>${fmtRs(net - paid - exTotal)}</b><br><span class="text-xs">Naya Lot bane ga: ${qty} ${unitOf(fieldVal('f_product'))} @ ${fmtRs(rate)}</span>`;
+      box.classList.remove('hidden');
+    } else box.classList.add('hidden');
+    return;
+  }
+  if (t === 'sale_return' || t === 'purchase_return') {
+    const lines = readRetLines(t === 'sale_return').filter(l => l.productId && l.qty > 0 && l.rate > 0);
+    const tot = lines.reduce((s, l) => s + l.qty * l.rate, 0);
+    if (tot > 0) { box.innerHTML = `Wapsi Kul: <b>${fmtRs(tot)}</b>`; box.classList.remove('hidden'); }
+    else box.classList.add('hidden');
+    return;
+  }
+  if (t === 'opening_stock') {
+    if (qty > 0 && rate > 0) { box.innerHTML = `Stock Value: <b>${fmtRs(qty * rate)}</b>`; box.classList.remove('hidden'); }
+    else box.classList.add('hidden');
+    return;
+  }
+  if (t === 'stock_adjust') {
+    const dir = fieldVal('f_direction');
+    if (qty > 0 && dir === 'in' && rate > 0) { box.innerHTML = `Stock Value: <b>${fmtRs(qty * rate)}</b>`; box.classList.remove('hidden'); }
+    else if (qty > 0 && dir === 'out') {
+      const pid = fieldVal('f_product');
+      const plan = pid ? BA_CORE.planSale(S.data, pid, qty) : null;
+      box.innerHTML = plan && plan.ok ? `Laagat par katega: <b>${fmtRs(plan.cost)}</b>` : `<span style="color:#c0392b">Stock itna nahi hai</span>`;
+      box.classList.remove('hidden');
+    } else box.classList.add('hidden');
+    return;
+  }
+  box.classList.add('hidden');
 }
+/* Purchase form ki exchange lines (Pass 2 ka form) — container na ho to khaali list.
+   Har line: seller ko wapis/diya gaya maal jo is purchase ki adaigi mein gina jata hai. */
+function readExchangeLines() {
+  const rows = document.querySelectorAll('#exchangeLines .ex-line');
+  const out = [];
+  rows.forEach(row => {
+    const pidEl = row.querySelector('.ex-product'), qEl = row.querySelector('.ex-qty'), rEl = row.querySelector('.ex-rate'), lEl = row.querySelector('.ex-lot');
+    if (!pidEl || !pidEl.value || pidEl.value === '__add__') return;
+    const qty = parseFloat(qEl ? qEl.value : '') || 0, rate = parseAmt(rEl ? rEl.value : '');
+    if (qty <= 0 || rate <= 0) return;
+    const pr = productById(pidEl.value);
+    out.push({ productId: pidEl.value, productName: pr ? pr.name : '', qty, rate, lotId: (lEl && lEl.value) || null });
+  });
+  return out;
+}
+/* Save ka in-flight LOCK: double-click/double-tap par duplicate entry kabhi nahi banti —
+   pehla save mukammal honay tak button disabled aur dobara call foran wapas */
+let _savingEntry = false;
 async function saveEntry() {
+  if (_savingEntry) return;
+  _savingEntry = true;
+  const btn = $('btnSaveEntry'); if (btn) btn.disabled = true;
+  try { await saveEntryInner(); }
+  finally { _savingEntry = false; if (btn) btn.disabled = false; }
+}
+async function saveEntryInner() {
   const t = entryDraft.type;
   const date = fieldVal('f_date') || selectedDate;
-  const seq = S.data.entries.reduce((m, e) => Math.max(m, e.seq || 0), 0) + 1;
-  const base = { id: genId(), code: nextCode('E-', S.data.entries.map(e => e.code)), seq, date, type: t, note: fieldVal('f_note').trim(), status: 'active', createdAt: new Date().toISOString() };
+  // Seq/code Firestore transaction se (Store.nextEntrySeq) — do members ke aik-saath
+  // save par takrao nahi; fail ho to local max+1 fallback andar hi hai
+  const seq = await Store.nextEntrySeq(S.data.entries.reduce((m, e) => Math.max(m, e.seq || 0), 0) + 1);
+  const base = { id: genId(), code: 'E-' + String(seq).padStart(3, '0'), seq, date, type: t, note: fieldVal('f_note').trim(), status: 'active', createdAt: new Date().toISOString() };
+  // Pass 2 ke form fields (abhi hon to parh lo, na hon to mehfooz default): method + discount
+  const method = fieldVal('f_method') === 'bank' ? 'bank' : 'cash';
+  let discount = parseAmt(fieldVal('f_discount'));
+  let partyPromise = null;   // wasooli ke saath waada — entry ke baad party par lagta hai
   if (t === 'sale') {
     const partyId = fieldVal('f_party'), paid = parseAmt(fieldVal('f_paid'));
     if (!partyId || partyId === '__add__') { sfx('error'); return toast('Buyer chunein'); }
@@ -1501,38 +2381,135 @@ async function saveEntry() {
     if (!lines.length) { sfx('error'); return toast('Kam az kam aik item add karein'); }
     for (const l of lines) {
       if (!l.productId || l.productId === '__add__') { sfx('error'); return toast('Har item ka Product chunein'); }
-      if (l.qty <= 0 || l.rate <= 0) { sfx('error'); return toast('Har item ki Quantity aur Rate theek likhein'); }
+      if (!Number.isInteger(l.qty) || l.qty <= 0) { sfx('error'); return toast('Adad poora likhein'); }
+      if (l.rate <= 0) { sfx('error'); return toast('Har item ki Rate theek likhein'); }
     }
     // Poori bill ki planning ikatthi: aik hi product ki lines ka sum bhi stock se zyada nahi ho sakta
     const plan = BA_CORE.planSaleMulti(S.data, lines);
     if (!plan.ok) { sfx('error'); const prod = productById(plan.productId); return toast('Stock kam hai — ' + (prod ? prod.name : 'Product') + ' sirf ' + plan.available + ' pcs bache hain'); }
-    const items = plan.lines.map(pl => { const pr = productById(pl.productId); return { productId: pl.productId, productName: pr ? pr.name : '', qty: pl.qty, rate: pl.rate, lotId: pl.lotId || null, allocations: pl.allocations }; });
-    Object.assign(base, { partyId, items, productId: items[0].productId, productName: items[0].productName, total: plan.total, amountReceived: Math.min(paid, plan.total) });
+    /* Allocations AB SAVE NAHI hotin — hisaab har dafa computeDerived mein lot universe se
+       dobara banta hai (backdated/correction par khud theek). Sirf chosen lot (lotId) rehta hai.
+       Over-payment clamp KHATAM: zyada wasooli = buyer ka advance (core posting khud sambhalti hai) */
+    const items = plan.lines.map(pl => { const pr = productById(pl.productId); return { productId: pl.productId, productName: pr ? pr.name : '', qty: pl.qty, rate: pl.rate, lotId: pl.lotId || null }; });
+    const party = partyById(partyId);
+    discount = Math.min(Math.max(0, discount), plan.total);
+    Object.assign(base, { partyId, partyName: party ? party.name : '', items, productId: items[0].productId, productName: items[0].productName, itemsTotal: plan.total, discount, total: r2(plan.total - discount), amountReceived: paid, payMethod: method });
   } else if (t === 'purchase') {
     const partyId = fieldVal('f_party'), productId = fieldVal('f_product');
     const qty = parseFloat(fieldVal('f_qty')) || 0, rate = parseAmt(fieldVal('f_rate')), paid = parseAmt(fieldVal('f_paid'));
     if (!partyId || partyId === '__add__') { sfx('error'); return toast('Seller chunein'); }
     if (!productId || productId === '__add__') { sfx('error'); return toast('Product chunein'); }
-    if (qty <= 0 || rate <= 0) { sfx('error'); return toast('Quantity aur Rate theek likhein'); }
+    if (!Number.isInteger(qty) || qty <= 0) { sfx('error'); return toast('Adad poora likhein'); }
+    if (rate <= 0) { sfx('error'); return toast('Rate theek likhein'); }
     const prod = productById(productId);
-    Object.assign(base, { partyId, productId, productName: prod ? prod.name : '', qty, rate, total: r2(qty * rate) });
-    base.amountPaid = Math.min(paid, base.total);
+    const party = partyById(partyId);
+    const grossTotal = r2(qty * rate);
+    discount = Math.min(Math.max(0, discount), grossTotal);
+    // Exchange lines (Pass 2 form; abhi na hon to []) — net baqaya core mein net − paid − exchangeTotal banta hai.
+    // Over-payment clamp KHATAM: zyada adaigi = seller ko advance.
+    const exchangeItems = readExchangeLines();
+    // Exchange ki jaanch: har line ka adad poora ho aur kul exchange maal stock mein maujood ho
+    for (const row of document.querySelectorAll('#exchangeLines .ex-line')) {
+      const pidEl = row.querySelector('.ex-product');
+      if (!pidEl || !pidEl.value || pidEl.value === '__add__') continue;
+      const q = parseFloat(row.querySelector('.ex-qty').value) || 0;
+      if (!Number.isInteger(q) || q <= 0) { sfx('error'); return toast('Adad poora likhein'); }
+    }
+    if (exchangeItems.length) {
+      const xplan = BA_CORE.planSaleMulti(S.data, exchangeItems);
+      if (!xplan.ok) { sfx('error'); const xp = productById(xplan.productId); return toast('Exchange ke liye stock kam hai — ' + (xp ? xp.name : 'Product') + ' sirf ' + xplan.available + ' ' + unitOf(xplan.productId) + ' bache hain'); }
+    }
+    Object.assign(base, { partyId, partyName: party ? party.name : '', productId, productName: prod ? prod.name : '', qty, rate, itemsTotal: grossTotal, discount, total: r2(grossTotal - discount), amountPaid: paid, payMethod: method });
+    if (exchangeItems.length) base.exchangeItems = exchangeItems;
   } else if (t === 'payment_received' || t === 'payment_given') {
     const partyId = fieldVal('f_party'), amount = parseAmt(fieldVal('f_amount'));
     if (!partyId || partyId === '__add__') { sfx('error'); return toast('Party chunein'); }
     if (amount <= 0) { sfx('error'); return toast('Rakam likhein'); }
-    Object.assign(base, { partyId, total: amount });
+    const party = partyById(partyId);
+    // Baqaye se zyada rakam = baqi advance — save se pehle confirm (sirf jab baqaya asal mein ho)
+    const bal0 = derived().partyBalances[partyId] || 0;
+    const owed = t === 'payment_received' ? bal0 : -bal0;
+    if (owed > 0.004 && amount > owed + 0.004) {
+      if (!confirm('Ye rakam baqaye se zyada hai — baqi advance ban jayega. Theek hai?')) return;
+    }
+    const billNo = fieldVal('f_billno').trim();
+    if (billNo) base.note = (base.note ? base.note + ' • ' : '') + 'Bill No: ' + billNo;
+    Object.assign(base, { partyId, partyName: party ? party.name : '', total: amount, method });
+    if (t === 'payment_received') {
+      const pd = fieldVal('f_promise');
+      if (pd) partyPromise = { partyId, date: pd, note: base.note || '' };
+    }
+  } else if (t === 'sale_return' || t === 'purchase_return') {
+    const isSaleRet = t === 'sale_return';
+    const partyId = fieldVal('f_party');
+    if (!partyId || partyId === '__add__') { sfx('error'); return toast(isSaleRet ? 'Buyer chunein' : 'Seller chunein'); }
+    const lines = readRetLines(isSaleRet).filter(l => l.productId || l.qty > 0 || l.rate > 0);
+    if (!lines.length) { sfx('error'); return toast('Kam az kam aik item add karein'); }
+    for (const l of lines) {
+      if (!l.productId || l.productId === '__add__') { sfx('error'); return toast('Har item ka Product chunein'); }
+      if (!Number.isInteger(l.qty) || l.qty <= 0) { sfx('error'); return toast('Adad poora likhein'); }
+      if (l.rate <= 0) { sfx('error'); return toast('Har item ki Rate theek likhein'); }
+    }
+    if (!isSaleRet) {
+      // Purchase Wapsi ka maal stock se katega — pehle jaanch ke stock kafi hai
+      const plan = BA_CORE.planSaleMulti(S.data, lines);
+      if (!plan.ok) { sfx('error'); const prod = productById(plan.productId); return toast('Stock kam hai — ' + (prod ? prod.name : 'Product') + ' sirf ' + plan.available + ' ' + unitOf(plan.productId) + ' bache hain'); }
+    }
+    const items = lines.map(l => {
+      const pr = productById(l.productId);
+      const it = { productId: l.productId, productName: pr ? pr.name : '', qty: l.qty, rate: l.rate, lotId: null };
+      // Laagat Rate: user ne likha ho to wahi; khaali/0 ho to null — core khud latest lot cost lagata hai
+      if (isSaleRet) it.costRate = (l.costRate != null && l.costRate > 0) ? l.costRate : null;
+      return it;
+    });
+    const total = r2(items.reduce((s, it) => s + it.qty * it.rate, 0));
+    const party = partyById(partyId);
+    Object.assign(base, { partyId, partyName: party ? party.name : '', items, productId: items[0].productId, productName: items[0].productName, itemsTotal: total, total, cashRefund: parseAmt(fieldVal('f_refund')), method });
+  } else if (t === 'opening_stock') {
+    const productId = fieldVal('f_product');
+    const qty = parseFloat(fieldVal('f_qty')) || 0, rate = parseAmt(fieldVal('f_rate'));
+    if (!productId || productId === '__add__') { sfx('error'); return toast('Product chunein'); }
+    if (!Number.isInteger(qty) || qty <= 0) { sfx('error'); return toast('Adad poora likhein'); }
+    if (rate <= 0) { sfx('error'); return toast('Laagat Rate theek likhein'); }
+    const prod = productById(productId);
+    Object.assign(base, { productId, productName: prod ? prod.name : '', qty, rate, total: r2(qty * rate) });
+  } else if (t === 'opening_balance') {
+    const partyId = fieldVal('f_party'), amount = parseAmt(fieldVal('f_amount'));
+    if (!partyId || partyId === '__add__') { sfx('error'); return toast('Party chunein'); }
+    if (amount <= 0) { sfx('error'); return toast('Rakam likhein'); }
+    const party = partyById(partyId);
+    Object.assign(base, { partyId, partyName: party ? party.name : '', total: amount, obSide: fieldVal('f_obside') === 'dena' ? 'dena' : 'lena' });
+  } else if (t === 'stock_adjust') {
+    const productId = fieldVal('f_product');
+    const qty = parseFloat(fieldVal('f_qty')) || 0, dir = fieldVal('f_direction') === 'out' ? 'out' : 'in';
+    if (!productId || productId === '__add__') { sfx('error'); return toast('Product chunein'); }
+    if (!Number.isInteger(qty) || qty <= 0) { sfx('error'); return toast('Adad poora likhein'); }
+    const prod = productById(productId);
+    if (dir === 'in') {
+      const rate = parseAmt(fieldVal('f_rate'));
+      if (rate <= 0) { sfx('error'); return toast('Laagat Rate theek likhein'); }
+      Object.assign(base, { productId, productName: prod ? prod.name : '', direction: 'in', qty, rate, total: r2(qty * rate) });
+    } else {
+      const plan = BA_CORE.planSale(S.data, productId, qty);
+      if (!plan.ok) { sfx('error'); return toast('Stock kam hai — sirf ' + plan.available + ' ' + unitOf(productId) + ' bache hain'); }
+      // total sirf card par dikhane ke liye hai — asal laagat core har dafa khud compute karta hai
+      Object.assign(base, { productId, productName: prod ? prod.name : '', direction: 'out', qty, total: plan.cost || 0 });
+    }
   } else if (t === 'expense') {
     const accountId = fieldVal('f_account'), amount = parseAmt(fieldVal('f_amount'));
     if (!accountId || accountId === '__add__') { sfx('error'); return toast('Kharcha head chunein'); }
     if (amount <= 0) { sfx('error'); return toast('Rakam likhein'); }
     Object.assign(base, { accountId, total: amount });
-  } else { // capital / drawing
+  } else if (t === 'capital' || t === 'drawing') {
     const amount = parseAmt(fieldVal('f_amount'));
     if (amount <= 0) { sfx('error'); return toast('Rakam likhein'); }
     base.total = amount;
   }
   await Store.addEntry(base);
+  if (partyPromise) {
+    // Waade ki tareekh party ke record par — Wasooli List isi se chalti hai
+    try { await Store.updateMaster('parties', partyPromise.partyId, { promiseDate: partyPromise.date, promiseNote: partyPromise.note }); } catch (e) { /* entry save ho gayi hai; waada na lage to bhi hisaab theek hai */ }
+  }
   entryDraft = null;
   $('entryModal').classList.add('hidden');
   selectedDate = date;
@@ -1540,7 +2517,9 @@ async function saveEntry() {
   renderAll();
 }
 /* ================= CORRECTION (ulti entry — edit/delete kabhi nahi) ================= */
+let _correcting = false;
 async function makeCorrection(entryId) {
+  if (_correcting) return; // double-tap par do correction nahi
   const e = S.data.entries.find(x => x.id === entryId);
   if (!e || e.isReversal || e.status === 'reversed') return;
   if (e.type === 'purchase') {
@@ -1548,12 +2527,15 @@ async function makeCorrection(entryId) {
     if (lot && lot.sold > 0.0001) { sfx('error'); return toast('Ye lot bik chuka hai (' + lot.sold + ' pcs) — pehle us sale ki correction karein'); }
   }
   if (!confirm('Correction lagayein?\n\n' + e.code + ' ki entry ghalat thi — ulti (reversal) entry lage gi. Dono entries Roznamcha mein nazar ayengi, hisaab se ye entry khatam ho jayegi.')) return;
-  const seq = S.data.entries.reduce((m, x) => Math.max(m, x.seq || 0), 0) + 1;
-  const rev = { ...e, id: genId(), code: nextCode('E-', S.data.entries.map(x => x.code)), seq, date: todayStr(), isReversal: true, reverses: e.id, reversesCode: e.code, status: 'active', createdAt: new Date().toISOString(), note: 'Correction of ' + e.code + (e.note ? ' — ' + e.note : '') };
-  await Store.addEntry(rev);
-  await Store.updateMaster('entries', e.id, { status: 'reversed', reversedByCode: rev.code });
-  toast('Correction lag gayi — ' + rev.code); sfx('correction');
-  renderAll();
+  _correcting = true;
+  try {
+    const seq = await Store.nextEntrySeq(S.data.entries.reduce((m, x) => Math.max(m, x.seq || 0), 0) + 1);
+    const rev = { ...e, id: genId(), code: 'E-' + String(seq).padStart(3, '0'), seq, date: todayStr(), isReversal: true, reverses: e.id, reversesCode: e.code, status: 'active', createdAt: new Date().toISOString(), note: 'Correction of ' + e.code + (e.note ? ' — ' + e.note : '') };
+    await Store.addEntry(rev);
+    await Store.updateMaster('entries', e.id, { status: 'reversed', reversedByCode: rev.code });
+    toast('Correction lag gayi — ' + rev.code); sfx('correction');
+    renderAll();
+  } finally { _correcting = false; }
 }
 /* ================= ADD / EDIT MASTERS (har jagah Add, code ke saath) ================= */
 let addCtx = null;
@@ -1578,7 +2560,8 @@ function buildAddForm(existing) {
   <div><label class="lbl">Address / Sheher</label><input id="a_address" class="field" value="${esc(ex.address || '')}"></div>`;
   if (kind === 'product') html += `<div class="grid grid-cols-2 gap-2">
     <div><label class="lbl">Unit</label><input id="a_unit" class="field" value="${esc(ex.unit || 'pcs')}"></div>
-    <div><label class="lbl">Low-stock Warning</label><input type="number" id="a_low" class="field" value="${esc(ex.lowStock ?? 10)}"></div></div>`;
+    <div><label class="lbl">Low-stock Warning</label><input type="number" id="a_low" class="field" value="${esc(ex.lowStock ?? 10)}"></div></div>
+  <div><label class="lbl">Sale Rate (agar tay ho)</label><input type="text" inputmode="numeric" id="a_saleRate" class="field amt-in" value="${esc(amtVal(ex.saleRate || ''))}"></div>`;
   if (edit) html += `<button id="btnDeactivate" class="w-full py-2.5 text-sm font-bold rounded-xl mt-1" style="background:#fdecea;color:#c0392b">${kind === 'product' ? 'Product band karein' : 'Band karein'}</button>`;
   $('addFormFields').innerHTML = html;
   const deact = $('btnDeactivate');
@@ -1589,15 +2572,30 @@ function buildAddForm(existing) {
     $('addModal').classList.add('hidden'); toast('Band kar diya gaya'); sfx('save'); renderAll();
   });
 }
+let _savingAdd = false;
 async function saveAdd() {
+  if (_savingAdd) return; // double-click par duplicate master nahi
+  _savingAdd = true;
+  const btn = $('btnSaveAdd'); if (btn) btn.disabled = true;
+  try { await saveAddInner(); }
+  finally { _savingAdd = false; if (btn) btn.disabled = false; }
+}
+async function saveAddInner() {
   const kind = addCtx.kind, edit = !!addCtx.editId;
   const name = fieldVal('a_name').trim();
   if (!name) { sfx('error'); return toast('Naam lazmi hai'); }
+  if (!edit) {
+    // Duplicate naam ki warning: isi type mein yehi naam pehle se ho to pehle poochho
+    const existing = kind === 'product' ? S.data.products : kind === 'account' ? S.data.accounts : S.data.parties.filter(x => x.type === kind);
+    if (existing.some(x => String(x.name || '').trim().toLowerCase() === name.toLowerCase())) {
+      if (!confirm('Isi naam ka record pehle se hai — phir bhi bana dein?')) return;
+    }
+  }
   if (edit) {
     const coll = kind === 'product' ? 'products' : kind === 'account' ? 'accounts' : 'parties';
     const patch = { name };
     if (kind === 'buyer' || kind === 'seller') { patch.phone = fieldVal('a_phone').trim(); patch.address = fieldVal('a_address').trim(); }
-    if (kind === 'product') { patch.unit = fieldVal('a_unit') || 'pcs'; patch.lowStock = parseFloat(fieldVal('a_low')) || 0; }
+    if (kind === 'product') { patch.unit = fieldVal('a_unit') || 'pcs'; patch.lowStock = parseFloat(fieldVal('a_low')) || 0; patch.saleRate = parseAmt(fieldVal('a_saleRate')); }
     await Store.updateMaster(coll, addCtx.editId, patch);
     $('addModal').classList.add('hidden'); toast('Update ho gaya'); sfx('save'); renderAll(); return;
   }
@@ -1606,7 +2604,7 @@ async function saveAdd() {
     const codes = S.data.parties.filter(x => x.type === kind).map(x => x.code);
     await Store.addMaster('parties', { id, code: nextCode(prefixFor(kind), codes), type: kind, name, phone: fieldVal('a_phone').trim(), address: fieldVal('a_address').trim(), active: true, createdAt: new Date().toISOString() });
   } else if (kind === 'product') {
-    await Store.addMaster('products', { id, code: nextCode('P-', S.data.products.map(x => x.code)), name, unit: fieldVal('a_unit') || 'pcs', lowStock: parseFloat(fieldVal('a_low')) || 0, active: true, createdAt: new Date().toISOString() });
+    await Store.addMaster('products', { id, code: nextCode('P-', S.data.products.map(x => x.code)), name, unit: fieldVal('a_unit') || 'pcs', lowStock: parseFloat(fieldVal('a_low')) || 0, saleRate: parseAmt(fieldVal('a_saleRate')), active: true, createdAt: new Date().toISOString() });
   } else {
     await Store.addMaster('accounts', { id, code: nextCode('A-', S.data.accounts.map(x => x.code)), name, active: true, createdAt: new Date().toISOString() });
   }
@@ -1685,6 +2683,7 @@ function billHTML(e) {
   const p = normalizeProfile(S.data.profile || { ...DEFAULT_PROFILE });
   const party = e.partyId ? partyById(e.partyId) : null;
   const items = BA_CORE.entryItems(e);
+  const sam = BA_CORE.saleAmounts(e);   // gross / discount / net — discount rows sirf tab jab discount > 0
   // Items ko pages (sheets) mein banto: har sheet par ENTRIES_PER_PAGE items; aakhri (totals wali) sheet par
   // totals + banner + signature ki jagah ke liye zyada se zyada BILL_TOTALS_PAGE_ITEMS items.
   const chunks = [];
@@ -1700,11 +2699,12 @@ function billHTML(e) {
     return `<div class="psheet" style="font-family:'Segoe UI',sans-serif;color:#24303d;max-width:640px;margin:0 auto">
   ${printHeaderHTML(p)}
   ${isFirst ? `<div style="text-align:center;font-size:12px;margin-top:4px">Hamare haan Khes, Dari, Kambal, Crystal, Diamond dastiyab hain</div>
-  <div style="display:flex;justify-content:space-between;font-size:13px;margin:6px 0">
-    <div>Bill No: <b>${esc(e.code)}</b></div><div>Tareekh: <b>${esc(e.date)}</b></div></div>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;margin:6px 0"><tr><td style="padding:0">Bill No: <b>${esc(e.code)}</b></td><td style="padding:0;text-align:right">Tareekh: <b>${esc(e.date)}</b></td></tr></table>
   <div style="font-size:13px;margin-bottom:8px">Naam Kharidaar: <b>${party ? esc(party.code) + ' • ' + esc(party.name) : ''}</b> ${party && party.phone ? '(' + esc(party.phone) + ')' : ''}</div>` : `<div style="font-size:12px;margin-top:4px">Bill No: <b>${esc(e.code)}</b> (jari)</div>`}
   <table style="width:100%;border-collapse:collapse;font-size:14px">${head}${chunk.map(rowOf).join('')}</table>
   ${isLast ? `<table style="width:260px;margin-left:auto;font-size:14px;margin-top:8px">
+    ${sam.discount > 0 ? `<tr><td style="padding:4px">Kul</td><td style="padding:4px;text-align:right">${fmtRs(sam.gross)}</td></tr>
+    <tr><td style="padding:4px">Discount</td><td style="padding:4px;text-align:right">− ${fmtRs(sam.discount)}</td></tr>` : ''}
     <tr><td style="padding:4px">Total</td><td style="padding:4px;text-align:right"><b>${fmtRs(e.total)}</b></td></tr>
     <tr><td style="padding:4px">Advance</td><td style="padding:4px;text-align:right">${fmtRs(e.amountReceived || 0)}</td></tr>
     <tr style="border-top:2px solid #6d1a2d"><td style="padding:4px"><b>Baqaya</b></td><td style="padding:4px;text-align:right"><b>${fmtRs((e.total || 0) - (e.amountReceived || 0))}</b></td></tr>
@@ -1797,6 +2797,22 @@ function buildStatementPrint(key) {
 }
 function printStatement(key) { buildStatementPrint(key); doPrint(); }
 function downloadStatementPDF(key) { const f = buildStatementPrint(key); if (f) downloadPDF(f); }
+/* Aik bill WhatsApp par: har line, Kul, Discount (ho to), Wasool, Baqaya + GG banner */
+function shareBillWA(entryId) {
+  const e = S.data.entries.find(x => x.id === entryId);
+  if (!e) return;
+  const p = e.partyId ? partyById(e.partyId) : null;
+  const amt = BA_CORE.saleAmounts(e);
+  const items = BA_CORE.entryItems(e);
+  const lines = items.map(it => (it.productName || '') + ' — ' + it.qty + ' × ' + fmtRs(it.rate) + ' = ' + fmtRs(r2((+it.qty || 0) * (+it.rate || 0))));
+  let msg = (S.data.profile.name || APP_NAME) + '\nBill No: ' + e.code + ' • Tareekh: ' + e.date + '\n' + lines.join('\n') + '\nKul: ' + fmtRs(amt.gross);
+  if (amt.discount > 0) msg += '\nDiscount: ' + fmtRs(amt.discount) + '\nBill Total: ' + fmtRs(amt.net);
+  msg += '\nWasool Hua: ' + fmtRs(e.amountReceived || 0) + '\nBaqaya: ' + fmtRs(r2(amt.net - (e.amountReceived || 0)));
+  msg += '\nApna hisaab bhi aise hi saaf rakhein!\nApna GG Khata Banayein — FREE Sign Up: ' + GG_KHATA_URL + '\nSirf Google account chahiye — 1 minute mein khata tayyar\n' + GG_BRAND_LINE;
+  let phone = p && p.phone ? String(p.phone).replace(/\D/g, '') : '';
+  if (phone.startsWith('0')) phone = '92' + phone.slice(1);
+  window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
+}
 function shareStatementWA(key) {
   const p = key.startsWith('party:') ? partyById(key.slice(6)) : null;
   if (!p || !p.phone) { sfx('error'); return toast('Party ka phone number nahi hai'); }
@@ -1809,34 +2825,57 @@ function shareStatementWA(key) {
 }
 function openDailyReport() {
   const d = BA_CORE.dailySummary(S.data, selectedDate);
+  const corrCount = S.data.entries.filter(e => e.isReversal && e.date === selectedDate).length;
   $('reportTitle').textContent = 'Roz ki Report — ' + selectedDate;
   const row = (l, v) => `<div class="flex justify-between items-center border-b border-gray-100 py-1.5"><span class="text-[11px] uppercase tracking-wide text-gray-500">${l}</span><b class="text-[13px]">${v}</b></div>`;
-  $('reportBody').innerHTML = row('Kul Entries', d.entries) + row('Sale', fmtRs(d.sale)) + row('Purchase', fmtRs(d.purchase)) +
+  $('reportBody').innerHTML = row('Kul Entries', d.entries) + row('Sale', fmtRs(d.sale)) + row('Sale Wapsi', fmtRs(d.saleReturn)) + row('Purchase', fmtRs(d.purchase)) + row('Purchase Wapsi', fmtRs(d.purchaseReturn)) +
     row('Wasooli (cash aya)', fmtRs(d.cashIn)) + row('Adaigi + Kharcha (cash gaya)', fmtRs(d.cashOut)) +
+    row('Bank aya', fmtRs(d.bankIn)) + row('Bank gaya', fmtRs(d.bankOut)) +
+    row('Corrections (aaj)', corrCount) +
     row('Aaj ka Munafa (sales par)', fmtRs(d.profit)) +
     `<div class="flex justify-between items-center rounded-xl px-3 py-2.5 mt-2" style="background:#4f1220;color:#fff"><span class="text-xs font-extrabold uppercase tracking-wide">Galla kul <span class="text-[10px] font-semibold normal-case opacity-70">(aaj tak)</span></span><b class="text-sm" style="color:#b9975b">${fmtRs(d.gallaTotal)}</b></div>` +
+    `<div class="flex justify-between items-center rounded-xl px-3 py-2.5 mt-2 cream2-bg"><span class="text-xs font-extrabold uppercase tracking-wide brand-text">Bank kul <span class="text-[10px] font-semibold normal-case opacity-70">(aaj tak)</span></span><b class="text-sm brand-text">${fmtRs(d.bankTotal)}</b></div>` +
     `<p class="text-xs text-gray-400 pt-2">Ye report Roznamcha ki entries se khud bani hai. Din band karne ka matlab: aaj ka hisaab check kar liya gaya.</p>`;
   $('reportModal').classList.remove('hidden');
 }
-function reportPrintBuild() {
-  const d = BA_CORE.dailySummary(S.data, selectedDate);
+/* Report wali sheet ka shared design (Roz ki Report + Aakhri Hisaab period report):
+   letterhead, TAFSEEL/RAKAM table, aakhir mein gehri maroon bar + branding line */
+function reportSheetHTML(title, subLine, rowsDisplay, footLabel, footValue) {
   const p = S.data.profile || DEFAULT_PROFILE;
-  const rows = [['Sale', d.sale], ['Purchase', d.purchase], ['Wasooli (cash aya)', d.cashIn], ['Cash gaya', d.cashOut], ['Kharcha', d.kharcha], ['Aaj ka Munafa', d.profit]]
-    .map(r => `<tr style="border-bottom:1px solid #e5dfd0"><td style="padding:5px 8px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#6b7280">${r[0]}</td><td style="padding:5px 8px;text-align:right"><b>${fmtRs(r[1])}</b></td></tr>`).join('');
-  $('printArea').innerHTML = `<div class="psheet" style="font-family:'Segoe UI',sans-serif;color:#24303d;max-width:640px;margin:0 auto">
+  const rows = rowsDisplay.map(r => `<tr style="border-bottom:1px solid #e5dfd0"><td style="padding:5px 8px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#6b7280">${r[0]}</td><td style="padding:5px 8px;text-align:right"><b>${r[1]}</b></td></tr>`).join('');
+  return `<div class="psheet" style="font-family:'Segoe UI',sans-serif;color:#24303d;max-width:640px;margin:0 auto">
   ${printHeaderHTML(p)}
-  <h2 style="color:#6d1a2d;text-align:center;font-size:17px;margin:6px 0 2px">Roz ki Report</h2>
-  <p style="text-align:center;font-size:11.5px;color:#666;margin:0 0 8px">Tareekh: ${esc(selectedDate)}</p>
+  <h2 style="color:#6d1a2d;text-align:center;font-size:17px;margin:6px 0 2px">${title}</h2>
+  <p style="text-align:center;font-size:11.5px;color:#666;margin:0 0 8px">${subLine}</p>
   <table style="width:100%;font-size:12.5px;line-height:1.35;border-collapse:collapse">
   <tr style="background:#efe6d2"><th style="padding:5px 8px;text-align:left;font-size:10.5px;letter-spacing:.06em;color:#8a7a52">TAFSEEL</th><th style="padding:5px 8px;text-align:right;font-size:10.5px;letter-spacing:.06em;color:#8a7a52">RAKAM</th></tr>
   ${rows}
-  <tr style="background:#4f1220;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact"><td style="padding:8px;font-weight:800;letter-spacing:.04em;text-transform:uppercase">Galla kul</td><td style="padding:8px;text-align:right;font-weight:800;color:#b9975b">${fmtRs(d.gallaTotal)}</td></tr>
+  <tr style="background:#4f1220;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact"><td style="padding:8px;font-weight:800;letter-spacing:.04em;text-transform:uppercase">${footLabel}</td><td style="padding:8px;text-align:right;font-weight:800;color:#b9975b">${footValue}</td></tr>
   </table>
   ${pfootHTML(1, 1)}</div>`;
+}
+function reportPrintBuild() {
+  const d = BA_CORE.dailySummary(S.data, selectedDate);
+  const corrCount = S.data.entries.filter(e => e.isReversal && e.date === selectedDate).length;
+  const rows = [['Sale', fmtRs(d.sale)], ['Sale Wapsi', fmtRs(d.saleReturn)], ['Purchase', fmtRs(d.purchase)], ['Purchase Wapsi', fmtRs(d.purchaseReturn)], ['Wasooli (cash aya)', fmtRs(d.cashIn)], ['Cash gaya', fmtRs(d.cashOut)], ['Bank aya', fmtRs(d.bankIn)], ['Bank gaya', fmtRs(d.bankOut)], ['Bank kul', fmtRs(d.bankTotal)], ['Kharcha', fmtRs(d.kharcha)], ['Corrections', String(corrCount)], ['Aaj ka Munafa', fmtRs(d.profit)]];
+  $('printArea').innerHTML = reportSheetHTML('Roz ki Report', 'Tareekh: ' + esc(selectedDate), rows, 'Galla kul', fmtRs(d.gallaTotal));
   return 'Roz-Report-' + selectedDate + '.pdf';
 }
 window.printReport = function () { reportPrintBuild(); doPrint(); };
 window.downloadReportPDF = function () { const f = reportPrintBuild(); if (f) downloadPDF(f); };
+/* Aakhri Hisaab ki period report — wahi design, period ke numbers ke saath */
+function periodPrintBuild() {
+  const { from, to } = periodRange();
+  const ps = BA_CORE.periodSummary(S.data, from, to);
+  const rows = [['Sale', fmtRs(ps.sale)], ['Bikey Maal ki Laagat', fmtRs(-ps.cogs)], ['Kham Munafa', fmtRs(r2(ps.sale - ps.cogs))],
+    ...Object.values(ps.expenses || {}).filter(h => Math.abs(h.net) > 0.004).map(h => ['Kharcha — ' + accountLabel('acct:' + h.accountId).name, fmtRs(-h.net)]),
+    ['Kul Kharchay', fmtRs(-ps.totalExpenses)], ['Farq / Adjustment', fmtRs(ps.adjustment)], ['Wasooli', fmtRs(ps.wasooli)], ['Adaigi', fmtRs(ps.adaigi)],
+    ['Galla (period ke aakhir par)', fmtRs(ps.closingCash)], ['Bank (period ke aakhir par)', fmtRs(ps.closingBank)]];
+  $('printArea').innerHTML = reportSheetHTML('Aakhri Hisaab', 'Period: ' + esc(from) + ' — ' + esc(to), rows, 'Khalaas Munafa', fmtRs(ps.netProfit));
+  return 'Aakhri-Hisaab-' + from + '-' + to + '.pdf';
+}
+window.printPeriodReport = function () { periodPrintBuild(); doPrint(); };
+window.downloadPeriodPDF = function () { const f = periodPrintBuild(); if (f) downloadPDF(f); };
 /* ================= BACKUP ================= */
 function exportData() {
   const blob = new Blob([JSON.stringify({ app: 'barkat-ali-khata', version: 1, exportedAt: new Date().toISOString(), data: S.data }, null, 2)], { type: 'application/json' });
@@ -1844,14 +2883,15 @@ function exportData() {
   toast('Backup download ho gaya'); sfx('save');
 }
 async function importData(file) {
+  if (S.role !== 'owner') { sfx('error'); return toast('Sirf owner backup import kar sakta hai'); }
   try {
     const obj = JSON.parse(await file.text());
-    const data = obj.data || obj;
-    if (!data || !Array.isArray(data.entries)) throw new Error('ghalat file');
-    data.profile = { ...DEFAULT_PROFILE, ...(data.profile || {}) };
+    const norm = BA_CORE.normalizeImport(obj);   // entries lazmi; baqi arrays na hon to []
+    if (!norm) throw new Error('file theek nahi hai');
+    const data = { parties: norm.parties, products: norm.products, accounts: norm.accounts, entries: norm.entries, profile: { ...DEFAULT_PROFILE, ...(norm.profile || {}) } };
     await Store.replaceAll(data);
     toast('Backup import ho gaya'); sfx('save'); applyProfile(); renderAll();
-  } catch (e) { sfx('error'); toast('Import nahi hua — file theek nahi hai'); }
+  } catch (e) { sfx('error'); toast('Import nahi hua — ' + (e.message || 'file theek nahi hai')); }
 }
 /* ================= DEFAULT RESET — khata factory default par wapas =================
    Saari entries / parties / products / heads delete ho kar pehli dafa wala seed dobara
@@ -1902,6 +2942,22 @@ $('btnClearSearch').addEventListener('click', () => { $('searchBar').value = '';
 $('khataSearch').addEventListener('input', renderKhata);
 $('invSearch').addEventListener('input', renderInventory);
 $('partySearch').addEventListener('input', renderParties);
+$('invShowInactive').addEventListener('change', renderInventory);
+$('partyShowInactive').addEventListener('change', renderParties);
+$('pnlPeriod').addEventListener('change', e => {
+  pnlPeriod = e.target.value;
+  const custom = pnlPeriod === 'custom';
+  $('pnlCustomWrap').classList.toggle('hidden', !custom);
+  if (custom) {
+    const t = todayStr();
+    if (!$('pnlFrom').value) $('pnlFrom').value = t.slice(0, 8) + '01';
+    if (!$('pnlTo').value) $('pnlTo').value = t;
+    pnlFrom = $('pnlFrom').value; pnlTo = $('pnlTo').value;
+  }
+  renderPnL();
+});
+$('pnlFrom').addEventListener('change', e => { pnlFrom = e.target.value; renderPnL(); });
+$('pnlTo').addEventListener('change', e => { pnlTo = e.target.value; renderPnL(); });
 $('dayPicker').addEventListener('change', e => { selectedDate = e.target.value || todayStr(); renderRoznamcha(); });
 $('btnPrevDay').addEventListener('click', () => { const d = new Date(selectedDate); d.setDate(d.getDate() - 1); selectedDate = d.toISOString().slice(0, 10); renderRoznamcha(); });
 $('btnNextDay').addEventListener('click', () => { const d = new Date(selectedDate); d.setDate(d.getDate() + 1); selectedDate = d.toISOString().slice(0, 10); renderRoznamcha(); });
@@ -1925,8 +2981,7 @@ $('fileImport').addEventListener('change', e => { if (e.target.files[0]) importD
 $('btnFactoryReset').addEventListener('click', factoryResetData);
 $('btnGoogleLogin').addEventListener('click', googleLogin);
 $('btnLogout').addEventListener('click', logout);
-// Init
-$('loginLogo').src = 'data:image/jpeg;base64,' + LOGO_B64;
+// Init — login hero ka logo ab file (logo-full.png, transparent) se ata hai, base64 khatam
 if (CONFIG_IS_PLACEHOLDER) {
   $('loginModeNote').textContent = 'Note: Firebase config abhi placeholder hai — asal config lagne par hi login chalega.';
 } else {
