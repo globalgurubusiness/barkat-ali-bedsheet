@@ -361,8 +361,11 @@
       <h3 class="text-lg font-extrabold brand-text" id="reportTitle">Roz ki Report</h3>
       <button class="text-gray-400 text-2xl font-bold px-2" data-close="reportModal">&times;</button>
     </div>
-    <div id="reportBody" class="space-y-2 text-sm"></div>
-    <button class="btn-cream w-full py-3 mt-4" onclick="window.printReport()">Print karein</button>
+    <div id="reportBody"></div>
+    <div class="flex gap-2 mt-4">
+      <button class="btn-cream flex-1 py-3 flex items-center justify-center gap-2" onclick="window.printReport()"><svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print</button>
+      <button class="btn-brand flex-1 py-3 flex items-center justify-center gap-2" onclick="window.downloadReportPDF()"><svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11"/><path d="m7 10.5 5 5 5-5"/><path d="M4 21h16"/></svg>Download PDF</button>
+    </div>
   </div>
 </div>
 
@@ -1013,6 +1016,8 @@ const ICON_PATHS = {
   landmark: '<path d="m12 2 9 5H3z"/><path d="M3 10h18"/><path d="M6 21v-8"/><path d="M10 21v-8"/><path d="M14 21v-8"/><path d="M18 21v-8"/><path d="M3 21h18"/>',
   ownerOut: '<circle cx="9" cy="8" r="3.5"/><path d="M3.5 20c.6-3.3 2.8-5.2 5.5-5.2 1.1 0 2.2.3 3.1.8"/><path d="M15.5 3.5H21V9"/><path d="m21 3.5-5.8 5.8"/>',
   file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
+  printer: '<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+  download: '<path d="M12 3v11"/><path d="m7 10.5 5 5 5-5"/><path d="M4 21h16"/>',
   settings: '<circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.51 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.24.6.86 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/>'
 };
 const ico = (name, cls) => `<svg viewBox="0 0 24 24" class="${cls || 'w-6 h-6'}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON_PATHS[name] || ICON_PATHS.file}</svg>`;
@@ -1073,7 +1078,7 @@ function entryCard(e, showDate) {
       </div>
     </div>
     <div class="flex gap-2 mt-2">
-      ${e.type === 'sale' && !isRev ? `<button class="btn-cream px-3 py-1.5 text-xs" onclick="printBill('${e.id}')">Bill Print</button>` : ''}
+      ${e.type === 'sale' && !isRev ? `<button class="btn-cream px-3 py-1.5 text-xs" onclick="printBill('${e.id}')">${ico('printer', 'w-3.5 h-3.5 inline-block')} Print</button><button class="btn-cream px-3 py-1.5 text-xs" onclick="downloadBillPDF('${e.id}')">${ico('download', 'w-3.5 h-3.5 inline-block')} Download PDF</button>` : ''}
       ${e.partyId ? `<button class="btn-cream px-3 py-1.5 text-xs" onclick="openStatement('party:${e.partyId}')">Statement</button>` : ''}
       ${canCorrect ? `<button class="px-3 py-1.5 text-xs font-bold rounded-xl" style="background:#fdecea;color:#c0392b" onclick="makeCorrection('${e.id}')">Correction</button>` : ''}
     </div>
@@ -1168,7 +1173,8 @@ function openStatement(key) {
     <table class="w-full text-sm mt-2"><thead><tr class="text-left text-xs text-gray-400"><th class="py-1">Tareekh</th><th>Tafseel</th><th class="text-right">Naame</th><th class="text-right">Jama</th><th class="text-right">Baqaya</th></tr></thead>
     <tbody>${rows || '<tr><td colspan="5" class="py-3 text-gray-400">Koi entry nahi</td></tr>'}</tbody></table>
     <div class="flex gap-2 mt-3">
-      <button class="btn-cream px-3 py-2 text-xs" onclick="printStatement('${key}')">Print Statement</button>
+      <button class="btn-cream px-3 py-2 text-xs" onclick="printStatement('${key}')">${ico('printer', 'w-3.5 h-3.5 inline-block')} Print</button>
+      <button class="btn-cream px-3 py-2 text-xs" onclick="downloadStatementPDF('${key}')">${ico('download', 'w-3.5 h-3.5 inline-block')} Download PDF</button>
       ${p && p.phone ? `<button class="btn-cream px-3 py-2 text-xs" onclick="shareStatementWA('${key}')">WhatsApp par bhejein</button>` : ''}
     </div></div>`;
   $('statementWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1637,9 +1643,56 @@ function billHTML(e) {
   <div style="margin-top:36px;display:flex;justify-content:space-between;font-size:12px;color:#666"><span>Dastakhat: ____________________</span><span>${ggBrandHTML(18)}</span></div></div>`;
 }
 // Print se pehle printArea ki images (GG logo) ke load ka intezaar — warna pehli print mein logo reh jata hai
-async function doPrint() { const imgs = [...$('printArea').querySelectorAll('img')]; await Promise.all(imgs.map(i => (i.complete && i.naturalWidth > 0) ? Promise.resolve() : new Promise(r => { i.onload = r; i.onerror = r; }))); window.print(); }
-function printBill(entryId) { const e = S.data.entries.find(x => x.id === entryId); if (!e) return; $('printArea').innerHTML = billHTML(e); doPrint(); }
-function printStatement(key) {
+async function waitPrintImages() { const imgs = [...$('printArea').querySelectorAll('img')]; await Promise.all(imgs.map(i => (i.complete && i.naturalWidth > 0) ? Promise.resolve() : new Promise(r => { i.onload = r; i.onerror = r; }))); }
+async function doPrint() { await waitPrintImages(); window.print(); }
+/* ---- Download PDF: html2pdf pehli dafa CDN se lazily load hota hai (sirf online par direct download);
+        load na ho (offline) to print-box wala fallback — document.title = file name, taake "Save as PDF" mein wohi naam aye ---- */
+let _h2pLoad = null;
+function loadHtml2Pdf() {
+  if (window.html2pdf) return Promise.resolve(true);
+  if (_h2pLoad) return _h2pLoad;
+  _h2pLoad = new Promise(res => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    sc.onload = () => res(!!window.html2pdf);
+    sc.onerror = () => { _h2pLoad = null; res(false); };
+    document.head.appendChild(sc);
+  });
+  return _h2pLoad;
+}
+function pdfName(s) { return String(s == null ? 'document' : s).replace(/[\\/:*?"<>|]+/g, '-').replace(/\s+/g, '-').replace(/^-+|-+$/g, '') || 'document'; }
+function printWithTitle(filename) {
+  const old = document.title;
+  document.title = String(filename || 'document').replace(/\.pdf$/i, '');
+  let done = false;
+  const restore = () => { if (done) return; done = true; document.title = old; window.removeEventListener('afterprint', restore); };
+  window.addEventListener('afterprint', restore);
+  setTimeout(restore, 120000);
+  doPrint();
+}
+async function downloadPDF(filename) {
+  await waitPrintImages();
+  const ok = await loadHtml2Pdf().catch(() => false);
+  if (ok && window.html2pdf) {
+    const holder = document.createElement('div');
+    holder.style.cssText = 'position:absolute;left:0;top:0;width:780px;background:#fff;z-index:-1';
+    const clone = $('printArea').cloneNode(true);
+    clone.removeAttribute('id'); clone.classList.remove('hidden');
+    holder.appendChild(clone); document.body.appendChild(holder);
+    try {
+      await window.html2pdf().set({ margin: 8, filename, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(clone).save();
+      toast('PDF download ho gaya'); sfx('save');
+      holder.remove();
+      return;
+    } catch (e) { holder.remove(); }
+  }
+  toast('PDF ke liye print box se "Save as PDF" chunein');
+  printWithTitle(filename);
+}
+function buildBillPrint(entryId) { const e = S.data.entries.find(x => x.id === entryId); if (!e) return null; $('printArea').innerHTML = billHTML(e); return 'Bill-' + pdfName(e.code) + '.pdf'; }
+function printBill(entryId) { if (buildBillPrint(entryId)) doPrint(); }
+function downloadBillPDF(entryId) { const f = buildBillPrint(entryId); if (f) downloadPDF(f); }
+function buildStatementPrint(key) {
   const d = derived(); const l = accountLabel(key);
   const posts = d.postings.filter(x => x.account === key).sort((a, b) => (a.date < b.date ? -1 : 1) || (a.seq - b.seq));
   let run = 0;
@@ -1652,8 +1705,10 @@ function printStatement(key) {
   <table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="background:#efe6d2"><th style="padding:6px;text-align:left">Tareekh</th><th style="padding:6px;text-align:left">Tafseel</th><th style="padding:6px;text-align:right">Naame</th><th style="padding:6px;text-align:right">Jama</th><th style="padding:6px;text-align:right">Baqaya</th></tr>${rows}</table>
   ${ggSignupBannerHTML()}
   <div style="margin-top:20px;font-size:11px;color:#666;text-align:center">${ggBrandHTML(18)}</div></div>`;
-  doPrint();
+  return 'Statement-' + pdfName(l.name) + '.pdf';
 }
+function printStatement(key) { buildStatementPrint(key); doPrint(); }
+function downloadStatementPDF(key) { const f = buildStatementPrint(key); if (f) downloadPDF(f); }
 function shareStatementWA(key) {
   const p = key.startsWith('party:') ? partyById(key.slice(6)) : null;
   if (!p || !p.phone) { sfx('error'); return toast('Party ka phone number nahi hai'); }
@@ -1667,24 +1722,31 @@ function shareStatementWA(key) {
 function openDailyReport() {
   const d = BA_CORE.dailySummary(S.data, selectedDate);
   $('reportTitle').textContent = 'Roz ki Report — ' + selectedDate;
-  const row = (l, v) => `<div class="flex justify-between border-b py-2"><span>${l}</span><b>${v}</b></div>`;
+  const row = (l, v) => `<div class="flex justify-between items-center border-b border-gray-100 py-1.5"><span class="text-[11px] uppercase tracking-wide text-gray-500">${l}</span><b class="text-[13px]">${v}</b></div>`;
   $('reportBody').innerHTML = row('Kul Entries', d.entries) + row('Sale', fmtRs(d.sale)) + row('Purchase', fmtRs(d.purchase)) +
     row('Wasooli (cash aya)', fmtRs(d.cashIn)) + row('Adaigi + Kharcha (cash gaya)', fmtRs(d.cashOut)) +
-    row('Aaj ka Munafa (sales par)', fmtRs(d.profit)) + row('Galla kul (aaj tak)', fmtRs(d.gallaTotal)) +
+    row('Aaj ka Munafa (sales par)', fmtRs(d.profit)) +
+    `<div class="flex justify-between items-center rounded-xl px-3 py-2.5 mt-2" style="background:#4f1220;color:#fff"><span class="text-xs font-extrabold uppercase tracking-wide">Galla kul <span class="text-[10px] font-semibold normal-case opacity-70">(aaj tak)</span></span><b class="text-sm" style="color:#b9975b">${fmtRs(d.gallaTotal)}</b></div>` +
     `<p class="text-xs text-gray-400 pt-2">Ye report Roznamcha ki entries se khud bani hai. Din band karne ka matlab: aaj ka hisaab check kar liya gaya.</p>`;
   $('reportModal').classList.remove('hidden');
 }
-window.printReport = function () {
+function reportPrintBuild() {
   const d = BA_CORE.dailySummary(S.data, selectedDate);
   const p = S.data.profile || DEFAULT_PROFILE;
+  const rows = [['Sale', d.sale], ['Purchase', d.purchase], ['Wasooli (cash aya)', d.cashIn], ['Cash gaya', d.cashOut], ['Kharcha', d.kharcha], ['Aaj ka Munafa', d.profit]]
+    .map(r => `<tr style="border-bottom:1px solid #e5dfd0"><td style="padding:5px 8px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#6b7280">${r[0]}</td><td style="padding:5px 8px;text-align:right"><b>${fmtRs(r[1])}</b></td></tr>`).join('');
   $('printArea').innerHTML = `<div style="font-family:'Segoe UI',sans-serif;color:#24303d;max-width:640px;margin:0 auto">
-  <h2 style="color:#6d1a2d;text-align:center">${esc(p.name)} — Roz ki Report</h2>
-  <p style="text-align:center;font-size:12px">Tareekh: ${esc(selectedDate)}</p>
-  <table style="width:100%;font-size:14px;border-collapse:collapse">
-  ${[['Sale', d.sale], ['Purchase', d.purchase], ['Wasooli (cash aya)', d.cashIn], ['Cash gaya', d.cashOut], ['Kharcha', d.kharcha], ['Aaj ka Munafa', d.profit], ['Galla kul', d.gallaTotal]].map(r => `<tr style="border-bottom:1px solid #ddd"><td style="padding:6px">${r[0]}</td><td style="padding:6px;text-align:right"><b>${fmtRs(r[1])}</b></td></tr>`).join('')}
-  </table><div style="margin-top:16px;font-size:11px;color:#666;text-align:center">${ggBrandHTML(18)}</div></div>`;
-  doPrint();
-};
+  <h2 style="color:#6d1a2d;text-align:center;font-size:19px;margin:0 0 2px">${esc(p.name)} — Roz ki Report</h2>
+  <p style="text-align:center;font-size:11.5px;color:#666;margin:0 0 8px">Tareekh: ${esc(selectedDate)}</p>
+  <table style="width:100%;font-size:12.5px;line-height:1.35;border-collapse:collapse">
+  <tr style="background:#efe6d2"><th style="padding:5px 8px;text-align:left;font-size:10.5px;letter-spacing:.06em;color:#8a7a52">TAFSEEL</th><th style="padding:5px 8px;text-align:right;font-size:10.5px;letter-spacing:.06em;color:#8a7a52">RAKAM</th></tr>
+  ${rows}
+  <tr style="background:#4f1220;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact"><td style="padding:8px;font-weight:800;letter-spacing:.04em;text-transform:uppercase">Galla kul</td><td style="padding:8px;text-align:right;font-weight:800;color:#b9975b">${fmtRs(d.gallaTotal)}</td></tr>
+  </table><div style="margin-top:14px;font-size:11px;color:#666;text-align:center">${ggBrandHTML(18)}</div></div>`;
+  return 'Roz-Report-' + selectedDate + '.pdf';
+}
+window.printReport = function () { reportPrintBuild(); doPrint(); };
+window.downloadReportPDF = function () { const f = reportPrintBuild(); if (f) downloadPDF(f); };
 /* ================= BACKUP ================= */
 function exportData() {
   const blob = new Blob([JSON.stringify({ app: 'barkat-ali-khata', version: 1, exportedAt: new Date().toISOString(), data: S.data }, null, 2)], { type: 'application/json' });
