@@ -226,6 +226,18 @@
         <label class="btn-cream w-full py-2.5 text-sm block text-center cursor-pointer">Backup Import (JSON)<input id="fileImport" type="file" accept=".json" class="hidden"></label>
         <button id="btnResetDemo" class="btn-cream w-full py-2.5 text-sm hidden" style="color:#c0392b">Demo Data Saaf karein</button>
       </div>
+      <div id="sharingCard" class="card p-4 space-y-3 mb-4 lg:max-w-3xl hidden">
+        <div class="font-bold text-sm brand-text">Khata Sharing</div>
+        <div><label class="lbl">Owner</label><div id="shareOwner" class="text-sm font-semibold"></div></div>
+        <div><label class="lbl">Members</label><div id="shareMembers" class="space-y-1.5"></div></div>
+        <div id="shareOwnerTools">
+          <label class="lbl">Gmail</label>
+          <div class="flex gap-2">
+            <input id="shareEmail" type="email" class="field flex-1">
+            <button id="btnShareAdd" class="btn-brand px-4 shrink-0">Add karein</button>
+          </div>
+        </div>
+      </div>
       <div class="card p-4 mb-4 lg:max-w-3xl">
         <div class="text-[11px] font-extrabold tracking-[.18em] text-gray-400 mb-3">CONTACT US</div>
         <a href="https://wa.me/923027374880?text=Assalam%20o%20Alaikum!%20Mujhe%20Barkat%20Ali%20Khata%20app%20ke%20baray%20mein%20madad%20chahiye." target="_blank" rel="noopener" class="flex items-center gap-3 rounded-2xl p-3.5" style="background:linear-gradient(135deg,#25d366,#1cb457)">
@@ -644,10 +656,11 @@ function normalizeProfile(p) {
 const SEED_PRODUCTS = ['Khes', 'Dari', 'Kambal', 'Crystal', 'Diamond'];
 const SEED_ACCOUNTS = ['Kirya / Transport', 'Mazdoori', 'Chai / Khana', 'Dukkan Kharcha', 'Deegar Kharcha'];
 
-let S = { mode: 'none', uid: null, data: { parties: [], products: [], accounts: [], entries: [], profile: { ...DEFAULT_PROFILE } }, derived: null };
+let S = { mode: 'none', uid: null, wid: null, role: null, userEmail: '', userName: '', ws: null, data: { parties: [], products: [], accounts: [], entries: [], profile: { ...DEFAULT_PROFILE } }, derived: null };
 let selectedDate = todayStr();
 let fb = null;          // firebase handles (mode === 'firebase' par)
 let unsubs = [];
+let resolvingWs = false;
 
 function seedMasters(data) {
   if (!data.products.length) data.products = SEED_PRODUCTS.map((n, i) => ({ id: genId() + i, code: 'P-' + String(i + 1).padStart(3, '0'), name: n, unit: 'pcs', lowStock: 10, active: true }));
@@ -656,6 +669,11 @@ function seedMasters(data) {
 
 /* ---------------- STORE (demo = localStorage, firebase = Firestore) ---------------- */
 const LS_KEY = 'barkatali_demo_v1';
+/* Workspace base path — KHATA SHARING model: saara cloud data ab workspaces/{S.wid} ke
+   neeche rehta hai, taake malik + members (alag alag Gmail) AIK hi khata dekhein.
+   Har cloud read/write/listen sirf in helpers se jata hai. */
+const wsDocRef = (coll, id) => fb.fs.doc(fb.db, 'workspaces', S.wid, coll, id);
+const wsCollRef = coll => fb.fs.collection(fb.db, 'workspaces', S.wid, coll);
 const Store = {
   loadDemo() {
     try { const raw = localStorage.getItem(LS_KEY); if (raw) { S.data = JSON.parse(raw); return; } } catch (e) {}
@@ -665,30 +683,34 @@ const Store = {
   saveDemo() { try { localStorage.setItem(LS_KEY, JSON.stringify(S.data)); } catch (e) {} },
   async addMaster(coll, obj) {
     if (S.mode === 'demo') { S.data[coll].push(obj); Store.saveDemo(); renderAll(); }
-    else { const { doc, setDoc } = fb.fs; await setDoc(doc(fb.db, 'users', S.uid, coll, obj.id), obj); }
+    else { const { setDoc } = fb.fs; await setDoc(wsDocRef(coll, obj.id), obj); }
   },
   async updateMaster(coll, id, patch) {
     if (S.mode === 'demo') { const o = S.data[coll].find(x => x.id === id); if (o) Object.assign(o, patch); Store.saveDemo(); renderAll(); }
-    else { const { doc, setDoc } = fb.fs; await setDoc(doc(fb.db, 'users', S.uid, coll, id), patch, { merge: true }); }
+    else { const { setDoc } = fb.fs; await setDoc(wsDocRef(coll, id), patch, { merge: true }); }
   },
   async removeMaster(coll, id) {
     if (S.mode === 'demo') { S.data[coll] = S.data[coll].filter(x => x.id !== id); Store.saveDemo(); renderAll(); }
-    else { const { doc, deleteDoc } = fb.fs; await deleteDoc(doc(fb.db, 'users', S.uid, coll, id)); }
+    else { const { deleteDoc } = fb.fs; await deleteDoc(wsDocRef(coll, id)); }
   },
   async addEntry(e) {
     if (S.mode === 'demo') { S.data.entries.push(e); Store.saveDemo(); renderAll(); }
-    else { const { doc, setDoc } = fb.fs; await setDoc(doc(fb.db, 'users', S.uid, 'entries', e.id), e); }
+    else {
+      // Entry stamp: shared khate mein pata rahe kis ne entry lagayi (correction par bhi naya stamp lagta hai)
+      const stamped = { ...e, createdBy: { uid: S.uid, name: S.userName || (S.userEmail ? S.userEmail.split('@')[0] : ''), email: S.userEmail || '' } };
+      const { setDoc } = fb.fs; await setDoc(wsDocRef('entries', e.id), stamped);
+    }
   },
   async saveProfile(p) {
     S.data.profile = p;
     if (S.mode === 'demo') { Store.saveDemo(); renderAll(); }
-    else { const { doc, setDoc } = fb.fs; await setDoc(doc(fb.db, 'users', S.uid, 'profile', 'main'), p); }
+    else { const { setDoc } = fb.fs; await setDoc(wsDocRef('profile', 'main'), p); }
   },
   async replaceAll(data) { // backup import
     if (S.mode === 'demo') { S.data = data; Store.saveDemo(); renderAll(); return; }
-    const { doc, setDoc } = fb.fs;
+    const { setDoc } = fb.fs;
     for (const coll of ['parties', 'products', 'accounts', 'entries'])
-      for (const o of (data[coll] || [])) await setDoc(doc(fb.db, 'users', S.uid, coll, o.id), o);
+      for (const o of (data[coll] || [])) await setDoc(wsDocRef(coll, o.id), o);
     await Store.saveProfile(data.profile || { ...DEFAULT_PROFILE });
   }
 };
@@ -704,22 +726,33 @@ async function initFirebase() {
   try { await fsMod.enableIndexedDbPersistence(db); } catch (e) { /* multi-tab waghera par ignore */ }
   fb = { app, auth, db, authMod, fs: fsMod };
   authMod.getRedirectResult(auth).catch(() => {});
-  authMod.onAuthStateChanged(auth, user => {
-    if (user) { S.mode = 'firebase'; S.uid = user.uid; subscribeFirestore(); enterApp(); }
+  authMod.onAuthStateChanged(auth, async user => {
+    if (!user) return;
+    if (S.mode === 'firebase' && S.uid === user.uid && S.wid) return; // pehle se resolved hai
+    S.mode = 'firebase'; S.uid = user.uid;
+    if (resolvingWs) return; resolvingWs = true;
+    try { await resolveWorkspace(user); } catch (e) { sfx('error'); toast('Khata load nahi hua: ' + e.message); }
+    resolvingWs = false;
+    if (!S.wid) return;
+    subscribeFirestore(); enterApp();
   });
 }
 function subscribeFirestore() {
   unsubs.forEach(u => u()); unsubs = [];
-  const { collection, onSnapshot, doc } = fb.fs;
+  const { onSnapshot, doc } = fb.fs;
+  // Workspace doc live rahe: members ki list badle to sab ko foran nazar aye
+  unsubs.push(onSnapshot(doc(fb.db, 'workspaces', S.wid), snap => {
+    if (snap.exists()) { S.ws = { id: snap.id, ...snap.data() }; if (typeof renderSharing === 'function') renderSharing(); }
+  }, () => {}));
   const bind = (coll, key) => {
-    unsubs.push(onSnapshot(collection(fb.db, 'users', S.uid, coll), snap => {
+    unsubs.push(onSnapshot(wsCollRef(coll), snap => {
       S.data[key] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       if (key === 'products' || key === 'accounts') { /* seed sirf bilkul khali account par */ }
       renderAll();
     }, err => { sfx('error'); toast('Data load error: ' + err.message); }));
   };
   bind('parties', 'parties'); bind('products', 'products'); bind('accounts', 'accounts'); bind('entries', 'entries');
-  unsubs.push(onSnapshot(doc(fb.db, 'users', S.uid, 'profile', 'main'), snap => {
+  unsubs.push(onSnapshot(wsDocRef('profile', 'main'), snap => {
     if (snap.exists()) { S.data.profile = { ...DEFAULT_PROFILE, ...snap.data() }; applyProfile(); }
   }));
   // Pehli dafa: seed products/accounts agar dono khali hain aur entries bhi nahi
@@ -731,6 +764,107 @@ function subscribeFirestore() {
       for (const a of seed.accounts) await Store.addMaster('accounts', a);
     }
   }, 2500);
+}
+/* ---------------- KHATA SHARING: workspace resolution ----------------
+   Login ke baad active workspace is tartib se milta hai:
+   1) Kisi workspace ke memberEmails mein mera email hai -> woh SHARED khata (role: member)
+   2) Warna jo workspace maine khud banaya hai (ownerUid == mera uid) -> role: owner
+   3) Warna naya workspace banta hai aur purana data wahan migrate ho jata hai */
+// Pure decision (koi Firebase nahi) — found = { inviteWs, ownedWs } (doc data + id, ya null)
+function pickWorkspace(found) {
+  // NOTE: invite AUR apna workspace dono hon to invite wala jeet-ta hai —
+  // is dukaan ke use-case mein family ka shared khata hi asal khata hai.
+  if (found && found.inviteWs) return { action: 'use', wid: found.inviteWs.id, role: 'member', ws: found.inviteWs };
+  if (found && found.ownedWs) return { action: 'use', wid: found.ownedWs.id, role: 'owner', ws: found.ownedWs };
+  return { action: 'create' };
+}
+async function resolveWorkspace(user) {
+  const { collection, query, where, getDocs, addDoc } = fb.fs;
+  const email = String(user.email || '').toLowerCase();
+  S.userEmail = email;
+  S.userName = user.displayName || (email ? email.split('@')[0] : '');
+  let inviteWs = null, ownedWs = null;
+  if (email) {
+    const inv = await getDocs(query(collection(fb.db, 'workspaces'), where('memberEmails', 'array-contains', email)));
+    if (!inv.empty) inviteWs = { id: inv.docs[0].id, ...inv.docs[0].data() };
+  }
+  const own = await getDocs(query(collection(fb.db, 'workspaces'), where('ownerUid', '==', user.uid)));
+  if (!own.empty) ownedWs = { id: own.docs[0].id, ...own.docs[0].data() };
+  const pick = pickWorkspace({ inviteWs, ownedWs });
+  if (pick.action === 'use') { S.wid = pick.wid; S.role = pick.role; S.ws = pick.ws; return; }
+  const wsData = { name: APP_NAME, ownerUid: user.uid, ownerEmail: email, memberEmails: [], createdAt: new Date().toISOString() };
+  const ref = await addDoc(collection(fb.db, 'workspaces'), wsData);
+  S.wid = ref.id; S.role = 'owner'; S.ws = { id: ref.id, ...wsData };
+  await migrateLegacyData(user.uid, ref.id);
+}
+/* ONE-TIME migration: purana per-user data naye workspace mein COPY hota hai.
+   Legacy data delete ya change NAHI hota — backup ke tor par waisa hi rehta hai.
+   Ahem: poori app mein purana per-user data path sirf is function mein istemal hota hai. */
+async function migrateLegacyData(uid, wid) {
+  const { collection, getDocs, getDoc, doc, setDoc, writeBatch } = fb.fs;
+  // Guard: naye workspace mein pehle se entries hon to dobara migration nahi (idempotent)
+  const newEntries = await getDocs(collection(fb.db, 'workspaces', wid, 'entries'));
+  if (!newEntries.empty) return;
+  const colls = ['parties', 'products', 'accounts', 'entries'];
+  const legacy = {}; let hasData = false;
+  for (const coll of colls) {
+    const snap = await getDocs(collection(fb.db, 'users', uid, coll));
+    legacy[coll] = snap.docs.map(d => ({ id: d.id, data: d.data() }));
+    if (legacy[coll].length) hasData = true;
+  }
+  const profSnap = await getDoc(doc(fb.db, 'users', uid, 'profile', 'main'));
+  if (profSnap.exists()) hasData = true;
+  if (!hasData) return;
+  for (const coll of colls) {
+    const items = legacy[coll];
+    for (let i = 0; i < items.length; i += 450) {
+      const batch = writeBatch(fb.db);
+      items.slice(i, i + 450).forEach(it => batch.set(doc(fb.db, 'workspaces', wid, coll, it.id), it.data));
+      await batch.commit();
+    }
+  }
+  if (profSnap.exists()) await setDoc(doc(fb.db, 'workspaces', wid, 'profile', 'main'), profSnap.data());
+}
+/* ---------------- SETTINGS: Khata Sharing card ---------------- */
+function renderSharing() {
+  const card = $('sharingCard'); if (!card) return;
+  if (S.mode !== 'firebase' || !S.ws) { card.classList.add('hidden'); return; }
+  card.classList.remove('hidden');
+  const ws = S.ws;
+  $('shareOwner').textContent = ws.ownerEmail || '';
+  const members = Array.isArray(ws.memberEmails) ? ws.memberEmails : [];
+  const isOwner = S.role === 'owner';
+  $('shareMembers').innerHTML = members.length ? members.map(em => `<div class="flex items-center gap-2">
+      <span class="chip cream2-bg brand-text shrink-0">Member</span>
+      <span class="flex-1 text-sm truncate">${esc(em)}</span>
+      ${isOwner ? `<button type="button" class="btn-cream px-2.5 py-1 text-xs shrink-0" data-remove="${esc(em)}">✕</button>` : ''}
+    </div>`).join('') : '<div class="text-sm text-gray-400">—</div>';
+  $('shareOwnerTools').classList.toggle('hidden', !isOwner);
+}
+async function shareAddMember() {
+  if (!fb || !S.wid || S.role !== 'owner') return;
+  const email = ($('shareEmail').value || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { sfx('error'); return toast('Gmail theek likhein'); }
+  const ws = S.ws || {};
+  if (email === String(ws.ownerEmail || '').toLowerCase()) { sfx('error'); return toast('Ye Owner ka Gmail hai'); }
+  const members = (Array.isArray(ws.memberEmails) ? ws.memberEmails : []).map(x => String(x).toLowerCase());
+  if (members.includes(email)) { sfx('error'); return toast('Ye Gmail pehle se add hai'); }
+  try {
+    const { doc, updateDoc } = fb.fs;
+    await updateDoc(doc(fb.db, 'workspaces', S.wid), { memberEmails: [...members, email] });
+    $('shareEmail').value = '';
+    toast('Member add ho gaya'); sfx('save');
+  } catch (e) { sfx('error'); toast('Add nahi hua: ' + e.message); }
+}
+async function shareRemoveMember(email) {
+  if (!fb || !S.wid || S.role !== 'owner') return;
+  if (!confirm(email + ' ko is khate se hata dein?')) return;
+  const members = (Array.isArray(S.ws && S.ws.memberEmails) ? S.ws.memberEmails : []).filter(x => String(x).toLowerCase() !== String(email).toLowerCase());
+  try {
+    const { doc, updateDoc } = fb.fs;
+    await updateDoc(doc(fb.db, 'workspaces', S.wid), { memberEmails: members });
+    toast('Member hata diya gaya'); sfx('save');
+  } catch (e) { sfx('error'); toast('Nahi hata: ' + e.message); }
 }
 async function googleLogin() {
   if (CONFIG_IS_PLACEHOLDER) { toast('Firebase config abhi placeholder hai — Demo Mode chal raha hai'); enterDemo(); return; }
@@ -750,7 +884,7 @@ function enterApp() {
 async function logout() {
   if (S.mode === 'firebase' && fb) { try { await fb.authMod.signOut(fb.auth); } catch (e) {} }
   unsubs.forEach(u => u()); unsubs = [];
-  S.mode = 'none'; S.uid = null;
+  S.mode = 'none'; S.uid = null; S.wid = null; S.role = null; S.ws = null; S.userEmail = ''; S.userName = '';
   $('appScreen').classList.add('hidden'); $('loginScreen').classList.remove('hidden');
 }
 function applyProfile() {
@@ -830,6 +964,7 @@ function entryCard(e, showDate) {
         <div class="font-bold text-sm leading-snug">${esc(entryTitle(e))}</div>
         <div class="text-xs text-gray-500 mt-0.5">${esc(e.code)}${showDate ? ' • ' + esc(e.date) : ''} • ${esc(m.label)} ${extra}</div>
         ${e.note && e.type !== 'expense' ? `<div class="text-xs text-gray-500">${esc(e.note)}</div>` : ''}
+        ${e.createdBy && e.createdBy.name ? `<div class="text-[11px] text-gray-400">${esc(e.createdBy.name)}</div>` : ''}
       </div>
       <div class="text-right">
         <div class="font-extrabold" style="color:${m.color}">${fmtRs(e.total)}</div>
@@ -848,6 +983,7 @@ function renderAll() {
   if (S.mode === 'none') return;
   S.derived = null;
   renderRoznamcha(); renderKhata(); renderInventory(); renderBaqaya(); renderParties(); renderPnL();
+  if (typeof renderSharing === 'function') renderSharing();
 }
 function renderRoznamcha() {
   const d = BA_CORE.dailySummary(S.data, selectedDate);
@@ -1484,6 +1620,9 @@ $('setSound').addEventListener('change', async e => {
   toast(on ? 'Sound on ho gaya' : 'Sound band ho gaya');
 });
 $('btnAddContact').addEventListener('click', () => addContactRow());
+$('btnShareAdd').addEventListener('click', shareAddMember);
+$('shareMembers').addEventListener('click', e => { const b = e.target.closest('[data-remove]'); if (b) shareRemoveMember(b.dataset.remove); });
+$('shareEmail').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); shareAddMember(); } });
 $('contactRows').addEventListener('click', e => { const b = e.target.closest('.c-remove'); if (b) { const row = b.closest('.contact-row'); if (row) row.remove(); } });
 $('btnExport').addEventListener('click', exportData);
 $('fileImport').addEventListener('change', e => { if (e.target.files[0]) importData(e.target.files[0]); e.target.value = ''; });
