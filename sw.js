@@ -1,4 +1,4 @@
-const CACHE = 'barkat-ali-khata-v20';
+const CACHE = 'barkat-ali-khata-v21';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './logo.jpg', './gg-logo.png', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
