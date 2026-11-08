@@ -21,13 +21,12 @@
   .btn-brand:active{ transform:scale(.97); background:var(--brand-dark); }
   .btn-cream{ background:var(--cream2); color:var(--brand-dark); border-radius:12px; font-weight:600; }
   .chip{ border-radius:999px; font-size:12px; font-weight:700; padding:3px 10px; }
-  .navbtn{ flex:1; padding:9px 2px; font-size:11px; font-weight:600; color:#7b8a9a; text-align:center; border-top:3px solid transparent; }
-  .navbtn.active{ color:var(--brand-dark); border-top-color:var(--brand); }
-  .navbtn .ic{ font-size:19px; display:block; line-height:1.1; }
-  .navbtn .ic svg{ width:22px; height:22px; display:block; margin:0 auto; }
-  .navbtn{ min-width:0; }
-  /* 7 nav items chhoti screen par bhi saaf rahein — label halka sa shrink */
-  @media (max-width:480px){ .navbtn{ font-size:10px; padding:9px 1px; } .navbtn .ic svg{ width:20px; height:20px; } }
+  /* Drawer (side menu) items — v31: bottom nav khatam (labels takra rahe thay), navigation ab top-left ☰ wale vertical drawer se hoti hai */
+  .draweritem{ display:flex; align-items:center; gap:12px; width:100%; padding:12px 16px; font-size:15px; font-weight:600; color:#43556a; text-align:left; border-left:4px solid transparent; background:none; }
+  .draweritem:active{ background:var(--cream); }
+  .draweritem.active{ background:var(--cream2); color:var(--brand-dark); border-left-color:var(--brand); }
+  .draweritem .ic{ display:flex; align-items:center; flex-shrink:0; }
+  .draweritem .ic svg{ width:22px; height:22px; display:block; }
   /* Sound toggle (Settings) */
   .sfx-toggle{ cursor:pointer; flex-shrink:0; }
   .sfx-toggle .track{ display:block; width:50px; height:28px; border-radius:999px; background:#cfd6dd; position:relative; transition:.2s; }
@@ -87,7 +86,7 @@
   }
 </style>
 </head>
-<body class="min-h-screen pb-[124px]">
+<body class="min-h-screen pb-12">
 
 <!-- ============ LOGIN ============ -->
 <div id="loginScreen" class="min-h-screen flex flex-col lg:flex-row items-center justify-center px-6 pt-16 pb-10 lg:gap-24 max-w-6xl mx-auto w-full">
@@ -113,6 +112,7 @@
 <div id="appScreen" class="hidden">
   <header class="brand-bg text-white sticky top-0 z-40 shadow">
     <div class="max-w-3xl lg:max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
+      <button id="btnMenu" class="shrink-0 rounded-lg px-2 py-2 bg-white/15" aria-label="Menu kholein"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" class="w-6 h-6"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg></button>
       <img src="logo.png" alt="logo" class="w-10 h-10 rounded-xl object-cover bg-white">
       <div class="flex-1 min-w-0">
         <div class="font-extrabold leading-tight truncate" id="hdrBizName">Barkat Ali Bed Sheet</div>
@@ -121,6 +121,27 @@
       <button id="btnLogout" class="text-xs font-bold bg-white/15 rounded-lg px-3 py-2">Logout</button>
     </div>
   </header>
+
+  <!-- ===== SIDE DRAWER — saari navigation yahan hai (bottom nav khatam, v31) ===== -->
+  <div id="drawerWrap" class="hidden fixed inset-0 z-50">
+    <div id="drawerBackdrop" class="absolute inset-0 modal-bg"></div>
+    <aside class="absolute left-0 top-0 bottom-0 bg-white shadow-2xl flex flex-col" style="width:min(260px,80vw)">
+      <div class="brand-bg text-white px-4 py-3 flex items-center gap-3">
+        <img src="logo.png" alt="logo" class="w-9 h-9 rounded-xl object-cover bg-white">
+        <div class="flex-1 min-w-0 font-extrabold leading-tight truncate" id="drawerBizName">Barkat Ali Bed Sheet</div>
+        <button id="btnDrawerClose" class="shrink-0 text-2xl font-bold leading-none px-1" aria-label="Menu band karein">&times;</button>
+      </div>
+      <div class="flex-1 overflow-y-auto py-2">
+        <button class="draweritem active" data-view="roznamcha"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/></svg></span>Roznamcha</button>
+        <button class="draweritem" data-view="khata"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>Khata</button>
+        <button class="draweritem" data-view="inventory"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 9.4 7.5 4.2"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></span>Inventory</button>
+        <button class="draweritem" data-view="baqaya"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg></span>Baqaya/Talpat</button>
+        <button class="draweritem" data-view="parties"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Parties</button>
+        <button class="draweritem" data-view="more"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6.5h8"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01M8.5 15h.01M12 15h.01M15.5 15h.01M8.5 18.5h.01M12 18.5h.01M15.5 18.5h.01"/></svg></span>Aakhri Hisaab</button>
+        <button class="draweritem" data-view="settings"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.51 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.24.6.86 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/></svg></span>Settings</button>
+      </div>
+    </aside>
+  </div>
 
   <div id="setupBanner" class="hidden" style="background:#f3e2c7;border-bottom:1px solid rgba(109,26,45,.18)">
     <div class="max-w-3xl lg:max-w-6xl mx-auto px-4 py-1.5 text-center text-[11px] font-extrabold tracking-wide brand-text">Khata Setup</div>
@@ -177,7 +198,10 @@
       </div>
       <p class="text-xs text-gray-500 mb-3">Roznamcha ki har entry khud-ba-khud yahan post hoti hai (Khatoni). Kisi khate par tap karein, statement khul jayega.</p>
       <div class="card p-3 mb-3">
-        <input id="khataSearch" class="w-full text-base placeholder-gray-400" style="border:none">
+        <div class="flex items-center gap-2">
+          <span class="brand-text flex items-center shrink-0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="w-5 h-5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>
+          <input id="khataSearch" class="flex-1 text-base font-medium placeholder-gray-400" style="border:none;box-shadow:none!important" placeholder="Search">
+        </div>
       </div>
       <div id="khataList" class="space-y-2 listscroll"></div>
       <div id="statementWrap" class="hidden mt-4"></div>
@@ -194,7 +218,10 @@
       </div>
       <div id="invSummary" class="grid grid-cols-2 gap-2 mb-3"></div>
       <div class="card p-3 mb-3">
-        <input id="invSearch" class="w-full text-base placeholder-gray-400" style="border:none">
+        <div class="flex items-center gap-2">
+          <span class="brand-text flex items-center shrink-0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="w-5 h-5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>
+          <input id="invSearch" class="flex-1 text-base font-medium placeholder-gray-400" style="border:none;box-shadow:none!important" placeholder="Search">
+        </div>
       </div>
       <label class="flex items-center gap-2 text-xs font-semibold text-gray-500 mb-3"><input type="checkbox" id="invShowInactive" class="w-4 h-4"> Band shuda bhi dikhayein</label>
       <div id="productList" class="space-y-2 listscroll"></div>
@@ -237,7 +264,10 @@
       </div>
       <button class="btn-cream w-full py-2.5 text-sm mb-3" onclick="openEntry('opening_balance')">Opening Baqaya lagayein</button>
       <div class="card p-3 mb-3">
-        <input id="partySearch" class="w-full text-base placeholder-gray-400" style="border:none">
+        <div class="flex items-center gap-2">
+          <span class="brand-text flex items-center shrink-0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="w-5 h-5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>
+          <input id="partySearch" class="flex-1 text-base font-medium placeholder-gray-400" style="border:none;box-shadow:none!important" placeholder="Search">
+        </div>
       </div>
       <label class="flex items-center gap-2 text-xs font-semibold text-gray-500 mb-3"><input type="checkbox" id="partyShowInactive" class="w-4 h-4"> Band shuda bhi dikhayein</label>
       <div class="text-sm font-bold brand-text mb-2">Buyers / Clients</div>
@@ -289,6 +319,7 @@
       </div>
       <div id="ownerSetupCard" class="card p-4 space-y-3 mb-4 lg:max-w-3xl mx-auto hidden">
         <div class="font-bold text-sm brand-text">Owner Setup</div>
+        <div class="rounded-xl p-3 text-xs font-semibold" style="background:#fdf3d7;border:1px solid rgba(176,106,0,.30);color:#8a5a00">Rukiye! Agar aap ki family ya dukaan ka khata pehle se bana hua hai to yahan NAYA khata na banayein. Khata malik Settings mein Khata Sharing se aap ki Gmail add kare ga — phir aap ko wahi khata khul jayega. Naya khata sirf tab banayein jab pehle koi khata na ho aur aap hi malik hon.</div>
         <div><label class="lbl">Owner ka Naam</label><input id="setupOwnerName" class="field"></div>
         <div><label class="lbl">Gmail</label><div id="setupGmail" class="text-sm font-semibold"></div></div>
         <button id="btnOwnerSetup" class="btn-brand w-full py-2.5">Apna Khata Shuru karein</button>
@@ -385,21 +416,10 @@
     </section>
   </main>
 
-  <div id="ggBrandStrip" class="fixed left-0 right-0 z-40 cream-bg" style="bottom:60px;height:28px;border-top:1px solid rgba(61,79,99,.10)">
+  <div id="ggBrandStrip" class="fixed left-0 right-0 z-40 cream-bg" style="bottom:0;height:28px;border-top:1px solid rgba(61,79,99,.10)">
     <div class="max-w-3xl lg:max-w-6xl mx-auto h-full px-4 flex items-center justify-center gap-1.5 text-[11px] text-gray-400 font-semibold"><img src="logo.png" alt="Barkat Ali" class="h-4 w-4 object-contain"><span>Barkat Ali Khata •</span><img src="gg-logo.png" alt="Global Guru" class="w-4 h-4 rounded-full"><span>Powered By Global Guru</span></div>
   </div>
 
-  <nav class="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-2px_10px_rgba(0,0,0,.08)] z-40">
-    <div class="max-w-3xl lg:max-w-6xl mx-auto flex">
-      <button class="navbtn active" data-view="roznamcha"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/></svg></span>Roznamcha</button>
-      <button class="navbtn" data-view="khata"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>Khata</button>
-      <button class="navbtn" data-view="inventory"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 9.4 7.5 4.2"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></span>Inventory</button>
-      <button class="navbtn" data-view="baqaya"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg></span>Baqaya/Talpat</button>
-      <button class="navbtn" data-view="parties"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Parties</button>
-      <button class="navbtn" data-view="more"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6.5h8"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01M8.5 15h.01M12 15h.01M15.5 15h.01M8.5 18.5h.01M12 18.5h.01M15.5 18.5h.01"/></svg></span>Aakhri Hisaab</button>
-      <button class="navbtn" data-view="settings"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.51 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.24.6.86 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/></svg></span>Settings</button>
-    </div>
-  </nav>
 </div>
 
 <!-- ============ ENTRY MODAL ============ -->
@@ -1190,18 +1210,32 @@ async function initFirebase() {
   });
 }
 /* ---------------- SYNC / OFFLINE NISHAANI ----------------
-   Header ke neeche patli patti: browser offline ho YA koi snapshot cache se aya ho /
-   us mein pending writes hon to dikhti hai — user ko pata rahe ke entries is phone
-   mein mehfooz hain aur net ate hi khud cloud tak pohanch jayengi. */
+   Header ke neeche patli patti: user ko pata rahe ke entries is phone mein mehfooz
+   hain aur net ate hi khud cloud tak pohanch jayengi. Lekin patti har cache walay
+   snapshot par NAHI aati (v31 fix): fresh load par pehli snapshots cache se ati
+   hain aur net honay ke bawajood patti jhalak jati thi. Naya usool — patti SIRF tab:
+   (a) browser asal mein offline ho (navigator.onLine === false), YA
+   (b) pending/cache wali halat lagatar ~6 second se zyada barqarar rahe.
+   Server snapshot (fromCache=false, pending nahi) ate hi timer cancel + patti band. */
 let _syncPending = false;
+let _syncTimer = null;
 function noteSync(meta) {
   if (!meta) return;
   const p = !!(meta.hasPendingWrites || meta.fromCache);
-  if (p !== _syncPending) { _syncPending = p; updateSyncBar(); }
+  if (p === _syncPending) return;
+  _syncPending = p;
+  if (p) {
+    if (!_syncTimer) _syncTimer = setTimeout(() => { _syncTimer = null; updateSyncBar(); }, 6000);
+  } else {
+    if (_syncTimer) { clearTimeout(_syncTimer); _syncTimer = null; }
+  }
+  updateSyncBar();
 }
 function updateSyncBar() {
   const bar = $('syncBar'); if (!bar) return;
-  const show = S.mode === 'firebase' && (!navigator.onLine || _syncPending);
+  // Timer maujood hai matlab pending halat abhi 6s se kam purani hai — patti nahi
+  const longPending = _syncPending && !_syncTimer;
+  const show = S.mode === 'firebase' && (!navigator.onLine || longPending);
   bar.classList.toggle('hidden', !show);
 }
 window.addEventListener('online', updateSyncBar);
@@ -1326,7 +1360,7 @@ function renderSetupBanner() {
    Settings ke saare cards chhup jate hain; data kahin render/use nahi hota. */
 function applySetupGate() {
   const gate = !!S.needsSetup;
-  document.querySelectorAll('.navbtn').forEach(b => b.classList.toggle('hidden', gate && b.dataset.view !== 'settings'));
+  document.querySelectorAll('.draweritem').forEach(b => b.classList.toggle('hidden', gate && b.dataset.view !== 'settings'));
   for (const id of ['profileCard', 'backupCard', 'contactCard']) { const el = $(id); if (el) el.classList.toggle('hidden', gate); }
   if (gate) {
     const rc = $('resetCard'); if (rc) rc.classList.add('hidden');
@@ -1465,7 +1499,7 @@ async function logout() {
 function applyProfile() {
   if (!S.data.profile) S.data.profile = { ...DEFAULT_PROFILE };
   const p = normalizeProfile(S.data.profile);
-  $('hdrBizName').textContent = p.name || APP_NAME; $('loginBizName').textContent = p.name || APP_NAME;
+  $('hdrBizName').textContent = p.name || APP_NAME; $('loginBizName').textContent = p.name || APP_NAME; const dbn = $('drawerBizName'); if (dbn) dbn.textContent = p.name || APP_NAME;
   $('setBizName').value = p.name || ''; $('setBizPhones').value = p.phones || ''; $('setBizAddress').value = p.address || '';
   $('setNameLine').value = p.nameLine || '';
   const ssEl = $('setSound'); if (ssEl) ssEl.checked = p.sound !== false;
@@ -1902,7 +1936,7 @@ function switchView(name) {
   if (S.needsSetup && name !== 'settings') name = 'settings'; // setup gate: sirf Settings
   document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
   $('view-' + name).classList.remove('hidden');
-  document.querySelectorAll('.navbtn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+  document.querySelectorAll('.draweritem').forEach(b => b.classList.toggle('active', b.dataset.view === name));
   window.scrollTo({ top: 0 });
 }
 </script>
@@ -2933,7 +2967,12 @@ async function factoryResetData() {
   } catch (e) { sfx('error'); toast('Reset nahi hua: ' + e.message); }
 }
 /* ================= WIRING + INIT ================= */
-document.querySelectorAll('.navbtn').forEach(b => b.addEventListener('click', () => { sfx('tick'); switchView(b.dataset.view); }));
+function openDrawer() { const w = $('drawerWrap'); if (w) w.classList.remove('hidden'); }
+function closeDrawer() { const w = $('drawerWrap'); if (w) w.classList.add('hidden'); }
+document.querySelectorAll('.draweritem').forEach(b => b.addEventListener('click', () => { sfx('tick'); switchView(b.dataset.view); closeDrawer(); }));
+$('btnMenu').addEventListener('click', () => { sfx('tick'); openDrawer(); });
+$('btnDrawerClose').addEventListener('click', closeDrawer);
+$('drawerBackdrop').addEventListener('click', closeDrawer);
 document.querySelectorAll('[data-add]').forEach(b => b.addEventListener('click', () => openAdd(b.dataset.add, false)));
 document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => $(b.dataset.close).classList.add('hidden')));
 $('entryTypeBtns').innerHTML = Object.keys(TYPE_META).map(t => `<button class="card p-3 text-center" onclick="openEntry('${t}')">
