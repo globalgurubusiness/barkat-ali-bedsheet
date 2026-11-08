@@ -68,15 +68,19 @@
   details.lots > summary{ cursor:pointer; list-style:none; } details.lots > summary::-webkit-details-marker{ display:none; }
   /* Print documents: har page aik .psheet hai (flex column) — header upar, GG branding line (.pfoot) hamesha us page ke bilkul neeche */
   .pwrap,.psheet{ display:flex; flex-direction:column; }
+  /* page-break ka usool base (screen) par bhi rakha hai: html2pdf ka CSS pagebreak mode computed style parhta hai,
+     aur @media print ke andar wala rule screen par computed nahi hota — is ke baghair PDF mein sheets idhar udhar kat sakti thein */
+  .psheet{ page-break-after:always; }
+  .psheet:last-child{ page-break-after:auto; }
   .pfoot{ margin-top:auto; padding-top:14px; }
   @media print{
     @page{ size:A4; margin:10mm; }
     body *{ visibility:hidden; }
     #printArea, #printArea *{ visibility:visible; }
     #printArea{ position:absolute; inset:0; display:block!important; padding:10px; background:#fff; }
-    /* A4 height 297mm − @page margins (10mm upar + 10mm neeche) − 2mm safety: har sheet bilkul aik page ki,
-       footer usi page ke bottom par; sheet ke baad page break, aakhri sheet ke baad nahi (khaali page nahi banta) */
-    .psheet{ min-height:calc(100vh - 22mm); page-break-after:always; }
+    /* A4 height 297mm − @page margins (10mm upar + 10mm neeche) − 0.5mm safety: har sheet bilkul aik page ki,
+       footer usi page ke bilkul bottom par; sheet ke baad page break, aakhri sheet ke baad nahi (khaali page nahi banta) */
+    .psheet{ min-height:calc(100vh - 20.5mm); page-break-after:always; }
     .psheet:last-child{ page-break-after:auto; }
   }
 </style>
@@ -636,7 +640,7 @@ const GG_BRAND_LINE = 'Barkat Ali Khata • Powered by Global Guru';
 const ggBrandHTML = () => `<img src="logo.png" alt="Barkat Ali" style="display:inline-block;width:20px;height:20px;object-fit:contain;vertical-align:-5px;margin-right:6px"><span>Barkat Ali Khata • </span><img src="data:image/png;base64,${GG_LOGO_B64}" alt="Global Guru" style="display:inline-block;width:20px;height:20px;object-fit:contain;vertical-align:-5px;margin-right:6px"><span>Powered By Global Guru</span>`;
 const GG_KHATA_URL = 'https://globalgurubusiness.github.io/gg-khata/';
 // Print pagination: har page par FIX entries aur har page par header + footer (Bunny ka hukum).
-// Basis: A4 printable height ~1000px (PDF clone) / ~1039px (browser print). Letterhead ~96px + title ~30px
+// Basis: A4 printable height ~1080px (PDF clone) / ~1039px (browser print). Letterhead ~112px + title ~30px
 // + table head ~28px + footer ~45px nikaal kar ~800px bachta hai; statement ki aik row ~29px ki hai,
 // is liye 20 rows (~580px) aaram se fit hoti hain aur neeche jagah bhi bachi rehti hai.
 const ENTRIES_PER_PAGE = 20;
@@ -644,9 +648,12 @@ const ENTRIES_PER_PAGE = 20;
 const BILL_TOTALS_PAGE_ITEMS = 16;
 // Print footer: branding line hamesha sheet ke bilkul neeche (CSS .pfoot margin-top:auto ke zariye).
 // Kai pages hon to branding line ke bilkul upar dayein taraf chhota "Page X of Y" bhi ata hai.
-const pfootHTML = (page, total) => `<div class="pfoot" style="font-size:11px;color:#666;text-align:center">${total > 1 ? `<div style="text-align:right;font-size:9px;color:#999;margin-bottom:2px">Page ${page} of ${total}</div>` : ''}${ggBrandHTML()}</div>`;
+const pfootHTML = (page, total, tight) => `<div class="pfoot" style="font-size:11px;color:#666;text-align:center${tight ? ';padding-top:6px' : ''}">${total > 1 ? `<div style="text-align:right;font-size:9px;color:#999;margin-bottom:2px">Page ${page} of ${total}</div>` : ''}${ggBrandHTML()}</div>`;
+// Aakhri sheet ka bottom group: signup banner + branding line AIK wrapper (margin-top:auto) mein chipke hue sheet ke
+// bilkul neeche — banner entries ke foran baad nahi latakta aur us ke neeche safaid khaali jagah nahi banti.
+const bottomGroupHTML = (page, total, withBanner) => `<div style="margin-top:auto">${withBanner ? ggSignupBannerHTML() : ''}${pfootHTML(page, total, true)}</div>`;
 // GG signup banner — SIRF bahar jane wale documents (bill/statement print + WhatsApp statement) ke liye; app ki screens mein NAHI aata. Branding line se upar, branding line hamesha aakhir mein.
-const ggSignupBannerHTML = () => `<div style="margin-top:12px;border:1.5px solid #6d1a2d;border-radius:10px;background:#fffdf8;padding:5px 10px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact"><span style="font-size:12px;font-weight:800;color:#24303d">Apna hisaab bhi aise hi saaf rakhein!</span> <a href="${GG_KHATA_URL}" style="display:inline-block;margin-left:6px;background:#6d1a2d;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:7px;text-decoration:none;-webkit-print-color-adjust:exact;print-color-adjust:exact">Apna GG Khata Banayein — FREE Sign Up</a><div style="font-size:10.5px;font-weight:600;color:#6d1a2d;margin-top:1px">${GG_KHATA_URL.replace('https://', '').replace(/\/$/, '')} — Sirf Google account chahiye, 1 minute mein khata tayyar</div></div>`;
+const ggSignupBannerHTML = () => `<div style="margin-top:12px;border:1.5px solid #6d1a2d;border-radius:10px;background:#fffdf8;padding:5px 10px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact"><span style="font-size:12px;font-weight:800;color:#24303d">Apna hisaab bhi aise hi saaf rakhein!</span> <span style="display:inline-block;margin-left:6px;background:#6d1a2d;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:7px;-webkit-print-color-adjust:exact;print-color-adjust:exact">Apna GG Khata Banayein — FREE Sign Up</span><div style="font-size:10.5px;font-weight:600;color:#6d1a2d;margin-top:1px">Sirf Google account chahiye — 1 minute mein khata tayyar</div></div>`;
 const { r2, fmtRs, nextCode } = BA_CORE;
 
 const $ = id => document.getElementById(id);
@@ -1650,7 +1657,9 @@ function collectContacts() {
 }
 /* ================= PRINT: Bill / Statement / Report ================= */
 /* Print header (letterhead) — teeno documents ke sab se upar AIK hi shared header:
-   dukaan ka apna logo (logo.png — transparent monogram crop, bara 74px) + business naam + address + contact detail (saved tarteeb mein; Javeed ka naam/nameLine hamesha contacts ke AAKHIR mein).
+   dukaan ka apna logo (logo.png — transparent monogram crop, bara 104px) + business naam + address + contact detail (saved tarteeb mein; Javeed ka naam/nameLine hamesha contacts ke AAKHIR mein).
+   Naam/address/contacts AIK hi tight block ki tarah parte hain (chhoti line-heights, koi phaila hua gap nahi);
+   contacts left-aligned hain, har item ke baad fix 14px ka faasla hai (justify/spread bilkul nahi).
    Layout table + inline-block spans par hai taake browser print aur html2canvas (PDF) dono mein
    bilkul aik jaisa render ho (flex ka render dono engines mein mukhtalif hota hai). */
 function printHeaderHTML(p) {
@@ -1659,14 +1668,16 @@ function printHeaderHTML(p) {
   const items = [];
   contacts.forEach(c => {
     const nums = [(c.phone1 || '').trim(), (c.phone2 || '').trim()].filter(Boolean).map(n => esc(n)).join(' · ');
-    items.push(`<span style="display:inline-block;margin:0 10px 1px 0"><b>${esc((c.name || '').trim())}</b>${nums ? ' — ' + nums : ''}</span>`);
+    items.push(`<span style="display:inline-block;margin-right:14px;margin-bottom:2px"><b>${esc((c.name || '').trim())}</b>${nums ? ' — ' + nums : ''}</span>`);
   });
   // Legacy fallback: contacts mein aik bhi number na ho to purani "phones" wali detail header mein hi dikha do (double print nahi)
-  if (!contacts.some(c => (c.phone1 || '').trim() || (c.phone2 || '').trim()) && (prof.phones || '').trim()) items.push(`<span style="display:inline-block;margin:0 10px 1px 0">${esc(prof.phones.trim())}</span>`);
+  if (!contacts.some(c => (c.phone1 || '').trim() || (c.phone2 || '').trim()) && (prof.phones || '').trim()) items.push(`<span style="display:inline-block;margin-right:14px;margin-bottom:2px">${esc(prof.phones.trim())}</span>`);
   // Javeed ka naam (nameLine) hamesha contacts ke AAKHIR mein aata hai (Bunny ki tarteeb: Talib, Aqeel, Aqib, phir Javeed)
-  if ((prof.nameLine || '').trim()) items.push(`<span style="display:inline-block;margin:0 10px 1px 0;font-weight:700">${esc(prof.nameLine.trim())}</span>`);
-  const contactRow = items.length ? `<div style="font-size:10.5px;color:#444;margin-top:3px">${items.join('')}</div>` : '';
-  return `<table style="width:100%;border-collapse:collapse"><tr><td style="width:104px;vertical-align:top;padding:0"><img src="logo.png" alt="logo" style="display:block;height:88px;width:auto;object-fit:contain"></td><td style="vertical-align:top;padding:0 0 0 8px;line-height:1.25"><div style="font-size:16px;font-weight:800;color:#6d1a2d;line-height:1.2">${esc(prof.name || APP_NAME)}</div><div style="font-size:11px;color:#555;margin-top:1px">${esc(prof.address || '')}</div>${contactRow}</td></tr></table><div style="border-bottom:3px solid #6d1a2d;margin-top:4px"></div>`;
+  if ((prof.nameLine || '').trim()) items.push(`<span style="display:inline-block;margin-right:14px;margin-bottom:2px;font-weight:700">${esc(prof.nameLine.trim())}</span>`);
+  // Aakhri item ke baad margin nahi (line ke aakhir mein fazool faasla nahi parta)
+  if (items.length) items[items.length - 1] = items[items.length - 1].replace('margin-right:14px', 'margin-right:0');
+  const contactRow = items.length ? `<div style="font-size:10.5px;color:#444;margin-top:2px;line-height:1.25">${items.join('')}</div>` : '';
+  return `<table style="width:100%;border-collapse:collapse"><tr><td style="width:120px;vertical-align:top;padding:0"><img src="logo.png" alt="logo" style="display:block;height:104px;width:auto;object-fit:contain"></td><td style="vertical-align:top;padding:0 0 0 8px;line-height:1.25"><div style="font-size:16px;font-weight:800;color:#6d1a2d;line-height:1.15;margin:0">${esc(prof.name || APP_NAME)}</div><div style="font-size:11px;color:#555;margin-top:1px;line-height:1.2">${esc(prof.address || '')}</div>${contactRow}</td></tr></table><div style="border-bottom:3px solid #6d1a2d;margin-top:4px"></div>`;
 }
 function billHTML(e) {
   const p = normalizeProfile(S.data.profile || { ...DEFAULT_PROFILE });
@@ -1696,9 +1707,8 @@ function billHTML(e) {
     <tr><td style="padding:4px">Advance</td><td style="padding:4px;text-align:right">${fmtRs(e.amountReceived || 0)}</td></tr>
     <tr style="border-top:2px solid #6d1a2d"><td style="padding:4px"><b>Baqaya</b></td><td style="padding:4px;text-align:right"><b>${fmtRs((e.total || 0) - (e.amountReceived || 0))}</b></td></tr>
   </table>
-  ${ggSignupBannerHTML()}
   <div style="margin-top:36px;font-size:12px;color:#666"><span>Dastakhat: ____________________</span></div>` : ''}
-  ${pfootHTML(idx + 1, totalPages)}</div>`;
+  ${isLast ? bottomGroupHTML(idx + 1, totalPages, true) : pfootHTML(idx + 1, totalPages)}</div>`;
   }).join('');
 }
 // Print se pehle printArea ki images (GG logo) ke load ka intezaar — warna pehli print mein logo reh jata hai
@@ -1740,13 +1750,15 @@ async function downloadPDF(filename) {
     holder.appendChild(clone); document.body.appendChild(holder);
     // Clone page ke bilkul upar se shuru ho — koi inherited margin/padding upar ki khaali patti nahi banata
     clone.style.margin = '0'; clone.style.padding = '0'; clone.style.display = 'block';
-    // Har page-sheet ko bilkul aik A4 page ki height do (~1000px clone scale par): har sheet apne
-    // page par aye gi — header upar, branding line (flex margin-top:auto) page ke bilkul neeche.
-    // Rows pehle se fix count (ENTRIES_PER_PAGE) mein banti hui hain, is liye kisi sheet ka
-    // content is height se bahir nahi jata; purana single-wrapper wala tareeqa khatam.
-    clone.querySelectorAll('.psheet').forEach(sh => { sh.style.height = '1000px'; sh.style.minHeight = '1000px'; });
+    // Har page-sheet ko A4 page ki height ke qareeb-tareen height do (1080px clone scale par — branding line
+    // page ke ~96% neeche tak jati hai): har sheet apne page par aye gi — header upar, branding line
+    // (flex margin-top:auto) page ke bilkul neeche. Page breaks CSS mode se hote hain (neeche pagebreak
+    // option + base CSS mein .psheet ka page-break-after) taake sheets darmiyan se na kattein; 'legacy'
+    // mode backup hai. Rows pehle se fix count (ENTRIES_PER_PAGE) mein banti hui hain, is liye kisi
+    // sheet ka content is height se bahir nahi jata; purana single-wrapper wala tareeqa khatam.
+    clone.querySelectorAll('.psheet').forEach(sh => { sh.style.height = '1080px'; sh.style.minHeight = '1080px'; });
     try {
-      await window.html2pdf().set({ margin: 8, filename, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(clone).save();
+      await window.html2pdf().set({ margin: 8, filename, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['css', 'legacy'] } }).from(clone).save();
       toast('PDF download ho gaya'); sfx('save');
       holder.remove();
       return;
@@ -1775,8 +1787,7 @@ function buildStatementPrint(key) {
   ${printHeaderHTML(p)}
   <h3 style="margin:6px 0 6px">Khata Statement — ${esc(l.code)} • ${esc(l.name)}${idx ? ' (jari)' : ''}</h3>
   <table style="width:100%;border-collapse:collapse;font-size:13px">${head}${chunk.join('')}</table>
-  ${idx === totalPages - 1 ? ggSignupBannerHTML() : ''}
-  ${pfootHTML(idx + 1, totalPages)}</div>`).join('');
+  ${idx === totalPages - 1 ? bottomGroupHTML(idx + 1, totalPages, true) : pfootHTML(idx + 1, totalPages)}</div>`).join('');
   return 'Statement-' + pdfName(l.name) + '.pdf';
 }
 function printStatement(key) { buildStatementPrint(key); doPrint(); }
