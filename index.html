@@ -1308,6 +1308,12 @@ function openEntry(type, presetProductId) {
   $('entryModal').classList.remove('hidden');
 }
 function fieldVal(id) { const el = $(id); return el ? el.value : ''; }
+/* ============ COMMA RULE — amount wale tamam khaanon mein comma khud lagta hai (display wala hi grouping: en-IN / lakh style) ============ */
+const fmtNum = n => ((+n) || 0).toLocaleString('en-IN');
+const parseAmt = s => parseInt(String(s ?? '').replace(/[^0-9]/g, ''), 10) || 0;
+const amtVal = x => (x === '' || x === null || x === undefined) ? '' : fmtNum(parseAmt(x));
+function fmtAmtInput(el) { if (!el) return; const digits = String(el.value).replace(/[^0-9]/g, ''); el.value = digits === '' ? '' : fmtNum(parseInt(digits, 10) || 0); }
+document.addEventListener('input', e => { const el = e.target; if (el && el.classList && el.classList.contains('amt-in')) fmtAmtInput(el); });
 function stashDraft() {
   if (!entryDraft) return;
   ['f_date', 'f_party', 'f_product', 'f_qty', 'f_rate', 'f_amount', 'f_paid', 'f_account', 'f_lot', 'f_note'].forEach(id => {
@@ -1326,7 +1332,7 @@ function saleLineRowHTML(l) {
     </div>
     <div class="grid grid-cols-2 gap-2">
       <div><label class="lbl">Quantity</label><input type="number" class="field sl-qty" min="0" step="any" value="${esc(l.qty ?? '')}"></div>
-      <div><label class="lbl">Rate</label><input type="number" class="field sl-rate" min="0" step="any" value="${esc(l.rate ?? '')}"></div>
+      <div><label class="lbl">Rate</label><input type="text" inputmode="numeric" class="field sl-rate amt-in" value="${esc(amtVal(l.rate ?? ''))}"></div>
     </div>
     <div><label class="lbl">Lot</label><select class="field sl-lot">${lotOptions(pid, l.lotId || '')}</select></div>
     <div class="sl-calc text-sm"></div>
@@ -1336,7 +1342,7 @@ function readSaleLines() {
   return [...document.querySelectorAll('#saleLines .sale-line')].map(row => ({
     productId: row.querySelector('.sl-product').value,
     qty: parseFloat(row.querySelector('.sl-qty').value) || 0,
-    rate: parseFloat(row.querySelector('.sl-rate').value) || 0,
+    rate: parseAmt(row.querySelector('.sl-rate').value),
     lotId: row.querySelector('.sl-lot').value || null
   }));
 }
@@ -1367,26 +1373,26 @@ function buildEntryForm() {
     html += `<div><label class="lbl">Buyer / Client</label><select id="f_party" class="field">${partyOptions('buyer', v.f_party)}</select></div>
     <div id="saleLines" class="space-y-2">${initLines.map(saleLineRowHTML).join('')}</div>
     <button type="button" id="btnAddSaleLine" class="btn-cream w-full py-2 text-sm">+ Item add karein</button>
-    <div><label class="lbl">Wasool Hua</label><input type="number" id="f_paid" class="field" min="0" step="any" value="${esc(v.f_paid || '0')}"></div>` + noteF;
+    <div><label class="lbl">Wasool Hua</label><input type="text" inputmode="numeric" id="f_paid" class="field amt-in" value="${esc(amtVal(v.f_paid || '0'))}"></div>` + noteF;
   } else if (t === 'purchase') {
     html += `<div><label class="lbl">Seller / Supplier</label><select id="f_party" class="field">${partyOptions('seller', v.f_party)}</select></div>
     <div><label class="lbl">Product</label><select id="f_product" class="field">${productOptions(v.f_product || entryDraft.presetProductId)}</select></div>
     <div class="grid grid-cols-2 gap-2">
       <div><label class="lbl">Quantity</label><input type="number" id="f_qty" class="field" min="0" step="any" value="${esc(v.f_qty || '')}"></div>
-      <div><label class="lbl">Rate</label><input type="number" id="f_rate" class="field" min="0" step="any" value="${esc(v.f_rate || '')}"></div>
+      <div><label class="lbl">Rate</label><input type="text" inputmode="numeric" id="f_rate" class="field amt-in" value="${esc(amtVal(v.f_rate || ''))}"></div>
     </div>
-    <div><label class="lbl">Ada Kiya</label><input type="number" id="f_paid" class="field" min="0" step="any" value="${esc(v.f_paid || '0')}"></div>` + noteF;
+    <div><label class="lbl">Ada Kiya</label><input type="text" inputmode="numeric" id="f_paid" class="field amt-in" value="${esc(amtVal(v.f_paid || '0'))}"></div>` + noteF;
   } else if (t === 'payment_received') {
     html += `<div><label class="lbl">Buyer / Client</label><select id="f_party" class="field">${partyOptions('buyer', v.f_party)}</select></div>
-    <div><label class="lbl">Rakam</label><input type="number" id="f_amount" class="field" min="0" step="any" value="${esc(v.f_amount || '')}"></div>` + noteF;
+    <div><label class="lbl">Rakam</label><input type="text" inputmode="numeric" id="f_amount" class="field amt-in" value="${esc(amtVal(v.f_amount || ''))}"></div>` + noteF;
   } else if (t === 'payment_given') {
     html += `<div><label class="lbl">Seller / Supplier</label><select id="f_party" class="field">${partyOptions('seller', v.f_party)}</select></div>
-    <div><label class="lbl">Rakam</label><input type="number" id="f_amount" class="field" min="0" step="any" value="${esc(v.f_amount || '')}"></div>` + noteF;
+    <div><label class="lbl">Rakam</label><input type="text" inputmode="numeric" id="f_amount" class="field amt-in" value="${esc(amtVal(v.f_amount || ''))}"></div>` + noteF;
   } else if (t === 'expense') {
     html += `<div><label class="lbl">Kharcha Head</label><select id="f_account" class="field">${accountOptions(v.f_account)}</select></div>
-    <div><label class="lbl">Rakam</label><input type="number" id="f_amount" class="field" min="0" step="any" value="${esc(v.f_amount || '')}"></div>` + noteF;
+    <div><label class="lbl">Rakam</label><input type="text" inputmode="numeric" id="f_amount" class="field amt-in" value="${esc(amtVal(v.f_amount || ''))}"></div>` + noteF;
   } else if (t === 'capital' || t === 'drawing') {
-    html += `<div><label class="lbl">Rakam</label><input type="number" id="f_amount" class="field" min="0" step="any" value="${esc(v.f_amount || '')}"></div>` + noteF;
+    html += `<div><label class="lbl">Rakam</label><input type="text" inputmode="numeric" id="f_amount" class="field amt-in" value="${esc(amtVal(v.f_amount || ''))}"></div>` + noteF;
   }
   $('entryFormFields').innerHTML = html;
   // select par "＋ add" wala raasta + live calculation
@@ -1433,7 +1439,7 @@ function updateCalc() {
     box.innerHTML = txt; box.classList.remove('hidden');
     return;
   }
-  const qty = parseFloat(fieldVal('f_qty')) || 0, rate = parseFloat(fieldVal('f_rate')) || 0;
+  const qty = parseFloat(fieldVal('f_qty')) || 0, rate = parseAmt(fieldVal('f_rate'));
   if (t === 'purchase' && qty > 0 && rate > 0) {
     box.innerHTML = `Total: <b>${fmtRs(qty * rate)}</b> &nbsp;|&nbsp; Naya Lot bane ga: ${qty} pcs @ ${fmtRs(rate)}`;
     box.classList.remove('hidden');
@@ -1445,7 +1451,7 @@ async function saveEntry() {
   const seq = S.data.entries.reduce((m, e) => Math.max(m, e.seq || 0), 0) + 1;
   const base = { id: genId(), code: nextCode('E-', S.data.entries.map(e => e.code)), seq, date, type: t, note: fieldVal('f_note').trim(), status: 'active', createdAt: new Date().toISOString() };
   if (t === 'sale') {
-    const partyId = fieldVal('f_party'), paid = parseFloat(fieldVal('f_paid')) || 0;
+    const partyId = fieldVal('f_party'), paid = parseAmt(fieldVal('f_paid'));
     if (!partyId || partyId === '__add__') { sfx('error'); return toast('Buyer chunein'); }
     const lines = readSaleLines().filter(l => l.productId || l.qty > 0 || l.rate > 0);
     if (!lines.length) { sfx('error'); return toast('Kam az kam aik item add karein'); }
@@ -1460,7 +1466,7 @@ async function saveEntry() {
     Object.assign(base, { partyId, items, productId: items[0].productId, productName: items[0].productName, total: plan.total, amountReceived: Math.min(paid, plan.total) });
   } else if (t === 'purchase') {
     const partyId = fieldVal('f_party'), productId = fieldVal('f_product');
-    const qty = parseFloat(fieldVal('f_qty')) || 0, rate = parseFloat(fieldVal('f_rate')) || 0, paid = parseFloat(fieldVal('f_paid')) || 0;
+    const qty = parseFloat(fieldVal('f_qty')) || 0, rate = parseAmt(fieldVal('f_rate')), paid = parseAmt(fieldVal('f_paid'));
     if (!partyId || partyId === '__add__') { sfx('error'); return toast('Seller chunein'); }
     if (!productId || productId === '__add__') { sfx('error'); return toast('Product chunein'); }
     if (qty <= 0 || rate <= 0) { sfx('error'); return toast('Quantity aur Rate theek likhein'); }
@@ -1468,17 +1474,17 @@ async function saveEntry() {
     Object.assign(base, { partyId, productId, productName: prod ? prod.name : '', qty, rate, total: r2(qty * rate) });
     base.amountPaid = Math.min(paid, base.total);
   } else if (t === 'payment_received' || t === 'payment_given') {
-    const partyId = fieldVal('f_party'), amount = parseFloat(fieldVal('f_amount')) || 0;
+    const partyId = fieldVal('f_party'), amount = parseAmt(fieldVal('f_amount'));
     if (!partyId || partyId === '__add__') { sfx('error'); return toast('Party chunein'); }
     if (amount <= 0) { sfx('error'); return toast('Rakam likhein'); }
     Object.assign(base, { partyId, total: amount });
   } else if (t === 'expense') {
-    const accountId = fieldVal('f_account'), amount = parseFloat(fieldVal('f_amount')) || 0;
+    const accountId = fieldVal('f_account'), amount = parseAmt(fieldVal('f_amount'));
     if (!accountId || accountId === '__add__') { sfx('error'); return toast('Kharcha head chunein'); }
     if (amount <= 0) { sfx('error'); return toast('Rakam likhein'); }
     Object.assign(base, { accountId, total: amount });
   } else { // capital / drawing
-    const amount = parseFloat(fieldVal('f_amount')) || 0;
+    const amount = parseAmt(fieldVal('f_amount'));
     if (amount <= 0) { sfx('error'); return toast('Rakam likhein'); }
     base.total = amount;
   }
