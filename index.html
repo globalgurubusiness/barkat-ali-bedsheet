@@ -116,7 +116,7 @@
   <header class="brand-bg text-white sticky top-0 z-40 shadow">
     <div class="max-w-3xl lg:max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
       <button id="btnMenu" class="shrink-0 rounded-lg px-2 py-2 bg-white/15" aria-label="Menu kholein"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" class="w-6 h-6"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg></button>
-      <img src="logo.png" alt="logo" class="w-10 h-10 rounded-xl object-cover bg-white">
+      <img src="logo.png" alt="logo" class="w-10 h-10 rounded-xl object-contain">
       <div class="flex-1 min-w-0">
         <div class="font-extrabold leading-tight truncate" id="hdrBizName">Barkat Ali Bed Sheet</div>
         <div class="text-[11px] text-white/75 leading-tight">Roznamcha Khata System &bull; Multan</div>
@@ -129,12 +129,12 @@
   <div id="drawerWrap" class="hidden fixed inset-0 z-50">
     <div id="drawerBackdrop" class="absolute inset-0 modal-bg"></div>
     <aside class="absolute left-0 top-0 bottom-0 bg-white shadow-2xl flex flex-col" style="width:min(260px,80vw)">
-      <div class="brand-bg text-white px-4 py-3 flex items-center gap-3">
-        <img src="logo.png" alt="logo" class="w-9 h-9 rounded-xl object-cover bg-white">
+      <div class="brand-bg text-white px-4 py-3 shrink-0 flex items-center gap-3">
+        <img src="logo.png" alt="logo" class="w-9 h-9 rounded-xl object-contain">
         <div class="flex-1 min-w-0 font-extrabold leading-tight truncate" id="drawerBizName">Barkat Ali Bed Sheet</div>
         <button id="btnDrawerClose" class="shrink-0 text-2xl font-bold leading-none px-1" aria-label="Menu band karein">&times;</button>
       </div>
-      <div class="flex-1 overflow-y-auto py-2">
+      <div class="flex-1 min-h-0 overflow-y-auto py-2">
         <button class="draweritem active" data-view="roznamcha"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/></svg></span>Roznamcha</button>
         <button class="draweritem" data-view="khata"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>Khata</button>
         <button class="draweritem" data-view="inventory"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 9.4 7.5 4.2"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></span>Inventory</button>
@@ -142,28 +142,28 @@
         <button class="draweritem" data-view="parties"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Parties</button>
         <button class="draweritem" data-view="more"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6.5h8"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01M8.5 15h.01M12 15h.01M15.5 15h.01M8.5 18.5h.01M12 18.5h.01M15.5 18.5h.01"/></svg></span>Aakhri Hisaab</button>
         <button class="draweritem" data-view="settings"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.51 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.24.6.86 1 1.51 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/></svg></span>Settings</button>
-        <div class="px-2">
-          <div class="border-t border-gray-100 mt-1 pt-3 pb-3">
-            <div class="text-[10px] font-extrabold tracking-[.18em] text-gray-400 mb-2">CONTACT US</div>
-            <a href="https://wa.me/923027374880?text=Assalam%20o%20Alaikum!%20Mujhe%20Barkat%20Ali%20Khata%20app%20ke%20baray%20mein%20madad%20chahiye." target="_blank" rel="noopener" class="drawerContactLink flex items-center gap-1 rounded-lg px-[6px] py-[7px]" style="background:rgba(37,211,102,.10)">
-              <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 shrink-0" fill="#1cb457" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 11.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413"/></svg>
-              <span class="whitespace-nowrap leading-none font-semibold text-[11.5px]" style="color:#24303d">WhatsApp Support <span class="text-[10.5px] font-normal text-gray-500" style="letter-spacing:-.3px">0302-7374880</span></span>
-              <span class="ml-auto shrink-0 font-bold text-[10px] whitespace-nowrap" style="color:#128c4a">Chat &#8594;</span>
-            </a>
-            <div class="flex items-center justify-center gap-2 mt-2.5">
-              <a href="https://www.youtube.com/channel/UC0M6iMpgfweYMBGyu15dP1Q" target="_blank" rel="noopener" class="drawerContactLink flex items-center justify-center w-[34px] h-[34px] rounded-full border border-gray-200 bg-white shrink-0"><svg viewBox="0 0 24 24" class="w-[18px] h-[18px]" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="4" fill="#FF0000"/><path d="M10.2 9.3v5.4L15 12z" fill="#ffffff"/></svg></a>
-              <a href="https://www.facebook.com/globalguruofficial1" target="_blank" rel="noopener" class="drawerContactLink flex items-center justify-center w-[34px] h-[34px] rounded-full border border-gray-200 bg-white shrink-0"><svg viewBox="0 0 24 24" class="w-[18px] h-[18px]" aria-hidden="true"><path fill="#1877F2" d="M15.6 8.4V6.7c0-.8.2-1.2 1.3-1.2h1.7V2.6h-2.5c-2.6 0-3.4 1.9-3.4 3.7v2.1H10v3h2.7v9.6h2.9V11.4h2.6l.4-3h-3z"/></svg></a>
-              <a href="https://www.instagram.com/globalguruofficial1" target="_blank" rel="noopener" class="drawerContactLink flex items-center justify-center w-[34px] h-[34px] rounded-full border border-gray-200 bg-white shrink-0"><svg viewBox="0 0 24 24" class="w-[18px] h-[18px]" fill="none" stroke="#E1306C" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1.2" fill="#E1306C" stroke="none"/></svg></a>
-              <a href="https://www.tiktok.com/@globalguruofficial" target="_blank" rel="noopener" class="drawerContactLink flex items-center justify-center w-[34px] h-[34px] rounded-full border border-gray-200 bg-white shrink-0"><svg viewBox="0 0 24 24" class="w-[18px] h-[18px]" aria-hidden="true"><path fill="#111111" d="M16.6 3c.4 2.2 1.9 3.7 4.4 3.9v3c-1.7 0-3.2-.5-4.4-1.4v6.2c0 3.5-2.4 5.8-5.7 5.8-3 0-5.4-2.3-5.4-5.3 0-3.1 2.6-5.5 6-5.2v3.1c-1.5-.3-2.9.7-2.9 2.1 0 1.2 1 2.2 2.2 2.2 1.4 0 2.4-1 2.4-2.7V3h3.4z"/></svg></a>
-              <a href="https://www.threads.com/@globalguruofficial1" target="_blank" rel="noopener" class="drawerContactLink flex items-center justify-center w-[34px] h-[34px] rounded-full border border-gray-200 bg-white shrink-0"><svg viewBox="0 0 24 24" class="w-[18px] h-[18px]" fill="none" stroke="#111111" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M20.2 12.7c-.4 4-3.4 7.3-8.2 7.3-4.9 0-8.5-3.6-8.5-8S7.1 4 12 4c4.8 0 8.3 3.2 8.5 7.6.1 2.6-1.3 4.4-3.2 4.4-1.7 0-2.9-1.2-2.9-3 0-1.8 1.3-3.1 3.1-3.1 1.3 0 2.4.8 2.8 2"/></svg></a>
-            </div>
-            <a href="https://linktr.ee/Globalguruofficial1" target="_blank" rel="noopener" class="drawerContactLink flex items-center gap-1 mt-2.5 rounded-lg px-[6px] py-[7px]" style="background:#f2f6f4">
-              <svg viewBox="0 0 24 24" class="w-4 h-4 shrink-0" aria-hidden="true"><path fill="#2f9e44" d="M12 2l5.2 6.2h-3L18.6 14H5.4l4.4-5.8h-3L12 2zm-1.1 14h2.2v3h2.6v3H8.3v-3h2.6v-3z"/></svg>
-              <span class="whitespace-nowrap font-semibold text-[11px] brand-text leading-none">All Official Links (Linktree)</span>
-              <span class="ml-auto shrink-0 font-bold text-[10.5px] whitespace-nowrap" style="color:#128c4a">Open &#8594;</span>
-            </a>
-            <p class="mt-3 flex items-center justify-center whitespace-nowrap font-semibold text-gray-400" style="font-size:10px;letter-spacing:-.3px"><img src="logo.png" alt="Barkat Ali" style="width:14px;height:14px;object-fit:contain"><span style="margin:0 3px">Barkat Ali Khata •</span><img src="gg-logo.png" alt="Global Guru" style="width:14px;height:14px;border-radius:9999px"><span style="margin-left:3px">Powered By Global Guru</span></p>
+      </div>
+      <div class="shrink-0 px-2">
+        <div class="border-t border-gray-100 mt-1 pt-3 pb-3">
+          <div class="text-[10px] font-extrabold tracking-[.18em] text-gray-400 mb-2">CONTACT US</div>
+          <a href="https://wa.me/923027374880?text=Assalam%20o%20Alaikum!%20Mujhe%20Barkat%20Ali%20Khata%20app%20ke%20baray%20mein%20madad%20chahiye." target="_blank" rel="noopener" class="drawerContactLink flex items-center gap-1 rounded-lg px-[6px] py-[7px]" style="background:rgba(37,211,102,.10)">
+            <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 shrink-0" fill="#1cb457" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 11.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413"/></svg>
+            <span class="whitespace-nowrap leading-none font-semibold text-[11.5px]" style="color:#24303d">WhatsApp Support <span class="text-[10.5px] font-normal text-gray-500" style="letter-spacing:-.3px">0302-7374880</span></span>
+            <span class="ml-auto shrink-0 font-bold text-[10px] whitespace-nowrap" style="color:#128c4a">Chat &#8594;</span>
+          </a>
+          <div class="flex items-center justify-center gap-2 mt-2.5">
+            <a href="https://www.youtube.com/channel/UC0M6iMpgfweYMBGyu15dP1Q" target="_blank" rel="noopener" class="drawerContactLink flex items-center justify-center w-[34px] h-[34px] rounded-full border border-gray-200 bg-white shrink-0"><svg viewBox="0 0 24 24" class="w-[18px] h-[18px]" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="4" fill="#FF0000"/><path d="M10.2 9.3v5.4L15 12z" fill="#ffffff"/></svg></a>
+            <a href="https://www.facebook.com/globalguruofficial1" target="_blank" rel="noopener" class="drawerContactLink flex items-center justify-center w-[34px] h-[34px] rounded-full border border-gray-200 bg-white shrink-0"><svg viewBox="0 0 24 24" class="w-[18px] h-[18px]" aria-hidden="true"><path fill="#1877F2" d="M15.6 8.4V6.7c0-.8.2-1.2 1.3-1.2h1.7V2.6h-2.5c-2.6 0-3.4 1.9-3.4 3.7v2.1H10v3h2.7v9.6h2.9V11.4h2.6l.4-3h-3z"/></svg></a>
+            <a href="https://www.instagram.com/globalguruofficial1" target="_blank" rel="noopener" class="drawerContactLink flex items-center justify-center w-[34px] h-[34px] rounded-full border border-gray-200 bg-white shrink-0"><svg viewBox="0 0 24 24" class="w-[18px] h-[18px]" fill="none" stroke="#E1306C" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1.2" fill="#E1306C" stroke="none"/></svg></a>
+            <a href="https://www.tiktok.com/@globalguruofficial" target="_blank" rel="noopener" class="drawerContactLink flex items-center justify-center w-[34px] h-[34px] rounded-full border border-gray-200 bg-white shrink-0"><svg viewBox="0 0 24 24" class="w-[18px] h-[18px]" aria-hidden="true"><path fill="#111111" d="M16.6 3c.4 2.2 1.9 3.7 4.4 3.9v3c-1.7 0-3.2-.5-4.4-1.4v6.2c0 3.5-2.4 5.8-5.7 5.8-3 0-5.4-2.3-5.4-5.3 0-3.1 2.6-5.5 6-5.2v3.1c-1.5-.3-2.9.7-2.9 2.1 0 1.2 1 2.2 2.2 2.2 1.4 0 2.4-1 2.4-2.7V3h3.4z"/></svg></a>
+            <a href="https://www.threads.com/@globalguruofficial1" target="_blank" rel="noopener" class="drawerContactLink flex items-center justify-center w-[34px] h-[34px] rounded-full border border-gray-200 bg-white shrink-0"><svg viewBox="0 0 24 24" class="w-[18px] h-[18px]" fill="none" stroke="#111111" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M20.2 12.7c-.4 4-3.4 7.3-8.2 7.3-4.9 0-8.5-3.6-8.5-8S7.1 4 12 4c4.8 0 8.3 3.2 8.5 7.6.1 2.6-1.3 4.4-3.2 4.4-1.7 0-2.9-1.2-2.9-3 0-1.8 1.3-3.1 3.1-3.1 1.3 0 2.4.8 2.8 2"/></svg></a>
           </div>
+          <a href="https://linktr.ee/Globalguruofficial1" target="_blank" rel="noopener" class="drawerContactLink flex items-center gap-1 mt-2.5 rounded-lg px-[6px] py-[7px]" style="background:#f2f6f4">
+            <svg viewBox="0 0 24 24" class="w-4 h-4 shrink-0" aria-hidden="true"><path fill="#2f9e44" d="M12 2l5.2 6.2h-3L18.6 14H5.4l4.4-5.8h-3L12 2zm-1.1 14h2.2v3h2.6v3H8.3v-3h2.6v-3z"/></svg>
+            <span class="whitespace-nowrap font-semibold text-[11px] brand-text leading-none">All Official Links (Linktree)</span>
+            <span class="ml-auto shrink-0 font-bold text-[10.5px] whitespace-nowrap" style="color:#128c4a">Open &#8594;</span>
+          </a>
+          <p class="mt-3 flex items-center justify-center whitespace-nowrap font-semibold text-gray-400" style="font-size:10px;letter-spacing:-.3px"><img src="logo.png" alt="Barkat Ali" style="width:14px;height:14px;object-fit:contain"><span style="margin:0 3px">Barkat Ali Khata •</span><img src="gg-logo.png" alt="Global Guru" style="width:14px;height:14px;border-radius:9999px"><span style="margin-left:3px">Powered By Global Guru</span></p>
         </div>
       </div>
     </aside>
@@ -174,7 +174,7 @@
   </div>
 
   <div id="syncBar" class="hidden" style="background:#fdf3d7;border-bottom:1px solid rgba(176,106,0,.25)">
-    <div class="max-w-3xl lg:max-w-6xl mx-auto px-4 py-1.5 text-center text-[11px] font-bold" style="color:#8a5a00">Net nahi hai — entries is phone mein mehfooz hain, net ate hi khud pohanch jayengi</div>
+    <div id="syncBarText" class="max-w-3xl lg:max-w-6xl mx-auto px-4 py-1.5 text-center text-[11px] font-bold" style="color:#8a5a00">Net nahi hai — entries is device mein mehfooz hain, net ate hi khud pohanch jayengi</div>
   </div>
 
   <main class="max-w-3xl lg:max-w-6xl mx-auto px-3 sm:px-4 lg:px-6">
@@ -1236,7 +1236,7 @@ async function initFirebase() {
   });
 }
 /* ---------------- SYNC / OFFLINE NISHAANI ----------------
-   Header ke neeche patli patti: user ko pata rahe ke entries is phone mein mehfooz
+   Header ke neeche patli patti: user ko pata rahe ke entries is device mein mehfooz
    hain aur net ate hi khud cloud tak pohanch jayengi. Lekin patti har cache walay
    snapshot par NAHI aati (v31 fix): fresh load par pehli snapshots cache se ati
    hain aur net honay ke bawajood patti jhalak jati thi. Naya usool — patti SIRF tab:
@@ -1262,6 +1262,14 @@ function updateSyncBar() {
   // Timer maujood hai matlab pending halat abhi 6s se kam purani hai — patti nahi
   const longPending = _syncPending && !_syncTimer;
   const show = S.mode === 'firebase' && (!navigator.onLine || longPending);
+  if (show) {
+    // Pegham halat ke mutabiq: asal offline par net wala, net on ho lekin sync
+    // 6s se zyada atki rahe to stuck-sync wala (aksar wajah: app kai tabs mein khuli)
+    const t = $('syncBarText');
+    if (t) t.textContent = !navigator.onLine
+      ? 'Net nahi hai — entries is device mein mehfooz hain, net ate hi khud pohanch jayengi'
+      : 'Sync atak gaya hai — agar app kai tabs mein khuli hai to baqi tabs band karke refresh karein. Entries is device mein mehfooz hain.';
+  }
   bar.classList.toggle('hidden', !show);
 }
 window.addEventListener('online', updateSyncBar);
@@ -1747,6 +1755,7 @@ function openStatement(key) {
   $('statementWrap').classList.remove('hidden');
   $('view-khata').classList.add('stmt-open');
   $('statementWrap').innerHTML = `<div class="card p-4">
+    <button class="btn-brand px-3 py-1.5 text-xs mb-3" onclick="backFromStatement()">&#8592; Wapas</button>
     <div class="flex items-start justify-between">
       <div><div class="font-extrabold brand-text">${esc(l.code)} • ${esc(l.name)}</div>
       <div class="text-xs text-gray-500">Statement — Barkat Ali Bed Sheet</div></div>
@@ -1766,6 +1775,8 @@ function closeStatement() {
   $('statementWrap').classList.add('hidden');
   $('view-khata').classList.remove('stmt-open');
 }
+// Statement se wapas ka wazeh rasta (Bunny ki manzoori): seedha Roznamcha par
+function backFromStatement() { closeStatement(); switchView('roznamcha'); }
 async function reactivateMaster(coll, id) {
   await Store.updateMaster(coll, id, { active: true });
   toast('Dobara chalu ho gaya'); sfx('save'); renderAll();
