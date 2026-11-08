@@ -78,7 +78,6 @@
       Google se Login karein
     </button>
     <p id="loginModeNote" class="text-xs text-gray-400 text-center mt-3"></p>
-    <button id="btnDemoLogin" class="btn-cream w-full py-3 mt-2 text-sm hidden">Demo Mode mein dekhein (bina login)</button>
   </div>
   <p class="text-[11px] text-gray-400 font-semibold mt-8 flex items-center justify-center gap-1.5"><img src="gg-logo.png" alt="Global Guru" class="w-4 h-4 rounded-full">Barkat Ali Khata • Powered by Global Guru</p>
 </div>
@@ -92,13 +91,12 @@
         <div class="font-extrabold leading-tight truncate" id="hdrBizName">Barkat Ali Bed Sheet</div>
         <div class="text-[11px] text-white/75 leading-tight">Roznamcha Khata System &bull; Multan</div>
       </div>
-      <span id="modeBadge" class="chip bg-white/20 text-white hidden">DEMO</span>
       <button id="btnLogout" class="text-xs font-bold bg-white/15 rounded-lg px-3 py-2">Logout</button>
     </div>
   </header>
 
-  <div id="demoBanner" class="hidden" style="background:#f3e2c7;border-bottom:1px solid rgba(109,26,45,.18)">
-    <div class="max-w-3xl lg:max-w-6xl mx-auto px-4 py-1.5 text-center text-[11px] font-extrabold tracking-wide brand-text">Demo Session</div>
+  <div id="setupBanner" class="hidden" style="background:#f3e2c7;border-bottom:1px solid rgba(109,26,45,.18)">
+    <div class="max-w-3xl lg:max-w-6xl mx-auto px-4 py-1.5 text-center text-[11px] font-extrabold tracking-wide brand-text">Khata Setup</div>
   </div>
 
   <main class="max-w-3xl lg:max-w-6xl mx-auto px-3 sm:px-4 lg:px-6">
@@ -221,7 +219,7 @@
         <div><label class="lbl">Gmail</label><div id="setupGmail" class="text-sm font-semibold"></div></div>
         <button id="btnOwnerSetup" class="btn-brand w-full py-2.5">Apna Khata Shuru karein</button>
       </div>
-      <div class="card p-4 space-y-3 mb-4 lg:max-w-3xl">
+      <div id="profileCard" class="card p-4 space-y-3 mb-4 lg:max-w-3xl">
         <div class="flex items-center justify-between gap-3">
           <div><div class="font-bold text-sm brand-text">Sound</div><div class="text-xs text-gray-400">Har action par usi ke hisaab ki halki awaaz</div></div>
           <label class="sfx-toggle"><input type="checkbox" id="setSound" class="hidden" checked><span class="track"><span class="knob"></span></span></label>
@@ -237,11 +235,10 @@
         <div><label class="lbl">Upar wala Naam</label><input id="setNameLine" class="field"></div>
         <button id="btnSaveProfile" class="btn-brand w-full py-2.5">Profile Save karein</button>
       </div>
-      <div class="card p-4 space-y-2 mb-4 lg:max-w-3xl">
+      <div id="backupCard" class="card p-4 space-y-2 mb-4 lg:max-w-3xl">
         <div class="font-bold text-sm brand-text">Data Backup</div>
         <button id="btnExport" class="btn-cream w-full py-2.5 text-sm">Poora Data Export (JSON)</button>
         <label class="btn-cream w-full py-2.5 text-sm block text-center cursor-pointer">Backup Import (JSON)<input id="fileImport" type="file" accept=".json" class="hidden"></label>
-        <button id="btnResetDemo" class="btn-cream w-full py-2.5 text-sm hidden" style="color:#c0392b">Demo Data Saaf karein</button>
       </div>
       <div id="resetCard" class="card p-4 space-y-2 mb-4 lg:max-w-3xl">
         <div class="font-bold text-sm brand-text">Default Reset</div>
@@ -267,7 +264,7 @@
           </div>
         </div>
       </div>
-      <div class="card p-4 mb-4 lg:max-w-3xl">
+      <div id="contactCard" class="card p-4 mb-4 lg:max-w-3xl">
         <div class="text-[11px] font-extrabold tracking-[.18em] text-gray-400 mb-3">CONTACT US</div>
         <a href="https://wa.me/923027374880?text=Assalam%20o%20Alaikum!%20Mujhe%20Barkat%20Ali%20Khata%20app%20ke%20baray%20mein%20madad%20chahiye." target="_blank" rel="noopener" class="flex items-center gap-3 rounded-2xl p-3.5" style="background:linear-gradient(135deg,#25d366,#1cb457)">
           <span class="flex items-center justify-center w-11 h-11 rounded-xl shrink-0" style="background:rgba(255,255,255,.22)">
@@ -311,7 +308,6 @@
           <span class="ml-auto shrink-0 font-bold text-sm" style="color:#128c4a">Open &#8594;</span>
         </a>
       </div>
-      <p class="text-[11px] text-gray-400 text-center pb-4">Barkat Ali Bed Sheet &bull; Roznamcha Khata System<br><span class="flex items-center justify-center gap-1.5 mt-1 font-semibold"><img src="gg-logo.png" alt="Global Guru" class="w-4 h-4 rounded-full">Barkat Ali Khata • Powered by Global Guru</span></p>
     </section>
   </main>
 
@@ -600,8 +596,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = BA_CORE;
    1) APP_NAME: business ka display naam (logo par "Barket Ali" aur bill
       par "Barkat Ali" hai — final spelling yahin se aik line mein badle gi)
    2) firebaseConfig: asal Firebase project ki values yahan paste hongi.
-      Jab tak values placeholder hain, app DEMO MODE (localStorage) mein
-      chalegi — poora hisaab waisa hi hoga, data sirf is browser mein rahe ga.
+      App sirf asal Firebase par chalti hai — login ke baghair koi rasta nahi.
    ===================================================================== */
 const APP_NAME = 'Barkat Ali Bed Sheet';
 const firebaseConfig = {
@@ -686,7 +681,7 @@ function normalizeProfile(p) {
 const SEED_PRODUCTS = ['Khes', 'Dari', 'Kambal', 'Crystal', 'Diamond'];
 const SEED_ACCOUNTS = ['Kirya / Transport', 'Mazdoori', 'Chai / Khana', 'Dukkan Kharcha', 'Deegar Kharcha'];
 
-let S = { mode: 'none', uid: null, wid: null, role: null, userEmail: '', userName: '', ws: null, authDemo: false, authDone: false, data: { parties: [], products: [], accounts: [], entries: [], profile: { ...DEFAULT_PROFILE } }, derived: null };
+let S = { mode: 'none', uid: null, wid: null, role: null, userEmail: '', userName: '', ws: null, needsSetup: false, authDone: false, data: { parties: [], products: [], accounts: [], entries: [], profile: { ...DEFAULT_PROFILE } }, derived: null };
 let selectedDate = todayStr();
 let fb = null;          // firebase handles (mode === 'firebase' par)
 let unsubs = [];
@@ -697,47 +692,40 @@ function seedMasters(data) {
   if (!data.accounts.length) data.accounts = SEED_ACCOUNTS.map((n, i) => ({ id: genId() + 'a' + i, code: 'A-' + String(i + 1).padStart(3, '0'), name: n, active: true }));
 }
 
-/* ---------------- STORE (demo = localStorage, firebase = Firestore) ---------------- */
-const LS_KEY = 'barkatali_demo_v1';
-/* Workspace base path — KHATA SHARING model: saara cloud data ab workspaces/{S.wid} ke
+/* ---------------- STORE (Firestore) ----------------
+   Workspace base path — KHATA SHARING model: saara cloud data workspaces/{S.wid} ke
    neeche rehta hai, taake malik + members (alag alag Gmail) AIK hi khata dekhein.
-   Har cloud read/write/listen sirf in helpers se jata hai. */
+   Har cloud read/write/listen sirf in helpers se jata hai. Wid na ho (setup gate)
+   to koi write nahi hoti — ye guard har method mein hai. */
 const wsDocRef = (coll, id) => fb.fs.doc(fb.db, 'workspaces', S.wid, coll, id);
 const wsCollRef = coll => fb.fs.collection(fb.db, 'workspaces', S.wid, coll);
 const Store = {
-  loadDemo() {
-    try { const raw = localStorage.getItem(LS_KEY); if (raw) { S.data = JSON.parse(raw); return; } } catch (e) {}
-    S.data = { parties: [], products: [], accounts: [], entries: [], profile: { ...DEFAULT_PROFILE } };
-    seedMasters(S.data); Store.saveDemo();
-  },
-  saveDemo() { try { localStorage.setItem(LS_KEY, JSON.stringify(S.data)); } catch (e) {} },
   async addMaster(coll, obj) {
-    if (S.mode === 'demo') { S.data[coll].push(obj); Store.saveDemo(); renderAll(); }
-    else { const { setDoc } = fb.fs; await setDoc(wsDocRef(coll, obj.id), obj); }
+    if (!S.wid) return;
+    const { setDoc } = fb.fs; await setDoc(wsDocRef(coll, obj.id), obj);
   },
   async updateMaster(coll, id, patch) {
-    if (S.mode === 'demo') { const o = S.data[coll].find(x => x.id === id); if (o) Object.assign(o, patch); Store.saveDemo(); renderAll(); }
-    else { const { setDoc } = fb.fs; await setDoc(wsDocRef(coll, id), patch, { merge: true }); }
+    if (!S.wid) return;
+    const { setDoc } = fb.fs; await setDoc(wsDocRef(coll, id), patch, { merge: true });
   },
   async removeMaster(coll, id) {
-    if (S.mode === 'demo') { S.data[coll] = S.data[coll].filter(x => x.id !== id); Store.saveDemo(); renderAll(); }
-    else { const { deleteDoc } = fb.fs; await deleteDoc(wsDocRef(coll, id)); }
+    if (!S.wid) return;
+    const { deleteDoc } = fb.fs; await deleteDoc(wsDocRef(coll, id));
   },
   async addEntry(e) {
-    if (S.mode === 'demo') { S.data.entries.push(e); Store.saveDemo(); renderAll(); }
-    else {
-      // Entry stamp: shared khate mein pata rahe kis ne entry lagayi (correction par bhi naya stamp lagta hai)
-      const stamped = { ...e, createdBy: { uid: S.uid, name: S.userName || (S.userEmail ? S.userEmail.split('@')[0] : ''), email: S.userEmail || '' } };
-      const { setDoc } = fb.fs; await setDoc(wsDocRef('entries', e.id), stamped);
-    }
+    if (!S.wid) return;
+    // Entry stamp: shared khate mein pata rahe kis ne entry lagayi (correction par bhi naya stamp lagta hai)
+    const stamped = { ...e, createdBy: { uid: S.uid, name: S.userName || (S.userEmail ? S.userEmail.split('@')[0] : ''), email: S.userEmail || '' } };
+    const { setDoc } = fb.fs; await setDoc(wsDocRef('entries', e.id), stamped);
   },
   async saveProfile(p) {
     S.data.profile = p;
-    if (S.mode === 'demo') { Store.saveDemo(); renderAll(); }
-    else { const { setDoc } = fb.fs; await setDoc(wsDocRef('profile', 'main'), p); }
+    if (!S.wid) return;
+    const { setDoc } = fb.fs; await setDoc(wsDocRef('profile', 'main'), p);
   },
   async replaceAll(data) { // backup import
-    if (S.mode === 'demo') { S.data = data; Store.saveDemo(); renderAll(); return; }
+    if (!S.wid) return;
+    S.data = data;
     const { setDoc } = fb.fs;
     for (const coll of ['parties', 'products', 'accounts', 'entries'])
       for (const o of (data[coll] || [])) await setDoc(wsDocRef(coll, o.id), o);
@@ -765,13 +753,13 @@ async function initFirebase() {
     resolvingWs = false;
     S.authDone = true;
     if (S.wid) {
-      S.mode = 'firebase'; S.authDemo = false;
+      S.mode = 'firebase'; S.needsSetup = false;
       subscribeFirestore();
     } else {
-      // Login hai lekin koi khata nahi mila — DEMO SESSION (local demo store hi chalega,
-      // cloud par kuch nahi parha/likha jayega). Asal khata Owner Setup se shuru hota hai.
-      S.mode = 'demo'; S.role = 'none'; S.authDemo = true;
-      Store.loadDemo();
+      // Login hai lekin koi khata nahi mila — SETUP GATE: koi data load nahi hota,
+      // sirf Owner Setup dikhta hai. Asal khata Owner Setup se shuru hota hai.
+      S.mode = 'firebase'; S.role = 'none'; S.needsSetup = true;
+      S.data = { parties: [], products: [], accounts: [], entries: [], profile: { ...DEFAULT_PROFILE } };
     }
     enterApp();
   });
@@ -808,15 +796,15 @@ function subscribeFirestore() {
    Login ke baad active workspace is tartib se milta hai:
    1) Kisi workspace ke memberEmails mein mera email hai -> woh SHARED khata (role: member)
    2) Warna jo workspace maine khud banaya hai (ownerUid == mera uid) -> role: owner
-   3) Warna DEMO SESSION — koi workspace NAHI banta. Asal khata sirf Settings ke
-      "Owner Setup" se banta hai (naam de kar). Us se pehle sab demo hai. */
+   3) Warna SETUP GATE — koi workspace NAHI banta aur koi data NAHI dikhta.
+      Asal khata sirf Settings ke "Owner Setup" se banta hai (naam de kar). */
 // Pure decision (koi Firebase nahi) — found = { inviteWs, ownedWs } (doc data + id, ya null)
 function pickWorkspace(found) {
   // NOTE: invite AUR apna workspace dono hon to invite wala jeet-ta hai —
   // is dukaan ke use-case mein family ka shared khata hi asal khata hai.
   if (found && found.inviteWs) return { action: 'use', wid: found.inviteWs.id, role: 'member', ws: found.inviteWs };
   if (found && found.ownedWs) return { action: 'use', wid: found.ownedWs.id, role: 'owner', ws: found.ownedWs };
-  return { action: 'demo' };
+  return { action: 'setup' };
 }
 async function resolveWorkspace(user) {
   const { collection, query, where, getDocs } = fb.fs;
@@ -832,25 +820,38 @@ async function resolveWorkspace(user) {
   if (!own.empty) ownedWs = { id: own.docs[0].id, ...own.docs[0].data() };
   const pick = pickWorkspace({ inviteWs, ownedWs });
   if (pick.action === 'use') { S.wid = pick.wid; S.role = pick.role; S.ws = pick.ws; return; }
-  // Demo session: wid null rehta hai, koi create/migration yahan NAHI hoti
+  // Setup gate: wid null rehta hai, koi create/migration yahan NAHI hoti
   S.wid = null; S.role = 'none'; S.ws = null;
 }
-/* ---------------- OWNER SETUP — demo session se asal khata ----------------
+/* ---------------- OWNER SETUP — setup gate se asal khata ----------------
    Workspace banane ki poori app mein YAHI aik jagah hai (login par auto-create khatam).
    Client pehle apna naam + apni pehli Gmail deta hai — tab se asal kaam shuru hota hai. */
-const isAuthDemo = () => !!S.authDemo && S.mode === 'demo' && !S.wid;
+const isSetupState = () => !!S.needsSetup && !S.wid;
 function renderOwnerSetup() {
   const card = $('ownerSetupCard'); if (!card) return;
-  const show = isAuthDemo();
+  const show = isSetupState();
   card.classList.toggle('hidden', !show);
   if (show) $('setupGmail').textContent = S.userEmail || '';
 }
-function renderDemoBanner() {
-  const b = $('demoBanner'); if (!b) return;
-  b.classList.toggle('hidden', S.mode !== 'demo');
+function renderSetupBanner() {
+  const b = $('setupBanner'); if (!b) return;
+  b.classList.toggle('hidden', !S.needsSetup);
+}
+/* SETUP GATE: khata na ho to app band rehti hai — sirf Settings view khulta hai,
+   us mein bhi sirf Owner Setup card (+ header mein Logout). Baqi nav items aur
+   Settings ke saare cards chhup jate hain; data kahin render/use nahi hota. */
+function applySetupGate() {
+  const gate = !!S.needsSetup;
+  document.querySelectorAll('.navbtn').forEach(b => b.classList.toggle('hidden', gate && b.dataset.view !== 'settings'));
+  for (const id of ['profileCard', 'backupCard', 'contactCard']) { const el = $(id); if (el) el.classList.toggle('hidden', gate); }
+  if (gate) {
+    const rc = $('resetCard'); if (rc) rc.classList.add('hidden');
+    const sc = $('sharingCard'); if (sc) sc.classList.add('hidden');
+    switchView('settings');
+  }
 }
 async function setupOwnerKhata() {
-  if (!isAuthDemo() || !fb) return;
+  if (!isSetupState() || !fb) return;
   const name = ($('setupOwnerName').value || '').trim();
   if (!name) { sfx('error'); return toast('Owner ka naam likhein'); }
   try {
@@ -861,8 +862,8 @@ async function setupOwnerKhata() {
     // Purana per-user data ho to naye khate mein copy (legacy mehfooz rehta hai);
     // na ho to subscribeFirestore wala pehli-dafa seed khud lag jata hai
     await migrateLegacyData(S.uid, ref.id);
-    S.authDemo = false; S.mode = 'firebase';
-    // Demo (local) data cloud state se badal jaye — snapshots isay foran bhar denge
+    S.needsSetup = false; S.mode = 'firebase';
+    // Gate wali khaali state cloud state se badal jaye — snapshots isay foran bhar denge
     S.data = { parties: [], products: [], accounts: [], entries: [], profile: { ...DEFAULT_PROFILE } };
     subscribeFirestore();
     applyProfile(); renderAll();
@@ -959,18 +960,14 @@ async function shareRemoveMember(email) {
   } catch (e) { sfx('error'); toast('Nahi hata: ' + e.message); }
 }
 async function googleLogin() {
-  if (CONFIG_IS_PLACEHOLDER) { toast('Firebase config abhi placeholder hai — Demo Mode chal raha hai'); enterDemo(); return; }
-  if (!fb) { sfx('error'); toast('Firebase load nahi hua — page refresh karein ya Demo Mode use karein'); return; }
+  if (CONFIG_IS_PLACEHOLDER) { sfx('error'); toast('Firebase config abhi placeholder hai — asal config lagayein'); return; }
+  if (!fb) { sfx('error'); toast('Firebase load nahi hua — page refresh karein'); return; }
   const provider = new fb.authMod.GoogleAuthProvider();
   try { await fb.authMod.signInWithPopup(fb.auth, provider); }
   catch (e) { try { await fb.authMod.signInWithRedirect(fb.auth, provider); } catch (e2) { sfx('error'); toast('Login error: ' + e2.message); } }
 }
-function enterDemo() { S.mode = 'demo'; S.uid = 'demo'; S.authDemo = false; Store.loadDemo(); enterApp(); }
 function enterApp() {
   $('loginScreen').classList.add('hidden'); $('appScreen').classList.remove('hidden');
-  $('modeBadge').classList.toggle('hidden', S.mode !== 'demo');
-  $('btnResetDemo').classList.toggle('hidden', S.mode !== 'demo');
-  renderDemoBanner();
   applyProfile(); renderAll();
   sfx('login');
 }
@@ -978,7 +975,7 @@ async function logout() {
   if (fb && fb.auth && fb.auth.currentUser) { try { await fb.authMod.signOut(fb.auth); } catch (e) {} }
   unsubs.forEach(u => u()); unsubs = [];
   S.mode = 'none'; S.uid = null; S.wid = null; S.role = null; S.ws = null; S.userEmail = ''; S.userName = '';
-  S.authDemo = false; S.authDone = false; resolvingWs = false;
+  S.needsSetup = false; S.authDone = false; resolvingWs = false;
   $('appScreen').classList.add('hidden'); $('loginScreen').classList.remove('hidden');
 }
 function applyProfile() {
@@ -1081,7 +1078,8 @@ function renderAll() {
   if (typeof renderSharing === 'function') renderSharing();
   if (typeof renderResetCard === 'function') renderResetCard();
   if (typeof renderOwnerSetup === 'function') renderOwnerSetup();
-  if (typeof renderDemoBanner === 'function') renderDemoBanner();
+  if (typeof renderSetupBanner === 'function') renderSetupBanner();
+  if (typeof applySetupGate === 'function') applySetupGate();
 }
 function renderRoznamcha() {
   const d = BA_CORE.dailySummary(S.data, selectedDate);
@@ -1260,6 +1258,7 @@ function renderPnL() {
   <p class="text-xs text-gray-400 mt-2">Ye hisaab Roznamcha ki tamam entries se khud banta hai — koi rakam haath se nahi likhi jati.</p>`;
 }
 function switchView(name) {
+  if (S.needsSetup && name !== 'settings') name = 'settings'; // setup gate: sirf Settings
   document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
   $('view-' + name).classList.remove('hidden');
   document.querySelectorAll('.navbtn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
@@ -1695,42 +1694,34 @@ async function importData(file) {
 /* ================= DEFAULT RESET — khata factory default par wapas =================
    Saari entries / parties / products / heads delete ho kar pehli dafa wala seed dobara
    lagta hai aur profile defaults par wapas jati hai. Login, workspace doc aur sharing
-   (memberEmails) ko NAHI chherta. Cloud mode mein card sirf OWNER ko dikhta hai —
-   member ko card hi nazar nahi ata. Classic Demo mode mein card dikhta hai (local
-   single user); logged-in DEMO SESSION mein card NAHI dikhta (asal khata hi nahi hai). */
+   (memberEmails) ko NAHI chherta. Card sirf OWNER ko dikhta hai — member ko card hi
+   nazar nahi ata, aur setup gate (khata hi nahi) mein bhi card nahi dikhta. */
 function renderResetCard() {
   const card = $('resetCard'); if (!card) return;
-  // Classic demo ya cloud OWNER — logged-in demo session aur member ko card nahi dikhta
-  const show = (S.mode === 'demo' && !S.authDemo) || (S.mode === 'firebase' && S.role === 'owner');
+  const show = S.mode === 'firebase' && S.role === 'owner' && !!S.wid;
   card.classList.toggle('hidden', !show);
 }
 async function factoryResetData() {
-  if (S.authDemo) return; // demo session mein asal reset nahi — pehle Owner Setup hoga
-  if (S.mode !== 'demo' && S.role !== 'owner') return; // double safety: member reset nahi kar sakta
+  if (!S.wid || S.role !== 'owner') return; // sirf owner — member/gate par reset nahi
   if (!confirm('Saara data reset kar dein? Tamam entries, parties, products aur heads mit jayenge.')) return;
   if (!confirm('Akhri dafa confirm karein — reset ke baad purana data wapas nahi aayega.')) return;
   try {
-    if (S.mode === 'demo') {
-      S.data = { parties: [], products: [], accounts: [], entries: [], profile: { ...DEFAULT_PROFILE } };
-      seedMasters(S.data); Store.saveDemo();
-    } else {
-      const { getDocs, writeBatch } = fb.fs;
-      for (const coll of ['entries', 'parties', 'products', 'accounts']) {
-        const snap = await getDocs(wsCollRef(coll));
-        const docs = snap.docs;
-        for (let i = 0; i < docs.length; i += 450) {
-          const batch = writeBatch(fb.db);
-          docs.slice(i, i + 450).forEach(d => batch.delete(d.ref));
-          await batch.commit();
-        }
+    const { getDocs, writeBatch } = fb.fs;
+    for (const coll of ['entries', 'parties', 'products', 'accounts']) {
+      const snap = await getDocs(wsCollRef(coll));
+      const docs = snap.docs;
+      for (let i = 0; i < docs.length; i += 450) {
+        const batch = writeBatch(fb.db);
+        docs.slice(i, i + 450).forEach(d => batch.delete(d.ref));
+        await batch.commit();
       }
-      // In-memory state foran defaults par — onSnapshot snapshots bhi yahi confirm karenge
-      S.data = { parties: [], products: [], accounts: [], entries: [], profile: { ...DEFAULT_PROFILE } };
-      seedMasters(S.data);
-      for (const p of S.data.products) await Store.addMaster('products', p);
-      for (const a of S.data.accounts) await Store.addMaster('accounts', a);
-      await Store.saveProfile({ ...DEFAULT_PROFILE });
     }
+    // In-memory state foran defaults par — onSnapshot snapshots bhi yahi confirm karenge
+    S.data = { parties: [], products: [], accounts: [], entries: [], profile: { ...DEFAULT_PROFILE } };
+    seedMasters(S.data);
+    for (const p of S.data.products) await Store.addMaster('products', p);
+    for (const a of S.data.accounts) await Store.addMaster('accounts', a);
+    await Store.saveProfile({ ...DEFAULT_PROFILE });
     applyProfile(); renderAll();
     toast('Reset ho gaya'); sfx('save');
   } catch (e) { sfx('error'); toast('Reset nahi hua: ' + e.message); }
@@ -1769,20 +1760,16 @@ $('shareEmail').addEventListener('keydown', e => { if (e.key === 'Enter') { e.pr
 $('contactRows').addEventListener('click', e => { const b = e.target.closest('.c-remove'); if (b) { const row = b.closest('.contact-row'); if (row) row.remove(); } });
 $('btnExport').addEventListener('click', exportData);
 $('fileImport').addEventListener('change', e => { if (e.target.files[0]) importData(e.target.files[0]); e.target.value = ''; });
-$('btnResetDemo').addEventListener('click', () => { if (confirm('Demo data saaf kar dein? Saari demo entries mit jayengi.')) { localStorage.removeItem(LS_KEY); Store.loadDemo(); renderAll(); toast('Demo data saaf ho gaya'); } });
 $('btnFactoryReset').addEventListener('click', factoryResetData);
 $('btnGoogleLogin').addEventListener('click', googleLogin);
-$('btnDemoLogin').addEventListener('click', enterDemo);
 $('btnLogout').addEventListener('click', logout);
 // Init
 $('loginLogo').src = 'data:image/jpeg;base64,' + LOGO_B64;
 if (CONFIG_IS_PLACEHOLDER) {
-  $('loginModeNote').textContent = 'Note: Firebase config abhi placeholder hai, is liye app Demo Mode mein chalegi — data sirf isi browser mein mehfooz rahe ga.';
-  $('btnDemoLogin').classList.remove('hidden');
+  $('loginModeNote').textContent = 'Note: Firebase config abhi placeholder hai — asal config lagne par hi login chalega.';
 } else {
   $('loginModeNote').textContent = 'Apne Google account se login karein — aap ka data sirf aap ko dikhe ga.';
-  $('btnDemoLogin').classList.remove('hidden');
-  initFirebase().catch(e => { $('loginModeNote').textContent = 'Firebase start nahi hua: ' + e.message + ' — Demo Mode use karein.'; });
+  initFirebase().catch(e => { $('loginModeNote').textContent = 'Firebase start nahi hua: ' + e.message; });
 }
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
