@@ -90,19 +90,23 @@
 <body class="min-h-screen pb-[124px]">
 
 <!-- ============ LOGIN ============ -->
-<div id="loginScreen" class="min-h-screen flex flex-col items-center justify-center px-6 py-10">
-  <img id="loginLogo" src="logo-full.png" alt="Barkat Ali Bed Sheet logo" class="w-44 h-auto mb-4">
-  <h1 class="text-2xl font-extrabold brand-text text-center" id="loginBizName">Barkat Ali Bed Sheet</h1>
-  <p class="text-sm text-gray-500 text-center mt-1">Chungi No. 11, Nasir Wali Market, Shop No. 28, Multan</p>
-  <p class="text-sm font-semibold text-gray-600 text-center mt-3">Roznamcha &bull; Khata &bull; Inventory &bull; Talpat</p>
-  <div class="card w-full max-w-sm mt-7 p-5">
-    <button id="btnGoogleLogin" class="btn-brand w-full py-3.5 text-base flex items-center justify-center gap-2">
-      <span class="bg-white text-[#6d1a2d] rounded-full w-6 h-6 flex items-center justify-center font-extrabold text-sm">G</span>
-      Google se Login karein
-    </button>
-    <p id="loginModeNote" class="text-xs text-gray-400 text-center mt-3"></p>
+<div id="loginScreen" class="min-h-screen flex flex-col lg:flex-row items-center justify-center px-6 pt-16 pb-10 lg:gap-24 max-w-6xl mx-auto w-full">
+  <div class="flex flex-col items-center lg:items-start text-center lg:text-left">
+    <img id="loginLogo" src="logo-full.png" alt="Barkat Ali Bed Sheet logo" class="w-44 lg:w-60 h-auto mb-4">
+    <h1 class="text-2xl lg:text-4xl font-extrabold brand-text" id="loginBizName">Barkat Ali Bed Sheet</h1>
+    <p class="text-sm lg:text-base text-gray-500 mt-1">Chungi No. 11, Nasir Wali Market, Shop No. 28, Multan</p>
+    <p class="text-sm lg:text-base font-semibold text-gray-600 mt-3">Roznamcha &bull; Khata &bull; Inventory &bull; Talpat</p>
   </div>
-  <p class="text-[11px] text-gray-400 font-semibold mt-8 flex items-center justify-center gap-1.5"><img src="logo.png" alt="Barkat Ali" class="h-4 w-4 object-contain"><span>Barkat Ali Khata •</span><img src="gg-logo.png" alt="Global Guru" class="w-4 h-4 rounded-full"><span>Powered By Global Guru</span></p>
+  <div class="w-full max-w-sm flex flex-col items-center">
+    <div class="card w-full mt-7 lg:mt-0 p-5">
+      <button id="btnGoogleLogin" class="btn-brand w-full py-3.5 text-base flex items-center justify-center gap-2">
+        <span class="bg-white text-[#6d1a2d] rounded-full w-6 h-6 flex items-center justify-center font-extrabold text-sm">G</span>
+        Google se Login karein
+      </button>
+      <p id="loginModeNote" class="text-xs text-gray-400 text-center mt-3"></p>
+    </div>
+    <p class="text-[11px] text-gray-400 font-semibold mt-8 flex items-center justify-center gap-1.5"><img src="logo.png" alt="Barkat Ali" class="h-4 w-4 object-contain"><span>Barkat Ali Khata •</span><img src="gg-logo.png" alt="Global Guru" class="w-4 h-4 rounded-full"><span>Powered By Global Guru</span></p>
+  </div>
 </div>
 
 <!-- ============ APP ============ -->
