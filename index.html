@@ -346,22 +346,30 @@
     <!-- ===== VIEW: SETTINGS ===== -->
     <section id="view-settings" class="view hidden pt-3">
       <h2 class="text-lg font-extrabold brand-text mb-2">Settings</h2>
-      <div id="wsChooserCard" class="card p-4 space-y-3 mb-4 lg:max-w-3xl mx-auto hidden">
+      <div id="wsChooserCard" class="card p-4 space-y-3 mb-4 lg:max-w-6xl mx-auto hidden">
         <div class="font-bold text-sm brand-text">Apna Khata chunein</div>
         <div id="wsChooserList" class="space-y-2"></div>
       </div>
-      <div id="ownerSetupCard" class="card p-4 space-y-3 mb-4 lg:max-w-3xl mx-auto hidden">
+      <div id="ownerSetupCard" class="card p-4 space-y-3 mb-4 lg:max-w-6xl mx-auto hidden">
         <div class="font-bold text-sm brand-text">Owner Setup</div>
         <div class="rounded-xl p-3 text-xs font-semibold" style="background:#fdf3d7;border:1px solid rgba(176,106,0,.30);color:#8a5a00">Rukiye! Agar aap ki family ya dukaan ka khata pehle se bana hua hai to yahan NAYA khata na banayein. Khata malik Settings mein Khata Sharing se aap ki Gmail add kare ga — phir aap ko wahi khata khul jayega. Naya khata sirf tab banayein jab pehle koi khata na ho aur aap hi malik hon.</div>
         <div><label class="lbl">Owner ka Naam</label><input id="setupOwnerName" class="field"></div>
         <div><label class="lbl">Gmail</label><div id="setupGmail" class="text-sm font-semibold"></div></div>
         <button id="btnOwnerSetup" class="btn-brand w-full py-2.5">Apna Khata Shuru karein</button>
       </div>
-      <div id="profileCard" class="card p-4 space-y-3 mb-4 lg:max-w-3xl mx-auto">
+      <div id="profileCard" class="card p-4 space-y-3 mb-4 lg:max-w-6xl mx-auto">
         <div class="flex items-center justify-between gap-3">
           <div><div class="font-bold text-sm brand-text">Sound</div><div class="text-xs text-gray-400">Har action par usi ke hisaab ki halki awaaz</div></div>
           <label class="sfx-toggle"><input type="checkbox" id="setSound" class="hidden" checked><span class="track"><span class="knob"></span></span></label>
         </div>
+        <div id="profileSummary" class="space-y-2 hidden">
+          <div><div class="lbl">Business ka Naam</div><div id="sumBizName" class="text-base font-extrabold brand-text"></div></div>
+          <div><div class="lbl">Phone Numbers</div><div id="sumBizPhones" class="text-sm font-semibold"></div></div>
+          <div><div class="lbl">Address</div><div id="sumBizAddress" class="text-sm font-semibold"></div></div>
+          <div><div class="lbl">Bill Contacts</div><div id="sumContacts" class="space-y-1"></div></div>
+          <button type="button" id="btnEditProfile" class="btn-brand w-full py-2.5">Tabdeel karein</button>
+        </div>
+        <div id="profileFormWrap" class="space-y-3">
         <div><label class="lbl">Business ka Naam</label><input id="setBizName" class="field"></div>
         <div><label class="lbl">Phone Numbers</label><input id="setBizPhones" class="field"></div>
         <div><label class="lbl">Address</label><input id="setBizAddress" class="field"></div>
@@ -371,18 +379,22 @@
           <button type="button" id="btnAddContact" class="btn-cream w-full py-2 text-sm mt-2">+ Contact add karein</button>
         </div>
         <div><label class="lbl">Upar wala Naam</label><input id="setNameLine" class="field"></div>
-        <button id="btnSaveProfile" class="btn-brand w-full py-2.5">Profile Save karein</button>
+        <div class="flex gap-2">
+          <button id="btnSaveProfile" class="btn-brand flex-1 py-2.5">Profile Save karein</button>
+          <button type="button" id="btnCancelProfile" class="btn-cream px-4 py-2.5">Cancel</button>
+        </div>
+        </div>
       </div>
-      <div id="backupCard" class="card p-4 space-y-2 mb-4 lg:max-w-3xl mx-auto">
+      <div id="backupCard" class="card p-4 space-y-2 mb-4 lg:max-w-6xl mx-auto">
         <div class="font-bold text-sm brand-text">Data Backup</div>
         <button id="btnExport" class="btn-cream w-full py-2.5 text-sm">Poora Data Export (JSON)</button>
         <label id="importLabel" class="btn-cream w-full py-2.5 text-sm block text-center cursor-pointer">Backup Import (JSON)<input id="fileImport" type="file" accept=".json" class="hidden"></label>
       </div>
-      <div id="resetCard" class="card p-4 space-y-2 mb-4 lg:max-w-3xl mx-auto">
+      <div id="resetCard" class="card p-4 space-y-2 mb-4 lg:max-w-6xl mx-auto">
         <div class="font-bold text-sm brand-text">Default Reset</div>
         <button id="btnFactoryReset" class="btn-cream w-full py-2.5 text-sm" style="color:#c0392b">Saara Data Reset karein</button>
       </div>
-      <div id="sharingCard" class="card p-4 space-y-3 mb-4 lg:max-w-3xl mx-auto hidden">
+      <div id="sharingCard" class="card p-4 space-y-3 mb-4 lg:max-w-6xl mx-auto hidden">
         <div class="font-bold text-sm brand-text">Khata Sharing</div>
         <div><label class="lbl">Owner</label><div id="shareOwner" class="text-sm font-semibold"></div>
           <div id="shareOwnerNameEdit" class="hidden mt-2">
@@ -402,7 +414,7 @@
           </div>
         </div>
       </div>
-      <div id="contactCard" class="card p-4 mb-4 lg:max-w-3xl mx-auto">
+      <div id="contactCard" class="card p-4 mb-4 lg:max-w-6xl mx-auto">
         <div class="text-[11px] font-extrabold tracking-[.18em] text-gray-400 mb-3">CONTACT US</div>
         <a href="https://wa.me/923027374880?text=Assalam%20o%20Alaikum!%20Mujhe%20Barkat%20Ali%20Khata%20app%20ke%20baray%20mein%20madad%20chahiye." target="_blank" rel="noopener" class="flex items-center gap-3 rounded-2xl p-3.5" style="background:linear-gradient(135deg,#25d366,#1cb457)">
           <span class="flex items-center justify-center w-11 h-11 rounded-xl shrink-0" style="background:rgba(255,255,255,.22)">
@@ -1113,6 +1125,12 @@ const SEED_ACCOUNTS = ['Kirya / Transport', 'Mazdoori', 'Chai / Khana', 'Dukkan 
 
 let S = { mode: 'none', uid: null, wid: null, role: null, userEmail: '', userName: '', ws: null, wsChoices: null, needsSetup: false, authDone: false, data: { parties: [], products: [], accounts: [], entries: [], profile: { ...DEFAULT_PROFILE } }, derived: null };
 let selectedDate = todayStr();
+/* Profile card ke dikhaway ki halat: profileDocExists = Firestore par profile/main
+   doc mojood hai; profileSavedOnce = is session mein save hua; profileEditMode =
+   Tabdeel dabane par form khula hai (summary ki jagah). */
+let profileDocExists = false;
+let profileSavedOnce = false;
+let profileEditMode = false;
 let fb = null;          // firebase handles (mode === 'firebase' par)
 let unsubs = [];
 let resolvingWs = false;
@@ -1160,6 +1178,7 @@ const Store = {
   },
   async saveProfile(p) {
     S.data.profile = p;
+    profileSavedOnce = true;
     if (!S.wid) return;
     const { setDoc } = fb.fs; await setDoc(wsDocRef('profile', 'main'), p);
   },
@@ -1317,7 +1336,7 @@ function subscribeFirestore() {
   bind('parties', 'parties'); bind('products', 'products'); bind('accounts', 'accounts'); bind('entries', 'entries');
   unsubs.push(onSnapshot(wsDocRef('profile', 'main'), snap => {
     noteSync(snap.metadata);
-    if (snap.exists()) { S.data.profile = { ...DEFAULT_PROFILE, ...snap.data() }; applyProfile(); }
+    if (snap.exists()) { profileDocExists = true; S.data.profile = { ...DEFAULT_PROFILE, ...snap.data() }; applyProfile(); }
   }));
 }
 /* ---------------- KHATA SHARING: workspace resolution ----------------
@@ -1545,6 +1564,7 @@ function applyProfile() {
   $('setNameLine').value = p.nameLine || '';
   const ssEl = $('setSound'); if (ssEl) ssEl.checked = p.sound !== false;
   if (typeof renderContactRows === 'function') renderContactRows(p.contacts);
+  if (typeof renderProfileCard === 'function') renderProfileCard();
 }
 </script>
 
@@ -1660,6 +1680,29 @@ function renderRoleGuards() {
   const memberBlocked = S.mode === 'firebase' && S.role !== 'owner';
   const imp = $('importLabel'); if (imp) imp.classList.toggle('hidden', memberBlocked);
   const ps = $('btnSaveProfile'); if (ps) ps.classList.toggle('hidden', memberBlocked);
+  const tb = $('btnEditProfile'); if (tb) tb.classList.toggle('hidden', memberBlocked);
+}
+/* Profile card ka dikhawa (Bunny ki tajweez): saved profile ho to poora form khula
+   nahi rehta — sirf SUMMARY (khulasa) + "Tabdeel karein" button dikhta hai; Tabdeel
+   par form khulta hai, Save par wapas summary. Profile khaali (pehli setup) ho to
+   form seedha khula dikhta hai. Sirf DIKHAWA badalta hai — data flow (Store.saveProfile,
+   fields, contacts editor, nameLine) bilkul waisa hi hai. */
+function renderProfileCard() {
+  const sum = $('profileSummary'), frm = $('profileFormWrap');
+  if (!sum || !frm) return;
+  const p = normalizeProfile(S.data.profile || { ...DEFAULT_PROFILE });
+  const hasName = !!(p.name && String(p.name).trim());
+  const showSummary = !profileEditMode && hasName && (profileDocExists || profileSavedOnce);
+  sum.classList.toggle('hidden', !showSummary);
+  frm.classList.toggle('hidden', showSummary);
+  if (showSummary) {
+    $('sumBizName').textContent = p.name || '';
+    $('sumBizPhones').textContent = (p.phones || '').trim() || '—';
+    $('sumBizAddress').textContent = (p.address || '').trim() || '—';
+    const rows = (Array.isArray(p.contacts) ? p.contacts : []).filter(c => (c.name || '').trim() || (c.phone1 || '').trim());
+    $('sumContacts').innerHTML = rows.length ? rows.map(c => `<div class="flex items-baseline justify-between gap-3 text-sm"><span class="font-semibold">${esc((c.name || '').trim())}</span>${(c.phone1 || '').trim() ? `<span class="text-gray-500">${esc((c.phone1 || '').trim())}</span>` : ''}</div>`).join('') : '<div class="text-sm text-gray-400">Koi contact nahi</div>';
+  }
+  renderRoleGuards();
 }
 function renderAll() {
   if (S.mode === 'none') return;
@@ -3068,7 +3111,9 @@ $('dayPicker').addEventListener('change', e => { selectedDate = e.target.value |
 $('btnPrevDay').addEventListener('click', () => { const d = new Date(selectedDate); d.setDate(d.getDate() - 1); selectedDate = d.toISOString().slice(0, 10); renderRoznamcha(); });
 $('btnNextDay').addEventListener('click', () => { const d = new Date(selectedDate); d.setDate(d.getDate() + 1); selectedDate = d.toISOString().slice(0, 10); renderRoznamcha(); });
 $('btnToday').addEventListener('click', () => { selectedDate = todayStr(); renderRoznamcha(); });
-$('btnSaveProfile').addEventListener('click', async () => { await Store.saveProfile({ name: $('setBizName').value.trim() || APP_NAME, phones: $('setBizPhones').value.trim(), address: $('setBizAddress').value.trim(), contacts: collectContacts(), nameLine: $('setNameLine').value.trim(), sound: $('setSound').checked }); toast('Profile save ho gaya'); sfx('save'); });
+$('btnSaveProfile').addEventListener('click', async () => { await Store.saveProfile({ name: $('setBizName').value.trim() || APP_NAME, phones: $('setBizPhones').value.trim(), address: $('setBizAddress').value.trim(), contacts: collectContacts(), nameLine: $('setNameLine').value.trim(), sound: $('setSound').checked }); toast('Profile save ho gaya'); sfx('save'); profileEditMode = false; renderProfileCard(); });
+$('btnEditProfile').addEventListener('click', () => { profileEditMode = true; renderProfileCard(); });
+$('btnCancelProfile').addEventListener('click', () => { profileEditMode = false; applyProfile(); });
 $('setSound').addEventListener('change', async e => {
   const on = e.target.checked;
   await Store.saveProfile({ name: $('setBizName').value.trim() || APP_NAME, phones: $('setBizPhones').value.trim(), address: $('setBizAddress').value.trim(), contacts: collectContacts(), nameLine: $('setNameLine').value.trim(), sound: on });
