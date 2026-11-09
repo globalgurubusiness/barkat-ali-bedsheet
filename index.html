@@ -73,18 +73,20 @@
   .psheet:last-child{ page-break-after:auto; }
   .pfoot{ margin-top:auto; padding-top:14px; }
   @media print{
-    @page{ size:A4; margin:10mm; }
+    @page{ size:A4; margin:5mm; }
     body *{ visibility:hidden; }
     #printArea, #printArea *{ visibility:visible; }
     #printArea{ position:absolute; inset:0; display:block!important; padding:0; background:#fff; }
     /* Padding printArea par nahi, har sheet ke ANDAR hai (border-box) — is liye sheet ki total height bilkul
-       min-height jitni hi rehti hai, koi chhupa hua extra nahi. A4 height 297mm − @page margins (10mm upar +
-       10mm neeche) − 0.5mm safety = 276.5mm ≤ printable 277mm: footer usi page ke bottom par rehta hai,
+       min-height jitni hi rehti hai, koi chhupa hua extra nahi. A4 height 297mm − @page margins (5mm upar +
+       5mm neeche) − 0.5mm safety = 286.5mm ≤ printable 287mm: footer usi page ke bottom par rehta hai,
        doosre page par nahi girta; sheet ke baad page break, aakhri sheet ke baad nahi (khaali page nahi banta).
+       @page margin 5mm is liye hai ke print wala rasta bhi PDF (html2pdf) wale raste ki tarah full-width
+       bane — sheet page ki asal chaudi ke mutabiq phailti hai, kinare par bare safaid band nahi bante (v38).
        Height ABSOLUTE mm mein hai, 100vh mein NAHI — vh print mein har browser/device par mukhtalif banta hai
        (kuch par screen ki height gin leta hai) aur sheet page se lambi ho kar aakhri line (branding) doosre
        page par slice ho jati thi; mm har jagah wohi hai. */
-    .psheet{ min-height:276.5mm; page-break-after:always; box-sizing:border-box; padding:10px; }
+    .psheet{ min-height:286.5mm; page-break-after:always; box-sizing:border-box; padding:10px; }
     .psheet:last-child{ page-break-after:auto; }
   }
 </style>
@@ -1044,16 +1046,14 @@ const GG_KHATA_URL = 'https://globalgurubusiness.github.io/gg-khata/';
 // + table head ~28px + footer ~45px nikaal kar ~800px bachta hai; statement ki aik row ~29px ki hai,
 // is liye 20 rows (~580px) aaram se fit hoti hain aur neeche jagah bhi bachi rehti hai.
 const ENTRIES_PER_PAGE = 20;
-// Bill ki aakhri page par items ke saath totals + banner + signature bhi ate hain, is liye wahan items kam rakhe hain.
+// Bill ki aakhri page par items ke saath totals + signature bhi ate hain, is liye wahan items kam rakhe hain.
 const BILL_TOTALS_PAGE_ITEMS = 16;
 // Print footer: branding line hamesha sheet ke bilkul neeche (CSS .pfoot margin-top:auto ke zariye).
 // Kai pages hon to branding line ke bilkul upar dayein taraf chhota "Page X of Y" bhi ata hai.
 const pfootHTML = (page, total, tight) => `<div class="pfoot" style="font-size:11px;color:#666;text-align:center${tight ? ';padding-top:6px' : ''}">${total > 1 ? `<div style="text-align:right;font-size:9px;color:#999;margin-bottom:2px">Page ${page} of ${total}</div>` : ''}${ggBrandHTML()}</div>`;
-// Aakhri sheet ka bottom group: signup banner + branding line AIK wrapper (margin-top:auto) mein chipke hue sheet ke
-// bilkul neeche — banner entries ke foran baad nahi latakta aur us ke neeche safaid khaali jagah nahi banti.
-const bottomGroupHTML = (page, total, withBanner) => `<div style="margin-top:auto">${withBanner ? ggSignupBannerHTML() : ''}${pfootHTML(page, total, true)}</div>`;
-// GG signup banner — SIRF bahar jane wale documents (bill/statement print + WhatsApp statement) ke liye; app ki screens mein NAHI aata. Branding line se upar, branding line hamesha aakhir mein.
-const ggSignupBannerHTML = () => `<div style="margin-top:12px;border:1.5px solid #6d1a2d;border-radius:10px;background:#fffdf8;padding:5px 10px;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact"><span style="font-size:12px;font-weight:800;color:#24303d">Apna hisaab bhi aise hi saaf rakhein!</span> <span style="display:inline-block;margin-left:6px;background:#6d1a2d;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:7px;-webkit-print-color-adjust:exact;print-color-adjust:exact">Apna GG Khata Banayein — FREE Sign Up</span><div style="font-size:10.5px;font-weight:600;color:#6d1a2d;margin-top:1px">Sirf Google account chahiye — 1 minute mein khata tayyar</div></div>`;
+// NOTE (v38, Bunny ka hukum): GG signup banner print/PDF documents (bill/statement) se HAMESHA ke liye hata diya
+// gaya hai — ab har document ke aakhir mein sirf branding line (pfootHTML) ati hai. WhatsApp statement ke TEXT
+// mein GG Khata ka link pehle ki tarah barqarar hai (woh alag cheez hai, yahan se nahi jata).
 const { r2, fmtRs, nextCode } = BA_CORE;
 
 const $ = id => document.getElementById(id);
@@ -2821,7 +2821,7 @@ function billHTML(e) {
   const items = BA_CORE.entryItems(e);
   const sam = BA_CORE.saleAmounts(e);   // gross / discount / net — discount rows sirf tab jab discount > 0
   // Items ko pages (sheets) mein banto: har sheet par ENTRIES_PER_PAGE items; aakhri (totals wali) sheet par
-  // totals + banner + signature ki jagah ke liye zyada se zyada BILL_TOTALS_PAGE_ITEMS items.
+  // totals + signature ki jagah ke liye zyada se zyada BILL_TOTALS_PAGE_ITEMS items.
   const chunks = [];
   for (let i = 0; i < items.length; i += ENTRIES_PER_PAGE) chunks.push(items.slice(i, i + ENTRIES_PER_PAGE));
   if (!chunks.length) chunks.push([]);
@@ -2832,7 +2832,7 @@ function billHTML(e) {
   const rowOf = it => `<tr style="border-bottom:1px solid #ccc"><td style="padding:7px">${it.qty}</td><td style="padding:7px">${esc(it.productName || '')}</td><td style="padding:7px;text-align:right">${fmtRs(it.rate)}</td><td style="padding:7px;text-align:right">${fmtRs(r2((+it.qty || 0) * (+it.rate || 0)))}</td></tr>`;
   return chunks.map((chunk, idx) => {
     const isFirst = idx === 0, isLast = idx === totalPages - 1;
-    return `<div class="psheet" style="font-family:'Segoe UI',sans-serif;color:#24303d;max-width:640px;margin:0 auto">
+    return `<div class="psheet" style="font-family:'Segoe UI',sans-serif;color:#24303d;width:100%">
   ${printHeaderHTML(p)}
   ${isFirst ? `<div style="text-align:center;font-size:12px;margin-top:4px">Hamare haan Khes, Dari, Kambal, Crystal, Diamond dastiyab hain</div>
   <table style="width:100%;border-collapse:collapse;font-size:13px;margin:6px 0"><tr><td style="padding:0">Bill No: <b>${esc(e.code)}</b></td><td style="padding:0;text-align:right">Tareekh: <b>${esc(e.date)}</b></td></tr></table>
@@ -2846,7 +2846,7 @@ function billHTML(e) {
     <tr style="border-top:2px solid #6d1a2d"><td style="padding:4px"><b>Baqaya</b></td><td style="padding:4px;text-align:right"><b>${fmtRs((e.total || 0) - (e.amountReceived || 0))}</b></td></tr>
   </table>
   <div style="margin-top:36px;font-size:12px;color:#666"><span>Dastakhat: ____________________</span></div>` : ''}
-  ${isLast ? bottomGroupHTML(idx + 1, totalPages, true) : pfootHTML(idx + 1, totalPages)}</div>`;
+  ${pfootHTML(idx + 1, totalPages)}</div>`;
   }).join('');
 }
 // Print se pehle printArea ki images (GG logo) ke load ka intezaar — warna pehli print mein logo reh jata hai
@@ -2890,8 +2890,9 @@ async function downloadPDF(filename) {
     // Isi liye neeche jsPDF ka margin 0 hai: margin 8mm hone par html2pdf image ko 210mm chaura scale karke
     // 8mm se shuru karta tha — image dayein kinare se bahar kat ti (measured: left margin 25.7mm / right 9.8mm)
     // aur kul height (285.6mm + 8mm offset) page se bahar ja kar branding line doosre page par slice ho jati
-    // thi (statement PDF 2 pages mein ata tha). Margin 0 par image page par bilkul fit: sheet (680px) clone ke
-    // center mein hai (dono taraf 57px = 15.1mm) aur sheet ki height 1080px ↔ 285.6mm ≤ 297mm — har sheet
+    // thi (statement PDF 2 pages mein ata tha). Margin 0 par image page par bilkul fit: sheet FULL-WIDTH
+    // hai (v38 — koi max-width cap nahi; sheet clone ki poori 794px chaudi leti hai, sirf us ka apna 10px
+    // padding kinara banta hai) aur sheet ki height 1080px ↔ 285.6mm ≤ 297mm — har sheet
     // aik hi page par, branding line sheet ke andar mehfooz. Clone page ke bilkul upar se shuru ho — koi
     // inherited margin/padding khaali patti nahi banata.
     clone.style.margin = '0'; clone.style.padding = '0'; clone.style.display = 'block'; clone.style.width = '794px';
@@ -2903,7 +2904,13 @@ async function downloadPDF(filename) {
     // sheet ka content is height se bahir nahi jata; purana single-wrapper wala tareeqa khatam.
     clone.querySelectorAll('.psheet').forEach(sh => { sh.style.height = '1080px'; sh.style.minHeight = '1080px'; });
     try {
-      await window.html2pdf().set({ margin: 0, filename, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['css', 'legacy'] } }).from(clone).save();
+      // scrollX/scrollY 0 LAZMI hai (v38): html2canvas default mein window ki maujooda scroll position se
+      // capture ka hisaab lagata hai — page scrolled ho (aam halat: lambi statement/list dekh kar Download
+      // dabana) to poori sheet utni hi neeche shift ho kar page se bahir kat jati hai aur neeche wala hissa
+      // (branding line) PDF se gayab ho jata hai (measured: scroll 200 par neeche ke ~320px kat gaye,
+      // scroll 2400 par poora page khaali). 0/0 par capture hamesha sheet ke asal size par banta hai,
+      // banda jahan bhi scrolled ho.
+      await window.html2pdf().set({ margin: 0, filename, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, scrollX: 0, scrollY: 0 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['css', 'legacy'] } }).from(clone).save();
       toast('PDF download ho gaya'); sfx('save');
       holder.remove();
       return;
@@ -2930,11 +2937,11 @@ function buildStatementPrint(key) {
   const totalPages = chunks.length;
   const p = S.data.profile || DEFAULT_PROFILE;
   const head = `<tr style="background:#efe6d2"><th style="padding:6px;text-align:left">Tareekh</th><th style="padding:6px;text-align:left">Tafseel</th><th style="padding:6px;text-align:right">Naame</th><th style="padding:6px;text-align:right">Jama</th><th style="padding:6px;text-align:right">Baqaya</th></tr>`;
-  $('printArea').innerHTML = chunks.map((chunk, idx) => `<div class="psheet" style="font-family:'Segoe UI',sans-serif;color:#24303d;max-width:680px;margin:0 auto">
+  $('printArea').innerHTML = chunks.map((chunk, idx) => `<div class="psheet" style="font-family:'Segoe UI',sans-serif;color:#24303d;width:100%">
   ${printHeaderHTML(p)}
   <h3 style="margin:6px 0 6px">Khata Statement — ${esc(l.code)} • ${esc(l.name)}${idx ? ' (jari)' : ''}</h3>
   <table style="width:100%;border-collapse:collapse;font-size:13px">${head}${chunk.join('')}</table>
-  ${idx === totalPages - 1 ? bottomGroupHTML(idx + 1, totalPages, true) : pfootHTML(idx + 1, totalPages)}</div>`).join('');
+  ${pfootHTML(idx + 1, totalPages)}</div>`).join('');
   return 'Statement-' + pdfName(l.name) + '.pdf';
 }
 function printStatement(key) { buildStatementPrint(key); doPrint(); }
@@ -2985,7 +2992,7 @@ function openDailyReport() {
 function reportSheetHTML(title, subLine, rowsDisplay, footLabel, footValue) {
   const p = S.data.profile || DEFAULT_PROFILE;
   const rows = rowsDisplay.map(r => `<tr style="border-bottom:1px solid #e5dfd0"><td style="padding:5px 8px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#6b7280">${r[0]}</td><td style="padding:5px 8px;text-align:right"><b>${r[1]}</b></td></tr>`).join('');
-  return `<div class="psheet" style="font-family:'Segoe UI',sans-serif;color:#24303d;max-width:640px;margin:0 auto">
+  return `<div class="psheet" style="font-family:'Segoe UI',sans-serif;color:#24303d;width:100%">
   ${printHeaderHTML(p)}
   <h2 style="color:#6d1a2d;text-align:center;font-size:17px;margin:6px 0 2px">${title}</h2>
   <p style="text-align:center;font-size:11.5px;color:#666;margin:0 0 8px">${subLine}</p>
