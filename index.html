@@ -1801,6 +1801,11 @@ function openStatement(key) {
     <td class="py-2 pr-2">${esc(p.note || '')}</td>
     <td class="py-2 text-right">${p.dr ? fmtRs(p.dr) : '—'}</td><td class="py-2 text-right">${p.cr ? fmtRs(p.cr) : '—'}</td>
     <td class="py-2 text-right font-bold">${fmtRs(r2(run * sgn))}</td></tr>`; }).join('');
+  // Grand Total (v39): screen wali statement ke aakhir mein bhi wohi totals jo print/PDF par ate hain —
+  // Kul Naame / Kul Jama apne columns ke neeche, Aakhri Baqaya = aakhri running balance (run) statement sign ke saath.
+  const totDr = r2(posts.reduce((s, x) => s + (+x.dr || 0), 0));
+  const totCr = r2(posts.reduce((s, x) => s + (+x.cr || 0), 0));
+  const totalsRow = posts.length ? `<tfoot><tr style="background:#4f1220;color:#fff"><td colspan="2" class="py-2 pr-2 font-extrabold" style="letter-spacing:.04em">GRAND TOTAL</td><td class="py-2 text-right font-extrabold">${fmtRs(totDr)}</td><td class="py-2 text-right font-extrabold">${fmtRs(totCr)}</td><td class="py-2 text-right font-extrabold" style="color:#b9975b">${fmtRs(r2(run * sgn))}</td></tr></tfoot>` : '';
   const p = key.startsWith('party:') ? partyById(key.slice(6)) : null;
   $('statementWrap').classList.remove('hidden');
   $('view-khata').classList.add('stmt-open');
@@ -1812,7 +1817,7 @@ function openStatement(key) {
       <button class="text-gray-400 text-xl font-bold" onclick="closeStatement()">&times;</button>
     </div>
     <div class="listscroll"><table class="w-full text-sm mt-2"><thead><tr class="text-left text-xs text-gray-400"><th class="py-1">Tareekh</th><th>Tafseel</th><th class="text-right">Naame</th><th class="text-right">Jama</th><th class="text-right">Baqaya</th></tr></thead>
-    <tbody>${rows || '<tr><td colspan="5" class="py-3 text-gray-400">Koi entry nahi</td></tr>'}</tbody></table></div>
+    <tbody>${rows || '<tr><td colspan="5" class="py-3 text-gray-400">Koi entry nahi</td></tr>'}</tbody>${totalsRow}</table></div>
     <div class="flex gap-2 mt-3">
       <button class="btn-cream px-3 py-2 text-xs" onclick="printStatement('${key}')">${ico('printer', 'w-3.5 h-3.5 inline-block')} Print</button>
       <button class="btn-cream px-3 py-2 text-xs" onclick="downloadStatementPDF('${key}')">${ico('download', 'w-3.5 h-3.5 inline-block')} Download PDF</button>
@@ -2937,10 +2942,17 @@ function buildStatementPrint(key) {
   const totalPages = chunks.length;
   const p = S.data.profile || DEFAULT_PROFILE;
   const head = `<tr style="background:#efe6d2"><th style="padding:6px;text-align:left">Tareekh</th><th style="padding:6px;text-align:left">Tafseel</th><th style="padding:6px;text-align:right">Naame</th><th style="padding:6px;text-align:right">Jama</th><th style="padding:6px;text-align:right">Baqaya</th></tr>`;
+  // GRAND TOTAL (Bunny ki hidayat, v39): poori statement ke Kul Naame / Kul Jama aur Aakhri Baqaya —
+  // sirf AAKHRI sheet par, aakhri entry ke foran baad, gehri maroon bar mein (report ke total bar wala andaaz).
+  // Number apne hi column ke neeche ate hain; Baqaya statement wale sign (stmtSign) ke saath.
+  // Bar aik hi satar (~34px) hai — 20 rows wali bhari sheet par bhi jagah aaram se banti hai (neeche render se verify).
+  const totDr = r2(posts.reduce((s, x) => s + (+x.dr || 0), 0));
+  const totCr = r2(posts.reduce((s, x) => s + (+x.cr || 0), 0));
+  const totalsFoot = posts.length ? `<tfoot><tr style="background:#4f1220;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact"><td colspan="2" style="padding:7px;font-weight:800;letter-spacing:.04em">GRAND TOTAL</td><td style="padding:7px;text-align:right;font-weight:800">${fmtRs(totDr)}</td><td style="padding:7px;text-align:right;font-weight:800">${fmtRs(totCr)}</td><td style="padding:7px;text-align:right;font-weight:800;color:#b9975b">${fmtRs(r2((totDr - totCr) * sgn))}</td></tr></tfoot>` : '';
   $('printArea').innerHTML = chunks.map((chunk, idx) => `<div class="psheet" style="font-family:'Segoe UI',sans-serif;color:#24303d;width:100%">
   ${printHeaderHTML(p)}
   <h3 style="margin:6px 0 6px">Khata Statement — ${esc(l.code)} • ${esc(l.name)}${idx ? ' (jari)' : ''}</h3>
-  <table style="width:100%;border-collapse:collapse;font-size:13px">${head}${chunk.join('')}</table>
+  <table style="width:100%;border-collapse:collapse;font-size:13px">${head}${chunk.join('')}${idx === totalPages - 1 ? totalsFoot : ''}</table>
   ${pfootHTML(idx + 1, totalPages)}</div>`).join('');
   return 'Statement-' + pdfName(l.name) + '.pdf';
 }
