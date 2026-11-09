@@ -116,10 +116,12 @@
   <header class="brand-bg text-white sticky top-0 z-40 shadow">
     <div class="max-w-3xl lg:max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
       <button id="btnMenu" class="shrink-0 rounded-lg px-2 py-2 bg-white/15" aria-label="Menu kholein"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" class="w-6 h-6"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg></button>
-      <img src="logo.png" alt="logo" class="w-10 h-10 rounded-xl object-contain">
-      <div class="flex-1 min-w-0">
-        <div class="font-extrabold leading-tight truncate" id="hdrBizName">Barkat Ali Bed Sheet</div>
-        <div class="text-[11px] text-white/75 leading-tight">Roznamcha Khata System &bull; Multan</div>
+      <div id="hdrHome" class="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">
+        <img src="logo.png" alt="logo" class="w-10 h-10 rounded-xl object-contain shrink-0">
+        <div class="flex-1 min-w-0">
+          <div class="font-extrabold leading-tight truncate" id="hdrBizName">Barkat Ali Bed Sheet</div>
+          <div class="text-[11px] text-white/75 leading-tight">Roznamcha Khata System &bull; Multan</div>
+        </div>
       </div>
       <button id="btnLogout" class="text-xs font-bold bg-white/15 rounded-lg px-3 py-2">Logout</button>
     </div>
@@ -178,6 +180,11 @@
   </div>
 
   <main class="max-w-3xl lg:max-w-6xl mx-auto px-3 sm:px-4 lg:px-6">
+
+    <!-- ===== Global Wapas — Roznamcha ke ilawa har view ke sab se upar (v36, Bunny ka hukum: har option mein back button) ===== -->
+    <div id="globalBackWrap" class="hidden pt-3">
+      <button class="btn-brand px-3 py-1.5 text-xs" onclick="switchView('roznamcha')">&#8592; Wapas</button>
+    </div>
 
     <!-- ===== VIEW: ROZNAMCHA ===== -->
     <section id="view-roznamcha" class="view pt-3">
@@ -1984,6 +1991,7 @@ function switchView(name) {
   document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
   $('view-' + name).classList.remove('hidden');
   document.querySelectorAll('.draweritem').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+  const gbw = $('globalBackWrap'); if (gbw) gbw.classList.toggle('hidden', name === 'roznamcha' || !!S.needsSetup);
   window.scrollTo({ top: 0 });
 }
 </script>
@@ -3023,6 +3031,7 @@ async function factoryResetData() {
 function openDrawer() { const w = $('drawerWrap'); if (w) w.classList.remove('hidden'); }
 function closeDrawer() { const w = $('drawerWrap'); if (w) w.classList.add('hidden'); }
 document.querySelectorAll('.draweritem').forEach(b => b.addEventListener('click', () => { sfx('tick'); switchView(b.dataset.view); closeDrawer(); }));
+const hdrHomeEl = $('hdrHome'); if (hdrHomeEl) hdrHomeEl.addEventListener('click', () => { sfx('tick'); switchView('roznamcha'); });
 document.querySelectorAll('.drawerContactLink').forEach(a => a.addEventListener('click', closeDrawer));
 $('btnMenu').addEventListener('click', () => { sfx('tick'); openDrawer(); });
 $('btnDrawerClose').addEventListener('click', closeDrawer);
