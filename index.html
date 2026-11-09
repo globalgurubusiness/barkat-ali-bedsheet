@@ -72,21 +72,26 @@
   .psheet{ page-break-after:always; box-sizing:border-box; padding:10px; }
   .psheet:last-child{ page-break-after:auto; }
   .pfoot{ margin-top:auto; padding-top:14px; }
+  /* V40-P9: print/PDF tables ki lines — har column ke darmiyan vertical line, har row ke
+     neeche halki line (bahir ka numaya border table ke apne inline style mein hai).
+     Sirf #printArea ke andar — screen wali tables bilkul nahi badaltin */
+  #printArea table.ptbl td, #printArea table.ptbl th{ border-right:1px solid #d9cfb8; border-bottom:1px solid #d9cfb8; }
+  #printArea table.ptbl td:last-child, #printArea table.ptbl th:last-child{ border-right:none; }
   @media print{
-    @page{ size:A4; margin:5mm; }
+    @page{ size:A4; margin:4.4mm; }   /* V40-P7: left == right == 4.40mm (Download PDF wali tay jagah jaisi) */
     body *{ visibility:hidden; }
     #printArea, #printArea *{ visibility:visible; }
     #printArea{ position:absolute; inset:0; display:block!important; padding:0; background:#fff; }
     /* Padding printArea par nahi, har sheet ke ANDAR hai (border-box) — is liye sheet ki total height bilkul
-       min-height jitni hi rehti hai, koi chhupa hua extra nahi. A4 height 297mm − @page margins (5mm upar +
-       5mm neeche) − 0.5mm safety = 286.5mm ≤ printable 287mm: footer usi page ke bottom par rehta hai,
+       min-height jitni hi rehti hai, koi chhupa hua extra nahi. A4 height 297mm − @page margins (4.4mm upar +
+       4.4mm neeche) − 0.5mm safety = 287.7mm ≤ printable 288.2mm: footer usi page ke bottom par rehta hai,
        doosre page par nahi girta; sheet ke baad page break, aakhri sheet ke baad nahi (khaali page nahi banta).
-       @page margin 5mm is liye hai ke print wala rasta bhi PDF (html2pdf) wale raste ki tarah full-width
-       bane — sheet page ki asal chaudi ke mutabiq phailti hai, kinare par bare safaid band nahi bante (v38).
+       @page margin 4.4mm (V40-P7) is liye hai ke print wale raste par bhi sheet ke dono kinare bilkul
+       barabar hon — left gap == right gap == 4.40mm, bilkul Download PDF wali tay jagah ki tarah.
        Height ABSOLUTE mm mein hai, 100vh mein NAHI — vh print mein har browser/device par mukhtalif banta hai
        (kuch par screen ki height gin leta hai) aur sheet page se lambi ho kar aakhri line (branding) doosre
        page par slice ho jati thi; mm har jagah wohi hai. */
-    .psheet{ min-height:286.5mm; page-break-after:always; box-sizing:border-box; padding:10px; }
+    .psheet{ min-height:287.7mm; page-break-after:always; box-sizing:border-box; padding:10px; }
     .psheet:last-child{ page-break-after:auto; }
   }
 </style>
@@ -175,10 +180,6 @@
 
   <div id="setupBanner" class="hidden" style="background:#f3e2c7;border-bottom:1px solid rgba(109,26,45,.18)">
     <div class="max-w-3xl lg:max-w-6xl mx-auto px-4 py-1.5 text-center text-[11px] font-extrabold tracking-wide brand-text">Khata Setup</div>
-  </div>
-
-  <div id="syncBar" class="hidden" style="background:#fdf3d7;border-bottom:1px solid rgba(176,106,0,.25)">
-    <div id="syncBarText" class="max-w-3xl lg:max-w-6xl mx-auto px-4 py-1.5 text-center text-[11px] font-bold" style="color:#8a5a00">Net nahi hai — entries is device mein mehfooz hain, net ate hi khud pohanch jayengi</div>
   </div>
 
   <main class="max-w-3xl lg:max-w-6xl mx-auto px-3 sm:px-4 lg:px-6">
@@ -381,6 +382,30 @@
           <button type="button" id="btnAddContact" class="btn-cream w-full py-2 text-sm mt-2">+ Contact add karein</button>
         </div>
         <div><label class="lbl">Upar wala Naam</label><input id="setNameLine" class="field"></div>
+        <div class="grid grid-cols-2 gap-2" id="signStampWrap">
+          <div>
+            <label class="lbl">Signature</label>
+            <div class="rounded-xl p-2 text-center" style="border:1.5px solid #d8dee5">
+              <img id="signPreview" class="hidden mx-auto" style="height:44px;width:auto;max-width:100%;object-fit:contain" alt="Signature">
+              <div id="signEmpty" class="text-xs text-gray-400 py-2">Koi signature nahi</div>
+              <div class="flex gap-2 mt-2">
+                <label class="btn-cream flex-1 py-1.5 text-xs text-center cursor-pointer">Upload<input id="fileSign" type="file" accept="image/*" class="hidden"></label>
+                <button type="button" id="btnSignRemove" class="btn-cream px-3 py-1.5 text-xs hidden">Hataein</button>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label class="lbl">Stamp</label>
+            <div class="rounded-xl p-2 text-center" style="border:1.5px solid #d8dee5">
+              <img id="stampPreview" class="hidden mx-auto" style="height:44px;width:auto;max-width:100%;object-fit:contain" alt="Stamp">
+              <div id="stampEmpty" class="text-xs text-gray-400 py-2">Koi stamp nahi</div>
+              <div class="flex gap-2 mt-2">
+                <label class="btn-cream flex-1 py-1.5 text-xs text-center cursor-pointer">Upload<input id="fileStamp" type="file" accept="image/*" class="hidden"></label>
+                <button type="button" id="btnStampRemove" class="btn-cream px-3 py-1.5 text-xs hidden">Hataein</button>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="flex gap-2">
           <button id="btnSaveProfile" class="btn-brand flex-1 py-2.5">Profile Save karein</button>
           <button type="button" id="btnCancelProfile" class="btn-cream px-4 py-2.5">Cancel</button>
@@ -703,12 +728,23 @@ const BA_CORE = (() => {
       return { alloc: plan.alloc.map(a => ({ ...a, productId })), cost: r2(plan.alloc.reduce((s, a) => s + a.qty * a.rate, 0)) };
     };
 
+    /* V40-P3(i): lot consumption ka record — kis source entry (purchase / opening_stock /
+       sale_return / stock_adjust-in) ke banaye lot se kis ACTIVE entry ne kitna maal liya.
+       Correction ki ROK isi lot provenance se banti hai (source = lot.entryId). */
+    const lotConsumption = {};
+    const noteConsumption = (e, allocs) => {
+      (allocs || []).forEach(a => {
+        const lot = lots[a.lotId]; if (!lot || !lot.entryId || lot.entryId === e.id) return;
+        (lotConsumption[lot.entryId] || (lotConsumption[lot.entryId] = [])).push({ entryId: e.id, code: e.code, type: e.type, qty: a.qty });
+      });
+    };
+
     const salesInfo = {};  // sale entryId -> {cost, profit, alloc, revenue, gross, discount}
     const returnInfo = {}; // sale_return entryId -> {value, cost, margin}
     const outInfo = {};    // purchase_return / stock_adjust-out entryId -> {value, cost, alloc}
     const exchangeInfo = {}; // purchase entryId -> {total, cost, alloc} (exchange wala hissa)
     const productStats = {}, buyerStats = {};
-    const pstat = pid => productStats[pid] || (productStats[pid] = { productId: pid, soldQty: 0, revenue: 0, cogs: 0, profit: 0 });
+    const pstat = pid => productStats[pid] || (productStats[pid] = { productId: pid, soldQty: 0, revenue: 0, cogs: 0, profit: 0, profitExcl: 0 });
     const bstat = pid => buyerStats[pid] || (buyerStats[pid] = { partyId: pid, totalSale: 0, profit: 0 });
 
     for (const e of entries) {
@@ -727,6 +763,7 @@ const BA_CORE = (() => {
           xTotal = r2(xTotal + (+it.qty || 0) * (+it.rate || 0));
           const a = allocateOut(it.productId, it.qty, it.lotId); xCost = r2(xCost + a.cost); xAlloc.push(...a.alloc);
         }
+        noteConsumption(e, xAlloc);
         if (xTotal > 0 || xCost > 0) {
           if (xCost > 0) P(e, 'stock', 0, xCost, 'Exchange maal ki laagat');
           const farq = r2(xTotal - xCost);
@@ -753,18 +790,24 @@ const BA_CORE = (() => {
         let cost = 0; const allAlloc = [];
         const lineTotals = items.map(it => r2((+it.qty || 0) * (+it.rate || 0)));
         let shareAcc = 0;
+        let costComplete = true;   // V40-P3(ii): har line ki laagat POORI mili ya nahi
         items.forEach((it, idx) => {
           const a = allocateOut(it.productId, it.qty, it.lotId);
+          noteConsumption(e, a.alloc);
           cost = r2(cost + a.cost); allAlloc.push(...a.alloc);
           // Discount har line par us ke total ke tanasub se (aakhri line rounding ka baqi le leti hai)
           let share = 0;
           if (amt.discount > 0 && amt.gross > 0) { share = idx === items.length - 1 ? r2(amt.discount - shareAcc) : r2(amt.discount * lineTotals[idx] / amt.gross); shareAcc = r2(shareAcc + share); }
           const ps = pstat(it.productId);
           ps.soldQty = r2(ps.soldQty + (+it.qty || 0)); ps.revenue = r2(ps.revenue + lineTotals[idx] - share); ps.cogs = r2(ps.cogs + a.cost);
+          /* V40-P3(ii): allocated qty line ki qty se kam ho (partial bhi, zero bhi) to
+             line adhoori — us line ka munafa productStats se bhi bahir rakho */
+          const allocQty = (a.alloc || []).reduce((s, x) => s + (+x.qty || 0), 0);
+          if (allocQty < (+it.qty || 0) - 1e-9) { costComplete = false; ps.profitExcl = r2((ps.profitExcl || 0) + r2(lineTotals[idx] - share - a.cost)); }
         });
         if (cost > 0) { P(e, 'cogs', cost, 0, 'Bikey hue maal ki laagat'); P(e, 'stock', 0, cost, 'Stock se kata'); }
-        salesInfo[e.id] = { cost, profit: r2(amt.net - cost), alloc: allAlloc, revenue: amt.net, gross: amt.gross, discount: amt.discount };
-        if (e.partyId) { const bs = bstat(e.partyId); bs.totalSale = r2(bs.totalSale + amt.net); bs.profit = r2(bs.profit + amt.net - cost); }
+        salesInfo[e.id] = { cost, profit: r2(amt.net - cost), alloc: allAlloc, revenue: amt.net, gross: amt.gross, discount: amt.discount, costComplete };
+        if (e.partyId) { const bs = bstat(e.partyId); bs.totalSale = r2(bs.totalSale + amt.net); if (costComplete) bs.profit = r2(bs.profit + amt.net - cost); }
       } else if (e.type === 'sale_return') {
         /* Buyer ne maal wapis kiya: revenue kam (sales Dr), buyer ka lena kam (party Cr),
            maal stock mein laagat par wapis (stock Dr / cogs Cr) — wapis aya maal pass 0 mein
@@ -798,6 +841,7 @@ const BA_CORE = (() => {
           RT = r2(RT + (+it.qty || 0) * (+it.rate || 0));
           const a = allocateOut(it.productId, it.qty, it.lotId); AC = r2(AC + a.cost); allAlloc.push(...a.alloc);
         }
+        noteConsumption(e, allAlloc);
         if (RT > 0) P(e, 'party:' + e.partyId, RT, 0, 'Purchase wapsi');
         if (AC > 0) P(e, 'stock', 0, AC, 'Wapis maal stock se kata');
         const farq = r2(RT - AC);
@@ -822,6 +866,7 @@ const BA_CORE = (() => {
           P(e, 'stock', iTotal, 0, 'Stock barha (adjustment)'); P(e, 'adj', 0, iTotal, 'Stock adjustment (aamdani)');
         } else {
           const a = allocateOut(e.productId, e.qty, e.lotId);
+          noteConsumption(e, a.alloc);
           if (a.cost > 0) { P(e, 'adj', a.cost, 0, 'Stock kam (nuqsan)'); P(e, 'stock', 0, a.cost, 'Stock kam (adjustment)'); }
           outInfo[e.id] = { value: 0, cost: a.cost, alloc: a.alloc };
         }
@@ -862,7 +907,7 @@ const BA_CORE = (() => {
     (state.parties || []).forEach(p => { partyBalances[p.id] = accBal['party:' + p.id] || 0; });
 
     // Product stats ka munafa aakhir mein (revenue − cogs, returns shamil)
-    Object.values(productStats).forEach(ps => { ps.profit = r2(ps.revenue - ps.cogs); });
+    Object.values(productStats).forEach(ps => { ps.profit = r2(ps.revenue - ps.cogs - (ps.profitExcl || 0)); });
 
     // Kharcha/income heads ke totals (acct: accounts se)
     const headTotals = {};
@@ -898,14 +943,16 @@ const BA_CORE = (() => {
     const salesRevenue = r2(-(accBal['sales'] || 0));
     const cogs = r2(accBal['cogs'] || 0);
     let expenses = 0; Object.keys(accBal).forEach(k => { if (k.startsWith('acct:')) expenses = r2(expenses + accBal[k]); });
-    const grossProfit = r2(salesRevenue - cogs);
+    /* V40-P3(ii): adhoori-laagat sales ka munafa Aakhri Hisaab se bhi bahir */
+    const excludedProfit = Object.values(salesInfo).reduce((s, si) => si.costComplete === false ? r2(s + (si.profit || 0)) : s, 0);
+    const grossProfit = r2(salesRevenue - cogs - excludedProfit);
     const adjustment = r2(-(accBal['adj'] || 0));
     const netProfit = r2(grossProfit - expenses + adjustment);
 
     const result = {
       postings, lots, salesInfo, returnInfo, outInfo, exchangeInfo, accBal, talpat, talpatDr, talpatCr,
       talpatBalanced: Math.abs(talpatDr - talpatCr) < 0.01,
-      inventory, partyBalances, productStats, buyerStats, recovery, headTotals,
+      inventory, partyBalances, productStats, buyerStats, recovery, headTotals, lotConsumption, excludedProfit,
       cashBalance: r2(accBal['cash'] || 0),
       bankBalance: r2(accBal['bank'] || 0),
       stockValue: r2(Object.values(inventory).reduce((s, i) => s + i.value, 0)),
@@ -964,7 +1011,7 @@ const BA_CORE = (() => {
     let sale = 0, purchase = 0, wasooli = 0, adaigi = 0, kharcha = 0, profit = 0, cashIn = 0, cashOut = 0, bankIn = 0, bankOut = 0, saleReturn = 0, purchaseReturn = 0;
     for (const e of day) {
       const t = r2(e.total);
-      if (e.type === 'sale') { sale = r2(sale + saleAmounts(e).net); wasooli = r2(wasooli + (e.amountReceived || 0)); profit = r2(profit + (d.salesInfo[e.id] ? d.salesInfo[e.id].profit : 0)); }
+      if (e.type === 'sale') { sale = r2(sale + saleAmounts(e).net); wasooli = r2(wasooli + (e.amountReceived || 0)); profit = r2(profit + (d.salesInfo[e.id] && d.salesInfo[e.id].costComplete !== false ? d.salesInfo[e.id].profit : 0)); }
       if (e.type === 'sale_return') { saleReturn = r2(saleReturn + (d.returnInfo[e.id] ? d.returnInfo[e.id].value : 0)); profit = r2(profit - (d.returnInfo[e.id] ? d.returnInfo[e.id].margin : 0)); wasooli = r2(wasooli - (e.cashRefund || 0)); }
       if (e.type === 'purchase') { purchase = r2(purchase + purchaseAmounts(e).net); adaigi = r2(adaigi + (e.amountPaid || 0)); }
       if (e.type === 'purchase_return') { purchaseReturn = r2(purchaseReturn + (d.outInfo[e.id] ? d.outInfo[e.id].value : 0)); adaigi = r2(adaigi - (e.cashRefund || 0)); }
@@ -1011,7 +1058,9 @@ const BA_CORE = (() => {
     }
     const upto = { ...state, entries: (state.entries || []).filter(e => e.date <= to) };
     const dTo = computeDerived(upto);
-    return { from, to, sale, cogs: cogsNet, expenses, totalExpenses: expTotal, adjustment: adjNet, netProfit: r2(sale - cogsNet - expTotal + adjNet), wasooli, adaigi, closingCash: dTo.cashBalance, closingBank: dTo.bankBalance };
+    let excludedProfit = 0;
+    for (const e of activeEntries(state.entries)) { if (e.date < from || e.date > to) continue; if (e.type === 'sale' && d.salesInfo[e.id] && d.salesInfo[e.id].costComplete === false) excludedProfit = r2(excludedProfit + (d.salesInfo[e.id].profit || 0)); }
+    return { from, to, sale, cogs: cogsNet, expenses, totalExpenses: expTotal, adjustment: adjNet, netProfit: r2(sale - cogsNet - expTotal + adjNet - excludedProfit), excludedProfit, wasooli, adaigi, closingCash: dTo.cashBalance, closingBank: dTo.bankBalance };
   }
 
   return { r2, fmtRs, nextCode, activeEntries, allocateFIFO, computeDerived, planSale, planSaleMulti, entryItems, dailySummary, periodSummary, parseAmt, saleAmounts, purchaseAmounts, normalizeImport, planImportRestore };
@@ -1261,51 +1310,15 @@ async function initFirebase() {
     enterApp();
   });
 }
-/* ---------------- SYNC / OFFLINE NISHAANI ----------------
-   Header ke neeche patli patti: user ko pata rahe ke entries is device mein mehfooz
-   hain aur net ate hi khud cloud tak pohanch jayengi. Lekin patti har cache walay
-   snapshot par NAHI aati (v31 fix): fresh load par pehli snapshots cache se ati
-   hain aur net honay ke bawajood patti jhalak jati thi. Naya usool — patti SIRF tab:
-   (a) browser asal mein offline ho (navigator.onLine === false), YA
-   (b) pending/cache wali halat lagatar ~6 second se zyada barqarar rahe.
-   Server snapshot (fromCache=false, pending nahi) ate hi timer cancel + patti band. */
-let _syncPending = false;
-let _syncTimer = null;
-function noteSync(meta) {
-  if (!meta) return;
-  const p = !!(meta.hasPendingWrites || meta.fromCache);
-  if (p === _syncPending) return;
-  _syncPending = p;
-  if (p) {
-    if (!_syncTimer) _syncTimer = setTimeout(() => { _syncTimer = null; updateSyncBar(); }, 6000);
-  } else {
-    if (_syncTimer) { clearTimeout(_syncTimer); _syncTimer = null; }
-  }
-  updateSyncBar();
-}
-function updateSyncBar() {
-  const bar = $('syncBar'); if (!bar) return;
-  // Timer maujood hai matlab pending halat abhi 6s se kam purani hai — patti nahi
-  const longPending = _syncPending && !_syncTimer;
-  const show = S.mode === 'firebase' && (!navigator.onLine || longPending);
-  if (show) {
-    // Pegham halat ke mutabiq: asal offline par net wala, net on ho lekin sync
-    // 6s se zyada atki rahe to stuck-sync wala (aksar wajah: app kai tabs mein khuli)
-    const t = $('syncBarText');
-    if (t) t.textContent = !navigator.onLine
-      ? 'Net nahi hai — entries is device mein mehfooz hain, net ate hi khud pohanch jayengi'
-      : 'Sync atak gaya hai — agar app kai tabs mein khuli hai to baqi tabs band karke refresh karein. Entries is device mein mehfooz hain.';
-  }
-  bar.classList.toggle('hidden', !show);
-}
-window.addEventListener('online', updateSyncBar);
-window.addEventListener('offline', updateSyncBar);
+/* ---------------- SYNC / OFFLINE ----------------
+   V40-P8 (Bunny ka faisla): sync/offline patti mukammal khatam — kisi bhi halat mein
+   koi banner nahi ata. Firestore ki apni offline mehfoozgi aur sync waisi ki waisi
+   chalti hai; sirf dikhawa hataya gaya hai. */
 function subscribeFirestore() {
   unsubs.forEach(u => u()); unsubs = [];
   const { onSnapshot, doc } = fb.fs;
   // Workspace doc live rahe: members ki list badle to sab ko foran nazar aye
   unsubs.push(onSnapshot(doc(fb.db, 'workspaces', S.wid), snap => {
-    noteSync(snap.metadata);
     if (snap.exists()) { S.ws = { id: snap.id, ...snap.data() }; if (typeof renderSharing === 'function') renderSharing(); }
   }, () => {}));
   /* SEED (pehli dafa ke masters): koi timer nahi — seed SIRF tab hota hai jab products,
@@ -1327,7 +1340,6 @@ function subscribeFirestore() {
   };
   const bind = (coll, key) => {
     unsubs.push(onSnapshot(wsCollRef(coll), snap => {
-      noteSync(snap.metadata);
       S.data[key] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       if (key in _firstSnap && !_firstSnap[key]) { _firstSnap[key] = true; maybeSeed(); }
       renderAll();
@@ -1335,7 +1347,6 @@ function subscribeFirestore() {
   };
   bind('parties', 'parties'); bind('products', 'products'); bind('accounts', 'accounts'); bind('entries', 'entries');
   unsubs.push(onSnapshot(wsDocRef('profile', 'main'), snap => {
-    noteSync(snap.metadata);
     if (snap.exists()) { profileDocExists = true; S.data.profile = { ...DEFAULT_PROFILE, ...snap.data() }; applyProfile(); }
   }));
 }
@@ -1562,6 +1573,7 @@ function applyProfile() {
   $('hdrBizName').textContent = p.name || APP_NAME; $('loginBizName').textContent = p.name || APP_NAME; const dbn = $('drawerBizName'); if (dbn) dbn.textContent = p.name || APP_NAME;
   $('setBizName').value = p.name || ''; $('setBizPhones').value = p.phones || ''; $('setBizAddress').value = p.address || '';
   $('setNameLine').value = p.nameLine || '';
+  if (typeof loadProfileImages === 'function') loadProfileImages();
   const ssEl = $('setSound'); if (ssEl) ssEl.checked = p.sound !== false;
   if (typeof renderContactRows === 'function') renderContactRows(p.contacts);
   if (typeof renderProfileCard === 'function') renderProfileCard();
@@ -1647,10 +1659,14 @@ function entryCard(e, showDate) {
   const d = derived(); const m = TYPE_META[e.type] || { label: e.type, color: '#666', icon: 'file' };
   const isRev = e.isReversal || e.status === 'reversed';
   let extra = '';
-  if (e.type === 'sale' && d.salesInfo[e.id]) extra = `<span class="chip" style="background:#e7f3ec;color:#2e7d4f">Munafa ${fmtRs(d.salesInfo[e.id].profit)}</span>`;
+  if (e.type === 'sale' && d.salesInfo[e.id]) extra = d.salesInfo[e.id].costComplete === false
+    ? `<span class="chip" style="background:#fdf3d7;color:#8a5a00">Munafa: — (Laagat nahi mili)</span>`
+    : `<span class="chip" style="background:#e7f3ec;color:#2e7d4f">Munafa ${fmtRs(d.salesInfo[e.id].profit)}</span>`;
   if (e.isReversal) extra += ` <span class="chip" style="background:#fdecea;color:#c0392b">Correction — ${esc(e.reversesCode || '')} ki ulti entry</span>`;
   if (e.status === 'reversed') extra += ` <span class="chip" style="background:#fdecea;color:#c0392b">Reversed (Correction lag gayi)</span>`;
-  const canCorrect = !isRev;
+  const canCorrect = !e.isReversal && e.status !== 'reversed';   // V40-P3(iii): ulti (reversal) entry ke card par Correction button hi nahi
+  const profImgs = normalizeProfile(S.data.profile || { ...DEFAULT_PROFILE });
+  const hasSignImg = !!profImgs.signImg;   // V40-P6: signature save ho to hi stamp wale bill options ate hain
   return `<div class="card entrycard p-3 ${isRev ? 'revcard' : ''}" style="border-left-color:${m.color}">
     <div class="flex items-start gap-2">
       <div style="color:${m.color}">${ico(m.icon, 'w-5 h-5')}</div>
@@ -1667,8 +1683,9 @@ function entryCard(e, showDate) {
         ${(e.type === 'sale_return' || e.type === 'purchase_return') ? `<div class="text-[11px] text-gray-400">Cash wapis ${fmtRs(e.cashRefund || 0)}</div>` : ''}
       </div>
     </div>
-    <div class="flex gap-2 mt-2">
-      ${e.type === 'sale' && !isRev ? `<button class="btn-cream px-3 py-1.5 text-xs" onclick="printBill('${e.id}')">${ico('printer', 'w-3.5 h-3.5 inline-block')} Print</button><button class="btn-cream px-3 py-1.5 text-xs" onclick="downloadBillPDF('${e.id}')">${ico('download', 'w-3.5 h-3.5 inline-block')} Download PDF</button><button class="btn-cream px-3 py-1.5 text-xs" onclick="shareBillWA('${e.id}')">WhatsApp</button>` : ''}
+    <div class="flex flex-wrap gap-2 mt-2">
+      ${e.type === 'sale' && !isRev ? `<button class="btn-cream px-3 py-1.5 text-xs" onclick="printBill('${e.id}')">${ico('printer', 'w-3.5 h-3.5 inline-block')} Print</button><button class="btn-cream px-3 py-1.5 text-xs" onclick="downloadBillPDF('${e.id}')">${ico('download', 'w-3.5 h-3.5 inline-block')} Download PDF</button>${hasSignImg ? `<button class="btn-cream px-3 py-1.5 text-xs" onclick="printBill('${e.id}', true)">Print with Stamp and Signature</button><button class="btn-cream px-3 py-1.5 text-xs" onclick="downloadBillPDF('${e.id}', true)">PDF with Stamp and Signature</button>` : ''}<button class="btn-cream px-3 py-1.5 text-xs" onclick="shareBillWA('${e.id}')">WhatsApp</button>` : ''}
+      ${e.type === 'purchase' && !isRev ? `<button class="btn-cream px-3 py-1.5 text-xs" onclick="printBill('${e.id}')">${ico('printer', 'w-3.5 h-3.5 inline-block')} Print</button><button class="btn-cream px-3 py-1.5 text-xs" onclick="downloadBillPDF('${e.id}')">${ico('download', 'w-3.5 h-3.5 inline-block')} Download PDF</button>${hasSignImg ? `<button class="btn-cream px-3 py-1.5 text-xs" onclick="printBill('${e.id}', true)">Print with Stamp and Signature</button><button class="btn-cream px-3 py-1.5 text-xs" onclick="downloadBillPDF('${e.id}', true)">PDF with Stamp and Signature</button>` : ''}` : ''}
       ${e.partyId ? `<button class="btn-cream px-3 py-1.5 text-xs" onclick="openStatement('party:${e.partyId}')">Statement</button>` : ''}
       ${canCorrect ? `<button class="px-3 py-1.5 text-xs font-bold rounded-xl" style="background:#fdecea;color:#c0392b" onclick="makeCorrection('${e.id}')">Correction</button>` : ''}
     </div>
@@ -1681,6 +1698,7 @@ function renderRoleGuards() {
   const imp = $('importLabel'); if (imp) imp.classList.toggle('hidden', memberBlocked);
   const ps = $('btnSaveProfile'); if (ps) ps.classList.toggle('hidden', memberBlocked);
   const tb = $('btnEditProfile'); if (tb) tb.classList.toggle('hidden', memberBlocked);
+  const sw = $('signStampWrap'); if (sw) sw.classList.toggle('hidden', memberBlocked);
 }
 /* Profile card ka dikhawa (Bunny ki tajweez): saved profile ho to poora form khula
    nahi rehta — sirf SUMMARY (khulasa) + "Tabdeel karein" button dikhta hai; Tabdeel
@@ -1715,7 +1733,6 @@ function renderAll() {
   if (typeof renderSetupBanner === 'function') renderSetupBanner();
   if (typeof applySetupGate === 'function') applySetupGate();
   renderRoleGuards();
-  if (typeof updateSyncBar === 'function') updateSyncBar();
 }
 function renderRoznamcha() {
   const d = BA_CORE.dailySummary(S.data, selectedDate);
@@ -1788,7 +1805,16 @@ function renderKhata() {
    Ye sirf statement ki display hai — Khata list aur Baqaya/Talpat ke totals (accBal/partyBalances) nahi badalte. */
 function stmtSign(key) {
   if (key === 'capital') return -1;
+  if (key === 'sales') return -1;   // V40-P5: SALE (income) account bhi credit-nature hai — Baqaya Khata list jaisa positive
   if (key.startsWith('party:')) { const p = partyById(key.slice(6)); if (p && p.type === 'seller') return -1; }
+  if (key.startsWith('acct:')) {
+    /* V40-P5: income-nature heads — accounts model mein income/expense ki alag field
+       NAHI hai, is liye nature headTotals se derive hoti hai: jis head ka net (Dr − Cr)
+       negative ho woh credit-nature (income) hai -> flip; expense heads (net positive)
+       aur baqi sab bilkul nahi badalte. */
+    const ht = derived().headTotals[key.slice(5)];
+    if (ht && ht.net < -0.004) return -1;
+  }
   return 1;
 }
 function openStatement(key) {
@@ -2269,7 +2295,7 @@ function buildEntryForm() {
     html += `<div><label class="lbl">Buyer / Client</label><select id="f_party" class="field">${partyOptions('buyer', v.f_party)}</select></div>
     <div id="saleLines" class="space-y-2">${initLines.map(saleLineRowHTML).join('')}</div>
     <button type="button" id="btnAddSaleLine" class="btn-cream w-full py-2 text-sm">+ Item add karein</button>
-    <div><label class="lbl">Discount</label><input type="text" inputmode="numeric" id="f_discount" class="field amt-in" value="${esc(amtVal(v.f_discount || ''))}"></div>
+    <div><label class="lbl">Discount %</label><input type="text" inputmode="numeric" id="f_discount" class="field amt-in" value="${esc(amtVal(v.f_discount || ''))}"></div>
     <div class="grid grid-cols-2 gap-2">
       <div><label class="lbl">Wasool Hua</label><input type="text" inputmode="numeric" id="f_paid" class="field amt-in" value="${esc(amtVal(v.f_paid || '0'))}"></div>
       ${methodF}
@@ -2283,7 +2309,7 @@ function buildEntryForm() {
       <div><label class="lbl">Adad</label><input type="number" id="f_qty" class="field" min="0" step="1" value="${esc(v.f_qty || '')}"></div>
       <div><label class="lbl">Rate</label><input type="text" inputmode="numeric" id="f_rate" class="field amt-in" value="${esc(amtVal(v.f_rate || ''))}"></div>
     </div>
-    <div><label class="lbl">Discount</label><input type="text" inputmode="numeric" id="f_discount" class="field amt-in" value="${esc(amtVal(v.f_discount || ''))}"></div>
+    <div><label class="lbl">Discount %</label><input type="text" inputmode="numeric" id="f_discount" class="field amt-in" value="${esc(amtVal(v.f_discount || ''))}"></div>
     <div class="grid grid-cols-2 gap-2">
       <div><label class="lbl">Ada Kiya</label><input type="text" inputmode="numeric" id="f_paid" class="field amt-in" value="${esc(amtVal(v.f_paid || '0'))}"></div>
       ${methodF}
@@ -2428,10 +2454,11 @@ function updateCalc() {
     const planLines = lines.filter(l => l.productId && l.productId !== '__add__' && l.qty > 0);
     const grand = lines.reduce((s, l) => s + ((l.qty > 0 && l.rate > 0) ? l.qty * l.rate : 0), 0);
     if (!planLines.length || grand <= 0) { box.classList.add('hidden'); return; }
-    const discount = Math.min(parseAmt(fieldVal('f_discount')), grand);
+    const pct = Math.min(Math.max(0, parseAmt(fieldVal('f_discount'))), 100);
+    const discount = r2(grand * pct / 100);
     const paid = parseAmt(fieldVal('f_paid'));
     const net = r2(grand - discount);
-    let txt = `Kul: <b>${fmtRs(grand)}</b>${discount > 0 ? ` — Discount: ${fmtRs(discount)} = Bill: <b>${fmtRs(net)}</b>` : ''} &nbsp;|&nbsp; Wasool: ${fmtRs(paid)} &nbsp;|&nbsp; Baqaya: <b>${fmtRs(net - paid)}</b>`;
+    let txt = `Kul: <b>${fmtRs(grand)}</b>${discount > 0 ? ` — Discount ${pct}% = ${fmtRs(discount)} — Bill: <b>${fmtRs(net)}</b>` : ''} &nbsp;|&nbsp; Wasool: ${fmtRs(paid)} &nbsp;|&nbsp; Baqaya: <b>${fmtRs(net - paid)}</b>`;
     const plan = BA_CORE.planSaleMulti(S.data, planLines);
     if (!plan.ok) {
       const prod = productById(plan.productId);
@@ -2445,11 +2472,11 @@ function updateCalc() {
   }
   const qty = parseFloat(fieldVal('f_qty')) || 0, rate = parseAmt(fieldVal('f_rate'));
   if (t === 'purchase') {
-    const discount = parseAmt(fieldVal('f_discount')), paid = parseAmt(fieldVal('f_paid'));
+    const pct = Math.min(Math.max(0, parseAmt(fieldVal('f_discount'))), 100), paid = parseAmt(fieldVal('f_paid'));
     const exTotal = readExchangeLines().reduce((s, l) => s + l.qty * l.rate, 0);
     if (qty > 0 && rate > 0) {
-      const gross = r2(qty * rate), disc = Math.min(discount, gross), net = r2(gross - disc);
-      box.innerHTML = `Kul: <b>${fmtRs(gross)}</b>${disc > 0 ? ` — Discount: ${fmtRs(disc)} = Net: <b>${fmtRs(net)}</b>` : ''} &nbsp;|&nbsp; Ada Kiya: ${fmtRs(paid)}${exTotal > 0 ? ` &nbsp;|&nbsp; Exchange: ${fmtRs(exTotal)}` : ''} &nbsp;|&nbsp; Baqaya: <b>${fmtRs(net - paid - exTotal)}</b><br><span class="text-xs">Naya Lot bane ga: ${qty} ${unitOf(fieldVal('f_product'))} @ ${fmtRs(rate)}</span>`;
+      const gross = r2(qty * rate), disc = r2(gross * pct / 100), net = r2(gross - disc);
+      box.innerHTML = `Kul: <b>${fmtRs(gross)}</b>${disc > 0 ? ` — Discount ${pct}% = ${fmtRs(disc)} — Net: <b>${fmtRs(net)}</b>` : ''} &nbsp;|&nbsp; Ada Kiya: ${fmtRs(paid)}${exTotal > 0 ? ` &nbsp;|&nbsp; Exchange: ${fmtRs(exTotal)}` : ''} &nbsp;|&nbsp; Baqaya: <b>${fmtRs(net - paid - exTotal)}</b><br><span class="text-xs">Naya Lot bane ga: ${qty} ${unitOf(fieldVal('f_product'))} @ ${fmtRs(rate)}</span>`;
       box.classList.remove('hidden');
     } else box.classList.add('hidden');
     return;
@@ -2513,7 +2540,7 @@ async function saveEntryInner() {
   const base = { id: genId(), code: 'E-' + String(seq).padStart(3, '0'), seq, date, type: t, note: fieldVal('f_note').trim(), status: 'active', createdAt: new Date().toISOString() };
   // Pass 2 ke form fields (abhi hon to parh lo, na hon to mehfooz default): method + discount
   const method = fieldVal('f_method') === 'bank' ? 'bank' : 'cash';
-  let discount = parseAmt(fieldVal('f_discount'));
+  let discount = 0, discountPct = 0;   // V40-P2: Discount field ab PERCENT hai — amount (core ko wahi chahiye) yahin banta hai, pct alag store hota hai
   let partyPromise = null;   // wasooli ke saath waada — entry ke baad party par lagta hai
   if (t === 'sale') {
     const partyId = fieldVal('f_party'), paid = parseAmt(fieldVal('f_paid'));
@@ -2531,10 +2558,10 @@ async function saveEntryInner() {
     /* Allocations AB SAVE NAHI hotin — hisaab har dafa computeDerived mein lot universe se
        dobara banta hai (backdated/correction par khud theek). Sirf chosen lot (lotId) rehta hai.
        Over-payment clamp KHATAM: zyada wasooli = buyer ka advance (core posting khud sambhalti hai) */
-    const items = plan.lines.map(pl => { const pr = productById(pl.productId); return { productId: pl.productId, productName: pr ? pr.name : '', qty: pl.qty, rate: pl.rate, lotId: pl.lotId || null }; });
+    const items = plan.lines.map(pl => { const pr = productById(pl.productId); return { productId: pl.productId, productName: pr ? pr.name : '', qty: pl.qty, rate: pl.rate, lotId: pl.lotId || null, detail: pr ? (pr.detail || '') : '' }; });
     const party = partyById(partyId);
-    discount = Math.min(Math.max(0, discount), plan.total);
-    Object.assign(base, { partyId, partyName: party ? party.name : '', items, productId: items[0].productId, productName: items[0].productName, itemsTotal: plan.total, discount, total: r2(plan.total - discount), amountReceived: paid, payMethod: method });
+    discountPct = Math.min(Math.max(0, parseAmt(fieldVal('f_discount'))), 100); discount = r2(plan.total * discountPct / 100);
+    Object.assign(base, { partyId, partyName: party ? party.name : '', items, productId: items[0].productId, productName: items[0].productName, itemsTotal: plan.total, discount, discountPct, total: r2(plan.total - discount), amountReceived: paid, payMethod: method });
   } else if (t === 'purchase') {
     const partyId = fieldVal('f_party'), productId = fieldVal('f_product');
     const qty = parseFloat(fieldVal('f_qty')) || 0, rate = parseAmt(fieldVal('f_rate')), paid = parseAmt(fieldVal('f_paid'));
@@ -2545,7 +2572,7 @@ async function saveEntryInner() {
     const prod = productById(productId);
     const party = partyById(partyId);
     const grossTotal = r2(qty * rate);
-    discount = Math.min(Math.max(0, discount), grossTotal);
+    discountPct = Math.min(Math.max(0, parseAmt(fieldVal('f_discount'))), 100); discount = r2(grossTotal * discountPct / 100);
     // Exchange lines (Pass 2 form; abhi na hon to []) — net baqaya core mein net − paid − exchangeTotal banta hai.
     // Over-payment clamp KHATAM: zyada adaigi = seller ko advance.
     const exchangeItems = readExchangeLines();
@@ -2560,7 +2587,7 @@ async function saveEntryInner() {
       const xplan = BA_CORE.planSaleMulti(S.data, exchangeItems);
       if (!xplan.ok) { sfx('error'); const xp = productById(xplan.productId); return toast('Exchange ke liye stock kam hai — ' + (xp ? xp.name : 'Product') + ' sirf ' + xplan.available + ' ' + unitOf(xplan.productId) + ' bache hain'); }
     }
-    Object.assign(base, { partyId, partyName: party ? party.name : '', productId, productName: prod ? prod.name : '', qty, rate, itemsTotal: grossTotal, discount, total: r2(grossTotal - discount), amountPaid: paid, payMethod: method });
+    Object.assign(base, { partyId, partyName: party ? party.name : '', productId, productName: prod ? prod.name : '', qty, rate, itemsTotal: grossTotal, discount, discountPct, detail: prod ? (prod.detail || '') : '', total: r2(grossTotal - discount), amountPaid: paid, payMethod: method });
     if (exchangeItems.length) base.exchangeItems = exchangeItems;
   } else if (t === 'payment_received' || t === 'payment_given') {
     const partyId = fieldVal('f_party'), amount = parseAmt(fieldVal('f_amount'));
@@ -2663,9 +2690,18 @@ async function makeCorrection(entryId) {
   if (_correcting) return; // double-tap par do correction nahi
   const e = S.data.entries.find(x => x.id === entryId);
   if (!e || e.isReversal || e.status === 'reversed') return;
-  if (e.type === 'purchase') {
-    const d = derived(); const lot = d.lots[entryId];
-    if (lot && lot.sold > 0.0001) { sfx('error'); return toast('Ye lot bik chuka hai (' + lot.sold + ' pcs) — pehle us sale ki correction karein'); }
+  /* V40-P3(i) ROK: is entry ke banaye lot(s) se kisi ACTIVE entry ne maal liya ho
+     (sale / exchange / purchase-wapsi / stock-kam — lotConsumption computeDerived
+     mein lot provenance se banta hai) to correction NAHI lage gi: pehle woh entries
+     peeche se ulti tartib mein correct hongi. Consumption na ho to correction
+     pehle ki tarah aaram se lagti hai. */
+  const cons = (derived().lotConsumption || {})[entryId] || [];
+  if (cons.length) {
+    const byCode = {};
+    cons.forEach(c => { byCode[c.code] = (byCode[c.code] || 0) + (+c.qty || 0); });
+    sfx('error');
+    alert('Correction nahi lag sakti\n\n' + e.code + ' ke maal se pehle hi ye entries ho chuki hain: ' + Object.keys(byCode).join(', ') + '.\n\nPehle un entries ki correction karein (sab se aakhri wali se peeche ki taraf), phir ' + e.code + ' ki correction lage gi.');
+    return;
   }
   if (!confirm('Correction lagayein?\n\n' + e.code + ' ki entry ghalat thi — ulti (reversal) entry lage gi. Dono entries Roznamcha mein nazar ayengi, hisaab se ye entry khatam ho jayegi.')) return;
   _correcting = true;
@@ -2696,13 +2732,14 @@ function buildAddForm(existing) {
     : S.data.parties.filter(x => x.type === kind).map(x => x.code);
   $('addModalTitle').textContent = titleFor(kind, edit) + (edit ? ' — ' + esc(ex.code || '') : '');
   let html = `<div><label class="lbl">Code</label><input class="field" value="${esc(edit ? ex.code : nextCode(prefixFor(kind), codes))}" disabled></div>
-  <div><label class="lbl">Naam</label><input id="a_name" class="field" value="${esc(ex.name || '')}"></div>`;
-  if (kind === 'buyer' || kind === 'seller') html += `<div><label class="lbl">Phone / WhatsApp</label><input id="a_phone" class="field" value="${esc(ex.phone || '')}"></div>
-  <div><label class="lbl">Address / Sheher</label><input id="a_address" class="field" value="${esc(ex.address || '')}"></div>`;
+  <div><label class="lbl">Naam *</label><input id="a_name" class="field" value="${esc(ex.name || '')}"></div>`;
+  if (kind === 'buyer' || kind === 'seller') html += `<div><label class="lbl">Phone / WhatsApp *</label><input id="a_phone" class="field" value="${esc(ex.phone || '')}"></div>
+  <div><label class="lbl">Address / Sheher *</label><input id="a_address" class="field" value="${esc(ex.address || '')}"></div>`;
   if (kind === 'product') html += `<div class="grid grid-cols-2 gap-2">
     <div><label class="lbl">Unit</label><input id="a_unit" class="field" value="${esc(ex.unit || 'pcs')}"></div>
     <div><label class="lbl">Low-stock Warning</label><input type="number" id="a_low" class="field" value="${esc(ex.lowStock ?? 10)}"></div></div>
-  <div><label class="lbl">Sale Rate (agar tay ho)</label><input type="text" inputmode="numeric" id="a_saleRate" class="field amt-in" value="${esc(amtVal(ex.saleRate || ''))}"></div>`;
+  <div><label class="lbl">Sale Rate (agar tay ho)</label><input type="text" inputmode="numeric" id="a_saleRate" class="field amt-in" value="${esc(amtVal(ex.saleRate || ''))}"></div>
+  <div><label class="lbl">Short Detail</label><input id="a_detail" class="field" value="${esc(ex.detail || '')}"></div>`;
   if (edit) html += `<button id="btnDeactivate" class="w-full py-2.5 text-sm font-bold rounded-xl mt-1" style="background:#fdecea;color:#c0392b">${kind === 'product' ? 'Product band karein' : 'Band karein'}</button>`;
   $('addFormFields').innerHTML = html;
   const deact = $('btnDeactivate');
@@ -2725,6 +2762,14 @@ async function saveAddInner() {
   const kind = addCtx.kind, edit = !!addCtx.editId;
   const name = fieldVal('a_name').trim();
   if (!name) { sfx('error'); return toast('Naam lazmi hai'); }
+  if (kind === 'buyer' || kind === 'seller') {
+    /* V40-P1: Buyer/Seller ke liye Phone/WhatsApp aur Address bhi LAZMI hain —
+       add par bhi, edit par bhi; jo khana khaali ho us ka naam message mein ata hai */
+    const missing = [];
+    if (!fieldVal('a_phone').trim()) missing.push('Phone / WhatsApp');
+    if (!fieldVal('a_address').trim()) missing.push('Address / Sheher');
+    if (missing.length) { sfx('error'); return toast('Ye lazmi khaane baqi hain: ' + missing.join(', ')); }
+  }
   if (!edit) {
     // Duplicate naam ki warning: isi type mein yehi naam pehle se ho to pehle poochho
     const existing = kind === 'product' ? S.data.products : kind === 'account' ? S.data.accounts : S.data.parties.filter(x => x.type === kind);
@@ -2736,7 +2781,7 @@ async function saveAddInner() {
     const coll = kind === 'product' ? 'products' : kind === 'account' ? 'accounts' : 'parties';
     const patch = { name };
     if (kind === 'buyer' || kind === 'seller') { patch.phone = fieldVal('a_phone').trim(); patch.address = fieldVal('a_address').trim(); }
-    if (kind === 'product') { patch.unit = fieldVal('a_unit') || 'pcs'; patch.lowStock = parseFloat(fieldVal('a_low')) || 0; patch.saleRate = parseAmt(fieldVal('a_saleRate')); }
+    if (kind === 'product') { patch.unit = fieldVal('a_unit') || 'pcs'; patch.lowStock = parseFloat(fieldVal('a_low')) || 0; patch.saleRate = parseAmt(fieldVal('a_saleRate')); patch.detail = fieldVal('a_detail').trim(); }
     await Store.updateMaster(coll, addCtx.editId, patch);
     $('addModal').classList.add('hidden'); toast('Update ho gaya'); sfx('save'); renderAll(); return;
   }
@@ -2745,7 +2790,7 @@ async function saveAddInner() {
     const codes = S.data.parties.filter(x => x.type === kind).map(x => x.code);
     await Store.addMaster('parties', { id, code: nextCode(prefixFor(kind), codes), type: kind, name, phone: fieldVal('a_phone').trim(), address: fieldVal('a_address').trim(), active: true, createdAt: new Date().toISOString() });
   } else if (kind === 'product') {
-    await Store.addMaster('products', { id, code: nextCode('P-', S.data.products.map(x => x.code)), name, unit: fieldVal('a_unit') || 'pcs', lowStock: parseFloat(fieldVal('a_low')) || 0, saleRate: parseAmt(fieldVal('a_saleRate')), active: true, createdAt: new Date().toISOString() });
+    await Store.addMaster('products', { id, code: nextCode('P-', S.data.products.map(x => x.code)), name, unit: fieldVal('a_unit') || 'pcs', lowStock: parseFloat(fieldVal('a_low')) || 0, saleRate: parseAmt(fieldVal('a_saleRate')), detail: fieldVal('a_detail').trim(), active: true, createdAt: new Date().toISOString() });
   } else {
     await Store.addMaster('accounts', { id, code: nextCode('A-', S.data.accounts.map(x => x.code)), name, active: true, createdAt: new Date().toISOString() });
   }
@@ -2769,6 +2814,69 @@ async function saveAddInner() {
   renderAll();
 }
 function stashDraftKeep() { /* values pehle stashDraft se mehfooz hain; form dobara bane par wahi lagte hain */ }
+/* ================= SETTINGS: SIGNATURE + STAMP (V40-P6) =================
+   Dukaan ki signature aur stamp ki tasveerein profile ke saath mehfooz hoti hain
+   (upload par resize/compress — har aik ~120KB se bari nahi). Bill par
+   'PDF with Stamp and Signature' / 'Print with Stamp and Signature' ke options
+   sirf tab ate hain jab kam az kam signature save ho. Tasveer lagana/hataana
+   Profile Save par hi asal save hota hai (baqi profile fields ki tarah). */
+let profileSignImg = '', profileStampImg = '';
+function renderSignPreviews() {
+  const si = $('signPreview'), se = $('signEmpty'), sb = $('btnSignRemove');
+  if (si) { if (profileSignImg) si.src = profileSignImg; si.classList.toggle('hidden', !profileSignImg); }
+  if (se) se.classList.toggle('hidden', !!profileSignImg);
+  if (sb) sb.classList.toggle('hidden', !profileSignImg);
+  const ti = $('stampPreview'), te = $('stampEmpty'), tb = $('btnStampRemove');
+  if (ti) { if (profileStampImg) ti.src = profileStampImg; ti.classList.toggle('hidden', !profileStampImg); }
+  if (te) te.classList.toggle('hidden', !!profileStampImg);
+  if (tb) tb.classList.toggle('hidden', !profileStampImg);
+}
+function loadProfileImages() {
+  const p = normalizeProfile(S.data.profile || { ...DEFAULT_PROFILE });
+  profileSignImg = p.signImg || ''; profileStampImg = p.stampImg || '';
+  renderSignPreviews();
+}
+/* Tasveer chhoti karke dataURL: pehle PNG (transparent background mehfooz rehta hai —
+   stamp/sign ke safed hisse kagaz par ghul jate hain), size phir bhi bara ho to
+   JPEG (safed background par, kyunke bill ka kagaz safed hi hota hai) */
+function compressProfileImage(file, maxDim) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const scale = Math.min(1, maxDim / Math.max(img.naturalWidth || 1, img.naturalHeight || 1));
+        const w = Math.max(1, Math.round(img.naturalWidth * scale)), h = Math.max(1, Math.round(img.naturalHeight * scale));
+        const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+        cv.getContext('2d').drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        let out = cv.toDataURL('image/png');
+        if (out.length > 160000) {
+          const cv2 = document.createElement('canvas'); cv2.width = w; cv2.height = h;
+          const c2 = cv2.getContext('2d'); c2.fillStyle = '#ffffff'; c2.fillRect(0, 0, w, h); c2.drawImage(img, 0, 0, w, h);
+          out = cv2.toDataURL('image/jpeg', 0.85);
+        }
+        resolve(out);
+      } catch (err) { reject(err); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('image load nahi hui')); };
+    img.src = url;
+  });
+}
+async function onProfileImagePick(kind, file) {
+  if (!file) return;
+  try {
+    const dataUrl = await compressProfileImage(file, kind === 'sign' ? 640 : 560);
+    if (kind === 'sign') profileSignImg = dataUrl; else profileStampImg = dataUrl;
+    renderSignPreviews();
+    toast('Tasveer lag gayi — Profile Save karne par mehfooz ho gi');
+  } catch (e) { sfx('error'); toast('Tasveer nahi lagi'); }
+}
+/* Profile form ki tamam values aik jagah se — signature/stamp bhi isi mein shamil
+   hain taake Sound toggle jaisi koi bhi profile save tasveerein na mita de */
+function collectProfileFromForm(soundVal) {
+  return { name: $('setBizName').value.trim() || APP_NAME, phones: $('setBizPhones').value.trim(), address: $('setBizAddress').value.trim(), contacts: collectContacts(), nameLine: $('setNameLine').value.trim(), sound: soundVal != null ? soundVal : $('setSound').checked, signImg: profileSignImg || '', stampImg: profileStampImg || '' };
+}
 /* ================= SETTINGS: BILL CONTACTS ================= */
 function contactRowHTML(c) {
   c = c || { name: '', phone1: '', phone2: '' };
@@ -2820,37 +2928,93 @@ function printHeaderHTML(p) {
   const contactRow = items.length ? `<div style="font-size:12.5px;color:#444;margin-top:3px;line-height:1.3">${items.join('')}</div>` : '';
   return `<table style="width:100%;border-collapse:collapse"><tr><td style="width:120px;vertical-align:middle;padding:0"><img src="logo.png" alt="logo" style="display:block;height:104px;width:auto;object-fit:contain"></td><td style="vertical-align:middle;padding:0 0 0 10px;line-height:1.25"><div style="font-size:32px;font-weight:800;color:#6d1a2d;line-height:1.1;margin:0">${esc(prof.name || APP_NAME)}</div><div style="font-size:14px;color:#555;margin-top:2px;line-height:1.25">${esc(prof.address || '')}</div>${contactRow}</td></tr></table><div style="border-bottom:3px solid #6d1a2d;margin-top:4px"></div>`;
 }
-function billHTML(e) {
+/* Print tables ki lines (V40-P9): har column ke darmiyan vertical line, har row ke
+   neeche halki line, bahir ka numaya maroon border — sirf print/PDF par, screen nahi */
+const PTD = 'padding:7px;border-right:1px solid #d9cfb8;border-bottom:1px solid #d9cfb8';
+const PTDL = 'padding:7px;border-bottom:1px solid #d9cfb8';
+const PTH = 'padding:7px;border-right:1px solid rgba(255,255,255,.25);border-bottom:2px solid #4f1220';
+const PTHL = 'padding:7px;border-bottom:2px solid #4f1220';
+const PTBL = 'width:100%;border-collapse:collapse;border:2px solid #6d1a2d';
+/* Bill se pehle wala party baqaya: is entry se PEHLE ki postings ka balance (tartib
+   wahi jo core ki hai — date, seq, createdAt, id). Is bill ka apna asar shamil nahi,
+   is liye dobara print par bhi Pichla Baqaya wahi rehta hai. */
+function partyBalanceBefore(e) {
+  if (!e || !e.partyId) return 0;
+  const d = derived();
+  const sorted = BA_CORE.activeEntries(S.data.entries).slice().sort((a, b) =>
+    (a.date < b.date ? -1 : a.date > b.date ? 1 : 0) || ((a.seq || 0) - (b.seq || 0)) ||
+    (String(a.createdAt || '') < String(b.createdAt || '') ? -1 : String(a.createdAt || '') > String(b.createdAt || '') ? 1 : 0) ||
+    (String(a.id || '') < String(b.id || '') ? -1 : String(a.id || '') > String(b.id || '') ? 1 : 0));
+  const myIdx = sorted.findIndex(x => x.id === e.id);
+  if (myIdx < 0) return 0;
+  const beforeIds = new Set(sorted.slice(0, myIdx).map(x => x.id));
+  let bal = 0;
+  d.postings.forEach(p => { if (p.account === 'party:' + e.partyId && beforeIds.has(p.entryId)) bal = r2(bal + p.dr - p.cr); });
+  return bal;
+}
+/* Bill (V40-P4): sale + purchase dono ka aik hi layout — letterhead, Bill No + Date,
+   party ki tafseel (Naam / WhatsApp / Address), items table (# | Item 'QTY x Naam' +
+   short detail | Single Price | Total Price), phir totals ki tartib: Kul -> Discount
+   -> Exchange -> Total -> Wasool/Adaigi -> Baqaya -> Pichla Baqaya -> Kul Dena ->
+   Dastakhat (ya V40-P6 ki sign/stamp wali surat jab sign variant manga jaye) */
+function billHTML(e, opts) {
+  const wantSign = !!(opts && opts.sign);
   const p = normalizeProfile(S.data.profile || { ...DEFAULT_PROFILE });
   const party = e.partyId ? partyById(e.partyId) : null;
-  const items = BA_CORE.entryItems(e);
-  const sam = BA_CORE.saleAmounts(e);   // gross / discount / net — discount rows sirf tab jab discount > 0
+  const isPurchase = e.type === 'purchase';
+  const amt = isPurchase ? BA_CORE.purchaseAmounts(e) : BA_CORE.saleAmounts(e);   // gross / discount / net — discount row sirf tab jab discount > 0
+  const d = derived();
+  const exTotal = isPurchase && d.exchangeInfo[e.id] ? (d.exchangeInfo[e.id].total || 0) : 0;
+  const paid = isPurchase ? (e.amountPaid || 0) : (e.amountReceived || 0);
+  const billBaqaya = r2(amt.net - paid - exTotal);
+  /* Pichla Baqaya "dena" ki zabaan mein: buyer ka balance (Dr = Lena) waisa hi;
+     seller ka balance ulta (Cr = Dena) — dono surat mein Kul Dena = Baqaya + Pichla */
+  const prevBal = partyBalanceBefore(e);
+  const prevDena = party ? (party.type === 'seller' ? r2(-prevBal) : prevBal) : 0;
+  const showPrev = Math.abs(prevDena) > 0.004;
+  const kulDena = r2(billBaqaya + prevDena);
+  const discLabel = (e.discountPct != null && e.discountPct !== '') ? 'Discount ' + e.discountPct + '%' : 'Discount';
+  const rawItems = isPurchase ? [{ productId: e.productId, productName: e.productName, qty: e.qty, rate: e.rate, detail: e.detail }] : BA_CORE.entryItems(e);
+  const rowsAll = rawItems.map((it, i) => {
+    const prod = it.productId ? productById(it.productId) : null;
+    const detail = (it.detail != null && String(it.detail).trim()) ? String(it.detail).trim() : (prod && prod.detail ? String(prod.detail).trim() : '');
+    return { n: i + 1, name: it.productName || (prod ? prod.name : ''), qty: +it.qty || 0, rate: +it.rate || 0, detail };
+  });
   // Items ko pages (sheets) mein banto: har sheet par ENTRIES_PER_PAGE items; aakhri (totals wali) sheet par
   // totals + signature ki jagah ke liye zyada se zyada BILL_TOTALS_PAGE_ITEMS items.
   const chunks = [];
-  for (let i = 0; i < items.length; i += ENTRIES_PER_PAGE) chunks.push(items.slice(i, i + ENTRIES_PER_PAGE));
+  for (let i = 0; i < rowsAll.length; i += ENTRIES_PER_PAGE) chunks.push(rowsAll.slice(i, i + ENTRIES_PER_PAGE));
   if (!chunks.length) chunks.push([]);
   const lastChunk = chunks[chunks.length - 1];
   if (lastChunk.length > BILL_TOTALS_PAGE_ITEMS) chunks.splice(chunks.length - 1, 1, lastChunk.slice(0, lastChunk.length - BILL_TOTALS_PAGE_ITEMS), lastChunk.slice(lastChunk.length - BILL_TOTALS_PAGE_ITEMS));
   const totalPages = chunks.length;
-  const head = `<tr style="background:#6d1a2d;color:#fff"><th style="padding:7px;text-align:left">Number</th><th style="padding:7px;text-align:left">Tafseel</th><th style="padding:7px;text-align:right">Narkh</th><th style="padding:7px;text-align:right">Rupay</th></tr>`;
-  const rowOf = it => `<tr style="border-bottom:1px solid #ccc"><td style="padding:7px">${it.qty}</td><td style="padding:7px">${esc(it.productName || '')}</td><td style="padding:7px;text-align:right">${fmtRs(it.rate)}</td><td style="padding:7px;text-align:right">${fmtRs(r2((+it.qty || 0) * (+it.rate || 0)))}</td></tr>`;
+  const billNo = String(e.code || '').replace(/\D/g, '') || e.code;   // E-004 -> Bill No: 004
+  const head = `<tr style="background:#6d1a2d;color:#fff"><th style="${PTH};text-align:left;width:38px">#</th><th style="${PTH};text-align:left">Item</th><th style="${PTH};text-align:right">Single Price</th><th style="${PTHL};text-align:right">Total Price</th></tr>`;
+  const rowOf = r => `<tr><td style="${PTD}">${r.n}</td><td style="${PTD}"><div>${esc(r.qty)} x ${esc(r.name)}</div>${r.detail ? `<div style="font-size:11px;color:#888">${esc(r.detail)}</div>` : ''}</td><td style="${PTD};text-align:right">${fmtRs(r.rate)}</td><td style="${PTDL};text-align:right">${fmtRs(r2(r.qty * r.rate))}</td></tr>`;
+  const neg = v => (v < 0 ? '− ' + fmtRs(-v) : fmtRs(v));
+  const tRow = (label, val, bold, top) => `<tr${top ? ' style="border-top:2px solid #6d1a2d"' : ''}><td style="padding:4px 6px;border-bottom:1px solid #eadfc6;${bold ? 'font-weight:800' : ''}">${label}</td><td style="padding:4px 6px;border-bottom:1px solid #eadfc6;text-align:right;${bold ? 'font-weight:800' : ''}">${val}</td></tr>`;
+  const signed = wantSign && (p.signImg || p.stampImg);
+  const signArea = signed
+    ? `<div style="margin-top:26px;display:flex;justify-content:flex-end"><div style="text-align:center;position:relative;width:240px">${p.stampImg ? `<img src="${p.stampImg}" alt="Stamp" style="position:absolute;right:2px;top:-26px;height:76px;width:auto;max-width:150px;object-fit:contain;opacity:.92">` : ''}${p.signImg ? `<img src="${p.signImg}" alt="Signature" style="height:46px;width:auto;max-width:210px;object-fit:contain;margin-top:30px">` : '<div style="height:46px;margin-top:30px"></div>'}<div style="border-top:1px solid #999;margin-top:4px;padding-top:3px;font-size:11px;color:#666">Dastakhat</div></div></div>`
+    : `<div style="margin-top:36px;font-size:12px;color:#666"><span>Dastakhat: ____________________</span></div>`;
   return chunks.map((chunk, idx) => {
     const isFirst = idx === 0, isLast = idx === totalPages - 1;
     return `<div class="psheet" style="font-family:'Segoe UI',sans-serif;color:#24303d;width:100%">
   ${printHeaderHTML(p)}
   ${isFirst ? `<div style="text-align:center;font-size:12px;margin-top:4px">Hamare haan Khes, Dari, Kambal, Crystal, Diamond dastiyab hain</div>
-  <table style="width:100%;border-collapse:collapse;font-size:13px;margin:6px 0"><tr><td style="padding:0">Bill No: <b>${esc(e.code)}</b></td><td style="padding:0;text-align:right">Tareekh: <b>${esc(e.date)}</b></td></tr></table>
-  <div style="font-size:13px;margin-bottom:8px">Naam Kharidaar: <b>${party ? esc(party.code) + ' • ' + esc(party.name) : ''}</b> ${party && party.phone ? '(' + esc(party.phone) + ')' : ''}</div>` : `<div style="font-size:12px;margin-top:4px">Bill No: <b>${esc(e.code)}</b> (jari)</div>`}
-  <table style="width:100%;border-collapse:collapse;font-size:14px">${head}${chunk.map(rowOf).join('')}</table>
-  ${isLast ? `<table style="width:260px;margin-left:auto;font-size:14px;margin-top:8px">
-    ${sam.discount > 0 ? `<tr><td style="padding:4px">Kul</td><td style="padding:4px;text-align:right">${fmtRs(sam.gross)}</td></tr>
-    <tr><td style="padding:4px">Discount</td><td style="padding:4px;text-align:right">− ${fmtRs(sam.discount)}</td></tr>` : ''}
-    <tr><td style="padding:4px">Total</td><td style="padding:4px;text-align:right"><b>${fmtRs(e.total)}</b></td></tr>
-    <tr><td style="padding:4px">Advance</td><td style="padding:4px;text-align:right">${fmtRs(e.amountReceived || 0)}</td></tr>
-    <tr style="border-top:2px solid #6d1a2d"><td style="padding:4px"><b>Baqaya</b></td><td style="padding:4px;text-align:right"><b>${fmtRs((e.total || 0) - (e.amountReceived || 0))}</b></td></tr>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;margin:6px 0"><tr><td style="padding:0">Bill No: <b>${esc(billNo)}</b></td><td style="padding:0;text-align:right">Tareekh: <b>${esc(e.date)}</b></td></tr></table>
+  <div style="font-size:13px;margin-bottom:8px;line-height:1.5"><div>Naam: <b style="font-size:15px">${party ? esc(party.code) + ' • ' + esc(party.name) : esc(e.partyName || '')}</b></div>${party && party.phone ? `<div>WhatsApp: ${esc(party.phone)}</div>` : ''}${party && party.address ? `<div>Address: ${esc(party.address)}</div>` : ''}</div>` : `<div style="font-size:12px;margin-top:4px">Bill No: <b>${esc(billNo)}</b> (jari)</div>`}
+  <table style="${PTBL};font-size:14px">${head}${chunk.map(rowOf).join('')}</table>
+  ${isLast ? `<table style="width:300px;margin-left:auto;font-size:14px;margin-top:8px;border-collapse:collapse">
+    ${tRow('Kul', fmtRs(amt.gross))}
+    ${amt.discount > 0 ? tRow(discLabel, '− ' + fmtRs(amt.discount)) : ''}
+    ${exTotal > 0 ? tRow('Exchange', '− ' + fmtRs(exTotal)) : ''}
+    ${tRow('Total', fmtRs(amt.net), true)}
+    ${tRow(isPurchase ? 'Adaigi' : 'Wasool', fmtRs(paid))}
+    ${tRow('Baqaya', neg(billBaqaya), true, true)}
+    ${showPrev ? tRow('Pichla Baqaya', neg(prevDena)) + tRow('Kul Dena', neg(kulDena), true, true) : ''}
   </table>
-  <div style="margin-top:36px;font-size:12px;color:#666"><span>Dastakhat: ____________________</span></div>` : ''}
+  ${signArea}` : ''}
   ${pfootHTML(idx + 1, totalPages)}</div>`;
   }).join('');
 }
@@ -2873,6 +3037,21 @@ function loadHtml2Pdf() {
   return _h2pLoad;
 }
 function pdfName(s) { return String(s == null ? 'document' : s).replace(/[\\/:*?"<>|]+/g, '-').replace(/\s+/g, '-').replace(/^-+|-+$/g, '') || 'document'; }
+/* V40-P7 ke liye asal libraries ALAG se: html2pdf bundle apne html2canvas/jsPDF ko
+   window par expose NAHI karta (bundle ke andar band hain) — is liye wahi versions
+   (html2canvas 1.4.1 + jsPDF 2.3.1, jo bundle ke andar hain) cdnjs se alag load hoti
+   hain, taake har sheet ki capture aur jsPDF placement apne haath mein ho. */
+let _pdfLibsLoad = null;
+function loadPdfLibs() {
+  if (window.html2canvas && window.jspdf && window.jspdf.jsPDF) return Promise.resolve(true);
+  if (_pdfLibsLoad) return _pdfLibsLoad;
+  const one = src => new Promise(res => { const sc = document.createElement('script'); sc.src = src; sc.onload = () => res(true); sc.onerror = () => res(false); document.head.appendChild(sc); });
+  _pdfLibsLoad = Promise.all([
+    one('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
+    one('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js')
+  ]).then(() => { const ok = !!(window.html2canvas && window.jspdf && window.jspdf.jsPDF); if (!ok) _pdfLibsLoad = null; return ok; });
+  return _pdfLibsLoad;
+}
 function printWithTitle(filename) {
   const old = document.title;
   document.title = String(filename || 'document').replace(/\.pdf$/i, '');
@@ -2885,48 +3064,59 @@ function printWithTitle(filename) {
 async function downloadPDF(filename) {
   await waitPrintImages();
   const ok = await loadHtml2Pdf().catch(() => false);
-  if (ok && window.html2pdf) {
-    const holder = document.createElement('div');
-    holder.style.cssText = 'position:absolute;left:0;top:0;width:794px;margin:0;padding:0;background:#fff;z-index:-1';
-    const clone = $('printArea').cloneNode(true);
-    clone.removeAttribute('id'); clone.classList.remove('hidden');
-    holder.appendChild(clone); document.body.appendChild(holder);
-    // Clone ki width 794px par PIN hai — ye @96dpi par A4 ki POORI chaurai (210mm) ke bilkul barabar hai.
-    // Isi liye neeche jsPDF ka margin 0 hai: margin 8mm hone par html2pdf image ko 210mm chaura scale karke
-    // 8mm se shuru karta tha — image dayein kinare se bahar kat ti (measured: left margin 25.7mm / right 9.8mm)
-    // aur kul height (285.6mm + 8mm offset) page se bahar ja kar branding line doosre page par slice ho jati
-    // thi (statement PDF 2 pages mein ata tha). Margin 0 par image page par bilkul fit: sheet FULL-WIDTH
-    // hai (v38 — koi max-width cap nahi; sheet clone ki poori 794px chaudi leti hai, sirf us ka apna 10px
-    // padding kinara banta hai) aur sheet ki height 1080px ↔ 285.6mm ≤ 297mm — har sheet
-    // aik hi page par, branding line sheet ke andar mehfooz. Clone page ke bilkul upar se shuru ho — koi
-    // inherited margin/padding khaali patti nahi banata.
-    clone.style.margin = '0'; clone.style.padding = '0'; clone.style.display = 'block'; clone.style.width = '794px';
-    // Har page-sheet ko A4 page ki height ke qareeb-tareen height do (1080px clone scale par — branding line
-    // page ke ~96% neeche tak jati hai): har sheet apne page par aye gi — header upar, branding line
-    // (flex margin-top:auto) page ke bilkul neeche. Page breaks CSS mode se hote hain (neeche pagebreak
-    // option + base CSS mein .psheet ka page-break-after) taake sheets darmiyan se na kattein; 'legacy'
-    // mode backup hai. Rows pehle se fix count (ENTRIES_PER_PAGE) mein banti hui hain, is liye kisi
-    // sheet ka content is height se bahir nahi jata; purana single-wrapper wala tareeqa khatam.
-    clone.querySelectorAll('.psheet').forEach(sh => { sh.style.height = '1080px'; sh.style.minHeight = '1080px'; });
+  const libsOk = await loadPdfLibs().catch(() => false);
+  const holder = document.createElement('div');
+  holder.style.cssText = 'position:absolute;left:0;top:0;width:794px;margin:0;padding:0;background:#fff;z-index:-1';
+  const clone = $('printArea').cloneNode(true);
+  clone.removeAttribute('id'); clone.classList.remove('hidden');
+  holder.appendChild(clone); document.body.appendChild(holder);
+  clone.style.margin = '0'; clone.style.padding = '0'; clone.style.display = 'block'; clone.style.width = '794px';
+  // Har page-sheet ko A4 page ki height ke qareeb-tareen height do (1080px clone scale par — branding line
+  // page ke bilkul neeche tak jati hai): har sheet apne page par aye gi — header upar, branding line
+  // (flex margin-top:auto) sheet ke bilkul neeche.
+  clone.querySelectorAll('.psheet').forEach(sh => { sh.style.height = '1080px'; sh.style.minHeight = '1080px'; });
+  /* V40-P7 (LOCKED SPEC: left gap == right gap == 4.40mm, jaha se bhi PDF nikle):
+     har sheet ALAG html2canvas capture hoti hai (element-level capture — page ki
+     scroll position ya phone ke chhote viewport se capture shift NAHI hoti) aur
+     jsPDF mein TAY jagah par lagti hai: x = 4.4mm, chaudi = 201.2mm (210 − 2×4.4).
+     Purana tareeqa poora clone aik saath capture karke margin 0 par full-bleed
+     lagata tha — asal phone par capture ke andar hi ~4mm safed patti ghus jati thi
+     aur sheet dayein kinare se chipak jati thi (Bunny ki asal statement file par
+     naapa gaya: sheet left 4.40mm / right 0.51mm).
+     Vertical: image ki height canvas ke aspect se banti hai (1080/794), sheet page
+     par vertically CENTER lagti hai — top gap == bottom gap. */
+  if (libsOk && window.html2canvas && window.jspdf && window.jspdf.jsPDF) {
     try {
-      // scrollX/scrollY 0 LAZMI hai (v38): html2canvas default mein window ki maujooda scroll position se
-      // capture ka hisaab lagata hai — page scrolled ho (aam halat: lambi statement/list dekh kar Download
-      // dabana) to poori sheet utni hi neeche shift ho kar page se bahir kat jati hai aur neeche wala hissa
-      // (branding line) PDF se gayab ho jata hai (measured: scroll 200 par neeche ke ~320px kat gaye,
-      // scroll 2400 par poora page khaali). 0/0 par capture hamesha sheet ke asal size par banta hai,
-      // banda jahan bhi scrolled ho.
+      const pdf = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+      const sheets = [...clone.querySelectorAll('.psheet')];
+      if (!sheets.length) throw new Error('sheets nahi milein');
+      for (let i = 0; i < sheets.length; i++) {
+        if (i > 0) pdf.addPage();
+        const canvas = await window.html2canvas(sheets[i], { scale: 2, useCORS: true, scrollX: 0, scrollY: 0, windowWidth: 794, backgroundColor: '#ffffff' });
+        const imgH = 201.2 * canvas.height / canvas.width;
+        pdf.addImage(canvas.toDataURL('image/jpeg', 0.98), 'JPEG', 4.4, (297 - imgH) / 2, 201.2, imgH);
+      }
+      pdf.save(filename);
+      toast('PDF download ho gaya'); sfx('save');
+      holder.remove();
+      return;
+    } catch (e) { /* neeche wala fallback */ }
+  }
+  if (ok && window.html2pdf) {
+    try {
       await window.html2pdf().set({ margin: 0, filename, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, scrollX: 0, scrollY: 0 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['css', 'legacy'] } }).from(clone).save();
       toast('PDF download ho gaya'); sfx('save');
       holder.remove();
       return;
-    } catch (e) { holder.remove(); }
+    } catch (e) { /* print fallback */ }
   }
+  holder.remove();
   toast('PDF ke liye print box se "Save as PDF" chunein');
   printWithTitle(filename);
 }
-function buildBillPrint(entryId) { const e = S.data.entries.find(x => x.id === entryId); if (!e) return null; $('printArea').innerHTML = billHTML(e); return 'Bill-' + pdfName(e.code) + '.pdf'; }
-function printBill(entryId) { if (buildBillPrint(entryId)) doPrint(); }
-function downloadBillPDF(entryId) { const f = buildBillPrint(entryId); if (f) downloadPDF(f); }
+function buildBillPrint(entryId, sign) { const e = S.data.entries.find(x => x.id === entryId); if (!e) return null; $('printArea').innerHTML = billHTML(e, { sign: !!sign }); return 'Bill-' + pdfName(e.code) + (sign ? '-Signed' : '') + '.pdf'; }
+function printBill(entryId, sign) { const f = buildBillPrint(entryId, sign); if (!f) return; if (sign) printWithTitle(f); else doPrint(); }
+function downloadBillPDF(entryId, sign) { const f = buildBillPrint(entryId, sign); if (f) downloadPDF(f); }
 function buildStatementPrint(key) {
   const d = derived(); const l = accountLabel(key);
   const posts = d.postings.filter(x => x.account === key).sort((a, b) => (a.date < b.date ? -1 : 1) || (a.seq - b.seq));
@@ -2952,7 +3142,7 @@ function buildStatementPrint(key) {
   $('printArea').innerHTML = chunks.map((chunk, idx) => `<div class="psheet" style="font-family:'Segoe UI',sans-serif;color:#24303d;width:100%">
   ${printHeaderHTML(p)}
   <h3 style="margin:6px 0 6px">Khata Statement — ${esc(l.code)} • ${esc(l.name)}${idx ? ' (jari)' : ''}</h3>
-  <table style="width:100%;border-collapse:collapse;font-size:13px">${head}${chunk.join('')}${idx === totalPages - 1 ? totalsFoot : ''}</table>
+  <table class="ptbl" style="width:100%;border-collapse:collapse;border:2px solid #6d1a2d;font-size:13px">${head}${chunk.join('')}${idx === totalPages - 1 ? totalsFoot : ''}</table>
   ${pfootHTML(idx + 1, totalPages)}</div>`).join('');
   return 'Statement-' + pdfName(l.name) + '.pdf';
 }
@@ -2967,7 +3157,7 @@ function shareBillWA(entryId) {
   const items = BA_CORE.entryItems(e);
   const lines = items.map(it => (it.productName || '') + ' — ' + it.qty + ' × ' + fmtRs(it.rate) + ' = ' + fmtRs(r2((+it.qty || 0) * (+it.rate || 0))));
   let msg = (S.data.profile.name || APP_NAME) + '\nBill No: ' + e.code + ' • Tareekh: ' + e.date + '\n' + lines.join('\n') + '\nKul: ' + fmtRs(amt.gross);
-  if (amt.discount > 0) msg += '\nDiscount: ' + fmtRs(amt.discount) + '\nBill Total: ' + fmtRs(amt.net);
+  if (amt.discount > 0) msg += '\nDiscount' + (e.discountPct ? ' ' + e.discountPct + '%' : '') + ': ' + fmtRs(amt.discount) + '\nBill Total: ' + fmtRs(amt.net);
   msg += '\nWasool Hua: ' + fmtRs(e.amountReceived || 0) + '\nBaqaya: ' + fmtRs(r2(amt.net - (e.amountReceived || 0)));
   msg += '\nApna hisaab bhi aise hi saaf rakhein!\nApna GG Khata Banayein — FREE Sign Up: ' + GG_KHATA_URL + '\nSirf Google account chahiye — 1 minute mein khata tayyar\n' + GG_BRAND_LINE;
   let phone = p && p.phone ? String(p.phone).replace(/\D/g, '') : '';
@@ -3008,7 +3198,7 @@ function reportSheetHTML(title, subLine, rowsDisplay, footLabel, footValue) {
   ${printHeaderHTML(p)}
   <h2 style="color:#6d1a2d;text-align:center;font-size:17px;margin:6px 0 2px">${title}</h2>
   <p style="text-align:center;font-size:11.5px;color:#666;margin:0 0 8px">${subLine}</p>
-  <table style="width:100%;font-size:12.5px;line-height:1.35;border-collapse:collapse">
+  <table class="ptbl" style="width:100%;font-size:12.5px;line-height:1.35;border-collapse:collapse;border:2px solid #6d1a2d">
   <tr style="background:#efe6d2"><th style="padding:5px 8px;text-align:left;font-size:10.5px;letter-spacing:.06em;color:#8a7a52">TAFSEEL</th><th style="padding:5px 8px;text-align:right;font-size:10.5px;letter-spacing:.06em;color:#8a7a52">RAKAM</th></tr>
   ${rows}
   <tr style="background:#4f1220;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact"><td style="padding:8px;font-weight:800;letter-spacing:.04em;text-transform:uppercase">${footLabel}</td><td style="padding:8px;text-align:right;font-weight:800;color:#b9975b">${footValue}</td></tr>
@@ -3130,16 +3320,20 @@ $('dayPicker').addEventListener('change', e => { selectedDate = e.target.value |
 $('btnPrevDay').addEventListener('click', () => { const d = new Date(selectedDate); d.setDate(d.getDate() - 1); selectedDate = d.toISOString().slice(0, 10); renderRoznamcha(); });
 $('btnNextDay').addEventListener('click', () => { const d = new Date(selectedDate); d.setDate(d.getDate() + 1); selectedDate = d.toISOString().slice(0, 10); renderRoznamcha(); });
 $('btnToday').addEventListener('click', () => { selectedDate = todayStr(); renderRoznamcha(); });
-$('btnSaveProfile').addEventListener('click', async () => { await Store.saveProfile({ name: $('setBizName').value.trim() || APP_NAME, phones: $('setBizPhones').value.trim(), address: $('setBizAddress').value.trim(), contacts: collectContacts(), nameLine: $('setNameLine').value.trim(), sound: $('setSound').checked }); toast('Profile save ho gaya'); sfx('save'); profileEditMode = false; renderProfileCard(); });
+$('btnSaveProfile').addEventListener('click', async () => { await Store.saveProfile(collectProfileFromForm()); toast('Profile save ho gaya'); sfx('save'); profileEditMode = false; renderProfileCard(); });
 $('btnEditProfile').addEventListener('click', () => { profileEditMode = true; renderProfileCard(); });
 $('btnCancelProfile').addEventListener('click', () => { profileEditMode = false; applyProfile(); });
 $('setSound').addEventListener('change', async e => {
   const on = e.target.checked;
-  await Store.saveProfile({ name: $('setBizName').value.trim() || APP_NAME, phones: $('setBizPhones').value.trim(), address: $('setBizAddress').value.trim(), contacts: collectContacts(), nameLine: $('setNameLine').value.trim(), sound: on });
+  await Store.saveProfile(collectProfileFromForm(on));
   if (on) sfx('save');
   toast(on ? 'Sound on ho gaya' : 'Sound band ho gaya');
 });
 $('btnAddContact').addEventListener('click', () => addContactRow());
+$('fileSign').addEventListener('change', e => { onProfileImagePick('sign', e.target.files[0]); e.target.value = ''; });
+$('fileStamp').addEventListener('change', e => { onProfileImagePick('stamp', e.target.files[0]); e.target.value = ''; });
+$('btnSignRemove').addEventListener('click', () => { profileSignImg = ''; renderSignPreviews(); toast('Signature hata di — Profile Save karne par mehfooz ho gi'); });
+$('btnStampRemove').addEventListener('click', () => { profileStampImg = ''; renderSignPreviews(); toast('Stamp hata di — Profile Save karne par mehfooz ho gi'); });
 $('btnOwnerSetup').addEventListener('click', setupOwnerKhata);
 $('btnSaveOwnerName').addEventListener('click', saveOwnerName);
 $('btnShareAdd').addEventListener('click', shareAddMember);
